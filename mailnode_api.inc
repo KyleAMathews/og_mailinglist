@@ -1,0 +1,139 @@
+<?php
+// $Id$
+
+/*
+ * @param int $sid Space id to query for subscriptions
+ * @param string $space_type Space type e.g. og
+ * 
+ * @return array of UIDs and email addresses that are subscribed to this thread.
+ *  Format = key (UID) => value (email address)
+ */
+function mailnode_get_space_subscriptions($sid, $space_type) {
+  $result = db_query("SELECT uid
+                     FROM {mailnode_subscription}
+                     WHERE sid = %d
+                     And space_type = '%s'
+                     AND subscription_type = 'email'", $sid, $space_type);
+  
+  $uids = array();
+  while ($data = db_fetch_array($result)) {
+    $uids[] = $data['uid'];  
+  }
+  
+  $emails = array();
+  foreach ($uids as $uid) {
+    $emails[$uid] = db_result(db_query("SELECT mail
+                                   FROM {users}
+                                   WHERE uid = %d", $uid));
+  }
+  
+  return $emails;
+}
+
+/*
+ * @return array of UIDs and email addresses that are subscribed to this thread.
+ *  Format = key (UID) => value (email address)
+ */
+function mailnode_get_thread_subscriptions($nid) {
+  $result = db_query("SELECT uid
+                     FROM {mailnode_thread}
+                     WHERE nid = %d", $nid);
+  
+  $uids = array();
+  while ($data = db_fetch_array($result)) {
+    $uids[] = $data['uid'];  
+  }
+  
+  $emails = array();
+  foreach ($uids as $uid) {
+    $emails[$uid] = db_result(db_query("SELECT mail
+                                   FROM {users}
+                                   WHERE uid = %d", $uid));
+  }
+  
+  return $emails;
+}
+
+/*
+ * @param int $nid Node id for thread.
+ * @param array $uids array of User IDs that are subscribed to this thread.
+ *
+ * @return null.
+ */
+function mailnode_save_thread_subscriptions($nid, $uids) {
+  foreach ($uids as $uid) {
+    db_query("INSERT INTO {mailnode_thread}
+             VALUES (%d, %d)", $nid, $uid);
+  }
+}
+
+/*
+ * @param int $sid Space id.
+ * @param string $space_type Space type e.g. og.
+ * @param array $uids array of User IDs to add group subscriptions.
+ */
+function mailnode_save_group_subscriptions($sid, $space_type, $uids) {
+  foreach ($uids as $uid) {
+    db_query("INSERT INTO {mailnode_subscription}
+             VALUES (%d, '%s', %d, 'email')", $sid, $space_type, $uid);
+  }
+}
+
+/*
+ * @param int $sid Space id.
+ * @param string $space_type Space type e.g. og.
+ * @param array $uids array of User IDs to add group subscriptions.
+ */
+function mailnode_delete_group_subscriptions($sid, $space_type, $uids) {
+  foreach ($uids as $uid) {
+    // Delete subscription.
+    db_query("DELETE FROM {mailnode_subscription}
+             WHERE sid = %d
+             AND space_type = '%s'
+             AND uid = %d", $sid, $space_type, $uid);
+    
+    mailnode_delete_group_threads($sid, $uid);
+  }
+}
+
+/*
+ * Adds person to 15 latest threads in a group.
+ */
+function mailnode_subscribe_group_threads($gid, $uid) {
+  // Select threads created in the past month.
+  $results = db_query("SELECT o.nid
+                      FROM {og_ancestry} o
+                      INNER JOIN {node} n
+                      ON n.nid = o.nid
+                      WHERE o.group_nid = %d
+                      ORDER BY created DESC
+                      LIMIT 15", $gid);
+  
+  while ($data = db_fetch_array($results)) {
+    mailnode_save_thread_subscriptions($data['nid'], array($uid));
+  }
+  
+}
+
+function mailnode_delete_group_threads($gid, $uid) {
+  // Delete threads.
+  db_query("DELETE FROM {mailnode_thread} m
+           INNER JOIN {og_ancestry} o
+           WHERE o.nid = m.nid
+           AND m.uid = %d
+           AND o.group_nid = %d", $uid, $gid);  
+}
+
+function mailnode_delete_thread_subscription($nid, $uid) {
+  return db_query("DELETE FROM {mailnode_thread}
+           WHERE nid = %d
+           AND uid = %d", $nid, $uid);
+}
+
+/*
+ * Log successful sent email.
+ */
+function mailnode_log_email_sent($source, $nid, $cid = 0) {
+  return db_query("INSERT INTO {mailnode_source}
+           VALUES (%d, %d, '%s')", $nid, $cid, $source);
+}

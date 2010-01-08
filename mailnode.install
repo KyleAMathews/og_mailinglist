@@ -1,0 +1,124 @@
+<?php
+// $Id$
+/**
+ * Implementation of hook_install().
+ */
+function mailnode_install() {
+  $success = drupal_install_schema('mailnode');
+
+
+  if ($success) {
+    drupal_set_message(st('Mailnode module installed tables successfully.'));
+  }
+  else {
+    drupal_set_message(st('The installation of Mailnode module failed.'), 'error');
+  }
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function mailnode_uninstall() {
+  drupal_uninstall_schema('mailnode');
+  $result = db_query("SELECT name FROM {variable} WHERE name LIKE 'mailnode_%'");
+  while ($row = db_fetch_object($result)) {
+    variable_del($row->name);
+  }
+
+  drupal_set_message(t('Mailnode has been uninstalled.'));
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function mailnode_schema() {
+  $schema = array();
+
+  $schema['mailnode_source'] = array(
+    'fields' => array(
+      'nid' => array(
+        'description' => 'The nid for the new posting.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0),
+      'cid' => array(
+        'description' => 'The cid for the new posting. If 0, means posting was a new node not comment.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0),
+      'source' => array(
+        'type' => 'varchar',
+        'description' => 'If the new posting was via email or the web. Should be either "email" or "web"',
+        'length' => '64',
+        'not null' => TRUE,
+        'default' => ''
+      ),
+    ),
+    'primary key' => array('nid', 'cid'),
+    'indexes' => array(
+      'source' => array('source'),
+    ),
+  );
+
+  $schema['mailnode_thread'] = array(
+    'fields' => array(
+      'nid' => array(
+        'description' => 'The nid of the thread.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0),
+      'uid' => array(
+        'description' => 'The uid of the user who\'s subscribed to this thead.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0),
+    ),
+    'primary key' => array('nid', 'uid'),
+    'indexes' => array(
+      'nid' => array('nid'),
+      'uid' => array('uid'),
+    ),
+  );
+
+  $schema['mailnode_subscription'] = array(
+    'fields' => array(
+      'sid' => array(
+        'description' => 'The sid of the Group or Space.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0),
+      'space_type' => array(
+        'type' => 'varchar',
+        'description' => 'E.g. og, maps to space type in spaces table.',
+        'length' => '128',
+        'not null' => TRUE,
+        'default' => ''),
+      'uid' => array(
+        'description' => 'The uid of the User.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0),
+      'subscription_type' => array(
+        'type' => 'varchar',
+        'description' => 'Subscription type, e.g. "no email", "digest email", or "email"',
+        'length' => '128',
+        'not null' => TRUE,
+        'default' => ''
+      ),
+    ),
+    'primary key' => array('sid', 'space_type', 'uid'),
+    'indexes' => array(
+      'sid_type' => array('sid', 'space_type'),
+      'uid' => array('uid'),
+      'subscription_type' => array('subscription_type'),
+    ),
+  );
+  
+  return $schema;
+}

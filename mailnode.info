@@ -1,0 +1,10 @@
+; $Id: mailnode.info,v 1.0 2009-03-16 $
+name = MailNode
+description = "Allows email submissions of new discussions and comments for organic groups."
+dependencies[] = og
+dependencies[] = spaces
+package = "Messaging"
+core = "6.x"
+
+version = "6.x-1.0"
+core = "6.x"
