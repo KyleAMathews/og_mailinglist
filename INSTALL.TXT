@@ -1,9 +1,9 @@
 
 
-                MailNode - Turns Drupal into a multi-group email list.
+                OG_mailinglist - Turns Drupal into a multi-group email list.
                 
 
-Mailnode allows users to start new discussions by email and post comments on existing discussions by simply replying to emails.  You get the best of both worlds: a browser-based discussion site and an email-based list.
+OG_mailinglist allows users to start new discussions by email and post comments on existing discussions by simply replying to emails.  You get the best of both worlds: a browser-based discussion site and an email-based list.
 
 See the README.TXT file for more information on the module.
 
@@ -24,25 +24,25 @@ PREREQUISITES:
 
 INSTALLATION INSTRUCTIONS:
 
-* Unzip the mailnode files into a subdirectory in the Drupal modules/ directory.  This is the same as installing any other Drupal module (see the Drupal manual for more information on general module installation).
+* Unzip the og_mailinglist files into a subdirectory in the Drupal modules/ directory.  This is the same as installing any other Drupal module (see the Drupal manual for more information on general module installation).
 
 * Go to the Modules page in Drupal and enable the module (like normal).  After saving, navigate to admin/messaging/mailnode and set options to your liking.
 
-* Modify the $DRUPAL_DIR variable in mailnode_exim4_bootstrap_command_line.php to point at your Drupal installation directory.  This has to be set per installation -- since the script runs outside of Drupal, it can't just read the directory location from the Drupal settings.  After setting the variable, you can run the file in a terminal with "php mailnode_exim4_bootstrap_command_line.php".  It will throw errors if anything is wrong.
+* Modify the $DRUPAL_DIR variable in og_mailinglist_exim4_bootstrap_command_line.php to point at your Drupal installation directory.  This has to be set per installation -- since the script runs outside of Drupal, it can't just read the directory location from the Drupal settings.  After setting the variable, you can run the file in a terminal with "php og_mailinglist_exim4_bootstrap_command_line.php".  It will throw errors if anything is wrong.
 
 * Add the following to Exim's configuration files:
 
-   drupal_mailnode:
+   drupal_og_mailinglist:
      driver = queryprogram
-     command = /your/drupal/modules/mailnode/mailnode_exim4_router.php $local_part $domain
+     command = /your/drupal/modules/og_mailinglist/og_mailinglist_exim4_router.php $local_part $domain
      command_user = mail
      command_group = mail
-     transport = drupal_mailnode 
+     transport = drupal_og_mailinglist 
      
-   drupal_mailnode:
+   drupal_og_mailinglist:
      driver = pipe
      path = "/bin:/usr/bin:/usr/local/bin"
-     command = /your/drupal/modules/mailnode/mailnode_exim4_transport.php $local_part
+     command = /your/drupal/modules/og_mailinglist/og_mailinglist_exim4_transport.php $local_part
      user = mail
      group = mail
      return_path_add
@@ -53,15 +53,15 @@ INSTALLATION INSTRUCTIONS:
      
   Then restart Exim 4.  Note that on some operating systems like Debian, you need to run "update-exim4.conf" to actually update the configuration before restarting.  See your installation's Exim documentation for specifics.
   
-* Open a terminal and go to the mailnode/ directory.  Use the following commands to test your configuration:
+* Open a terminal and go to the og_mailinglist/ directory.  Use the following commands to test your configuration:
 
   To test the router (use a real group name on your site):
-     php mailnode_exim4_router.php groupname yourserver.com
+     php og_mailinglist_exim4_router.php groupname yourserver.com
   The script should report the word "ACCEPT" to tell you the router is accepting delivery for this address.
   
   To test the transport (again, use a real group name, and have a test email saved as email.txt):
-     php mailnode_exim4_transport.php groupname < email.txt
-  The email should post a new discussion on your site in the given group.  If the email.txt file contains a reply to an existing discussion created since you installed mailnode, it should post a comment to that discussion.
+     php og_mailinglist_exim4_transport.php groupname < email.txt
+  The email should post a new discussion on your site in the given group.  If the email.txt file contains a reply to an existing discussion created since you installed og_mailinglist, it should post a comment to that discussion.
   
 * Congratulations.  You're running.
 

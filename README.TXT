@@ -1,16 +1,11 @@
 
 
-                MailNode - Turns Drupal into a multi-group email list.
+OG_mailinglist - Turns Drupal into a multi-group email list.
                 
 
-Mailnode allows users to start new discussions by email and post comments on existing discussions by simply replying to emails.  You get the best of both worlds: a browser-based discussion site and an email-based list.
+og_mailinglist allows users to start new discussions by email and post comments on existing discussions by simply replying to emails.  You get the best of both worlds: a browser-based discussion site and an email-based list.
 
 See the INSTALL.TXT file for system requirements and prerequisites.
-
-
-LICENSE:
-
-This module is released under the GNU General Public License.  It is Copyright (c) 2009, Conan C. Albrecht <conan@warp.byu.edu>.
 
 
 EXAMPLE:
@@ -29,4 +24,13 @@ This module essentially allows group members to post to your site directly from 
 
 CREDITS:
 
-Thanks to the mail2web module for the inspiration for some of the code in this module.
+Thanks to the mail_comment module for the inspiration for some of the code in this module.
+
+TODOs:
+We're working towards reworking this module so we can do an initial release on Drupal.org. The following is a hopefully comprehensive list of the remaining tasks.
+
+* Remove legacy code for integration with the Messaging.
+* Move hardcoded values to variables.
+* Revamp admin page.
+* Change name of module from mailnode to og_mailinglist
+
