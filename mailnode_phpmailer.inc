@@ -31,7 +31,7 @@ function mailnode_send_comment_email($comment, $node) {
   $mailer->Subject = "Re: [" . $space->purl . "] " . $node->title;
 
   // Decorate body.
-  $body = mailnode_prepare_web_content($comment->comment);
+  $body = mailnode_prepare_web_content($comment->comment); // TODO figure out what the render function for nodes/comments is and use that instead. Current setup inconsistent plus won't shift to other's setups
   $body = mailnode_build_web_footer($space, $node, $body, $messageid);
   
   $mailer->Body = $body;
