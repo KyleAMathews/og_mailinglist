@@ -118,11 +118,14 @@ function mailnode_build_web_footer($space, $node, $body, $messageid, $cid = 0) {
 }
   
 
-function mailnode_add_headers($mailer, $messageid, $space) {
+function mailnode_add_web_headers($mailer, $messageid, $space, $node) {
+  global $base_url;
+  
   $mailer->AddCustomHeader($mailer->HeaderLine("Message-ID", "<" . $messageid . ">"));
   $mailer->AddCustomHeader($mailer->HeaderLine("List-Id", "<" . $space->purl . "@island.byu.edu>"));
   $mailer->AddCustomHeader($mailer->HeaderLine("List-Post", "<mailto:" . $space->purl . "@island.byu.edu>"));
   $mailer->AddCustomHeader($mailer->HeaderLine("List-Archive", url("node/" . $space->sid, array('absolute' => TRUE))));
+  $mailer->AddCustomHeader($mailer->HeaderLine("X-Thread-Url", $base_url . "/node/" . $node->nid));
   
   return $mailer;
 }

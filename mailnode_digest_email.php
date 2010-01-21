@@ -1,5 +1,13 @@
 <?php
 
+define("EMAIL_HEADER", 'background-color: #D1DCFF; font-family: helvetica;
+       font-size: 160%; border-top: 1px solid #262c40; padding: 2px');
+define("DISCUSSION_HEADER", 'background-color: #D1DCFF; font-family: helvetica;
+       font-size: 140%; border-top: 1px solid #262c40; padding: 2px');
+define("MESSAGE_HEADER", 'background-color: #E6ECFF; font-family: helvetica;
+       border-top: 1px solid #262c40; padding: 2px');
+define("DIGEST_TIME_PERIOD", 86400); // One day currently.
+// TODO -- make email from list address + add add list-ids so email client filters still work
 # boostrap drupal
 # set up the drupal directory -- very important 
 $DRUPAL_DIR = '/var/www/island_prod';
@@ -28,8 +36,6 @@ error_reporting(E_ALL);
 // Get list of groups where at least one person has subscribed to a digest node
 // and which had a new post or comment in the last 24 hours.
 
-$digest_day = 86400;
-
 $new_nodes_sql = 'SELECT DISTINCT s.sid
           FROM {mailnode_subscription} s
           JOIN {og_ancestry} o
@@ -48,8 +54,8 @@ $new_comments_sql = 'SELECT DISTINCT s.sid
           AND c.timestamp > (unix_timestamp() - %d)
           AND s.subscription_type = "digest email"';
 
-$groups_with_new_nodes = db_query($new_nodes_sql, $digest_day);
-$groups_with_new_comments = db_query($new_comments_sql, $digest_day);
+$groups_with_new_nodes = db_query($new_nodes_sql, DIGEST_TIME_PERIOD);
+$groups_with_new_comments = db_query($new_comments_sql, DIGEST_TIME_PERIOD);
 
 $digest_groups = array();
 while ($data = db_fetch_array($groups_with_new_comments)) {
@@ -61,6 +67,7 @@ while ($data = db_fetch_array($groups_with_new_nodes)) {
 
 //print_r($digest_groups);
 foreach ($digest_groups as $gid) {
+  $group = node_load(array('nid' => $gid));
   // Get list of new activity -- new nodes and new comments
   $new_nids = 'SELECT o.nid
                 FROM {node} n
@@ -76,8 +83,8 @@ foreach ($digest_groups as $gid) {
                         AND c.timestamp > (unix_timestamp() - %d)
                         AND o.group_nid = %d';
 
-  $nids_with_new_nodes = db_query($new_nids, $digest_day, $gid);
-  $nids_with_new_comments = db_query($new_comment_nids, $digest_day, $gid);
+  $nids_with_new_nodes = db_query($new_nids, DIGEST_TIME_PERIOD, $gid);
+  $nids_with_new_comments = db_query($new_comment_nids, DIGEST_TIME_PERIOD, $gid);
 
   $nids = array();
   while ($data = db_fetch_array($nids_with_new_comments)) {
@@ -95,10 +102,7 @@ foreach ($digest_groups as $gid) {
   // Count # of messages.
   $message_count = 0;
   foreach ($nids as $nid) {
-    if ($nid['status'] === "new") {
-      $message_count++;
-    }
-    $message_count += count(array_keys($nid)) - 1;
+    $message_count += mailnode_count_new_messages($nid);
   }
   
   $purl_id = db_result(db_query("SELECT value
@@ -109,25 +113,26 @@ foreach ($digest_groups as $gid) {
   $subject = "Digest for " . $purl_id . "@" . variable_get("mailnode_server_string", "example.com")
         . " - " . $message_count . " Messages in " . count($nids) . " Discussions";
   
-  echo $subject . "\n\n";
-  
   // Assemble message
   $body = "";
-  $body .= "<h2>Today's Discussion Summary</h2>\n";
+  $body .= "<div style=\"" . EMAIL_HEADER . "\">Today's Discussion Summary</div>\n";
   $body .= "Group: " . url("node/" . $gid, array('absolute' => TRUE)) . "\n";
   $body .= "<ul>\n";
   foreach ($nids as $nid) {
     $body .= "<li>" . l($nid['node_obj']->title, "node/" . $nid['node_obj']->nid,
-                         array('absolute' => TRUE)) . "</li>\n";
+                         array('absolute' => TRUE)) . " (" .
+                         mailnode_count_new_messages($nid) . " New)</li>\n";
   }
   $body .= "</ul>\n";
   $body .= "<hr />\n";
 
   // Add individual discussions
   foreach ($nids as $nid) {
-    $body .= "<h3>Discussion: " . l($nid['node_obj']->title, "node/" .
-              $nid['node_obj']->nid, array('absolute' => TRUE)) . "</h3>\n";
-    
+    $body .= '<div style="' . DISCUSSION_HEADER . '">';
+    $body .= "Discussion: " . l($nid['node_obj']->title, "node/" .
+              $nid['node_obj']->nid, array('absolute' => TRUE)) . "\n";
+    $body .= "</div>";
+    $body .= "<blockquote>\n";
     // If new node created today.
     if ($nid['status'] === "new") {
       $body .= mailnode_style_node_message($nid['node_obj']);
@@ -135,46 +140,78 @@ foreach ($digest_groups as $gid) {
     
     foreach ($nid as $cid => $comment) {
       if (is_numeric($cid)) {
-        $body .= mailnode_style_comment_message($comment, $nid['node_obj']);
+        $body .= mailnode_style_comment_message($comment);
       }
     }
+    $body .= "</blockquote>\n";
   }
   
-  echo $body;
-  echo "\n\n\n\n";
+  // Add footer.
+  $body .= "________________________________<br />";
+  $body .= "You received this message because you are a member of the \"" .
+            $group->title . "\" group on " .
+            variable_get("mailnode_server_string", "example.com") . "<br />";
+  $body .= "To unsubscribe to this group, visit " .
+            url("mailnode/subscriptions", array("absolute" => true)) . "<br />";
+  $body .= "To post a new message to this group, email " . $purl_id . "@" .
+    variable_get("mailnode_server_string", "example.com") . "<br />";
  
   // For each person, send out an email.
-  if ($gid == 223) {
+  $result = db_query("SELECT uid
+                     FROM {mailnode_subscription}
+                     WHERE sid = %d
+                     AND subscription_type = \"digest email\"", $gid);
+  $uids = array();
+  while ($data = db_fetch_array($result)) {
+    $email = db_result(db_query("SELECT mail
+                                FROM {users}
+                                WHERE uid = %d", $data['uid']));
+    $uids[$data['uid']] = $email;
+  }
+  
+  // Add kyle be default for awhile to test:
+  $uids['3'] = "mathews.kyle@gmail.com";
+  
+  foreach ($uids as $email) {
     $mailer = mailnode_create_mailer();
     $mailer->From = "no_reply@island.byu.edu";
-    $mailer->AddAddress("mathews.kyle@gmail.com");
-    $mailer->Subject = $subject;
+    $mailer->FromName = $purl_id . "@" .
+    variable_get("mailnode_server_string", "example.com");
+    $mailer->AddAddress($email);
+    $mailer->Subject = $subject; 
     $mailer->Body = $body;
     $mailer->isHTML(TRUE);
-    echo "SENDING EMAIL";
-    echo $mailer->Send();
+    $mailer->Send();
+    echo "Sent digest email to " . $email . " for group " . $group->title . "\n";
   }
 }
 
 function mailnode_style_node_message($node) {
   $user = user_load(array('uid' => $node->uid));
-  $body .= "<strong>" . $user->name . "</strong> " . $user->mail . " " . $node->creation . "\n";
-  $body .= "<br />\n";
-  $body .= node_view($node);
-  $body .= "<br />\n";
-  $body .= "<hr />\n";
+  $body .= "<div style=\"" . MESSAGE_HEADER . "\"><strong>" . $user->realname . "</strong> " . $user->mail . " " .
+                date("d M Y — g:ia O", $node->created) . "</div>\n";
+  $body .= mailnode_prepare_web_content($node->body); // TODO -- node_view and comment_view don't work -- they add too much junk. Just want body.
+  $body .= "<br />\n"; // Plus need realname + need to convert dates into something readable + add num new messages per discussion
   
   return $body;
 }
 
-function mailnode_style_comment_message($comment, $node) {
+function mailnode_style_comment_message($comment) {
   $user = user_load(array('uid' => $comment->uid));
-  $body .= "<strong>" . $user->name . "</strong> " . $user->mail . " " . $comment->timestamp . "\n";
+  $body .= "<div style=\"" . MESSAGE_HEADER . "\"><strong>" . $user->realname . "</strong> " . $user->mail . " " .
+              date("d M Y — g:ia O", $comment->timestamp) . "</div>\n";
+  $body .= mailnode_prepare_web_content($comment->comment);
   $body .= "<br />\n";
-  $body .= theme_comment_view($comment, $node);
-  $body .= "br />\n";
-  $body .= "<hr />\n";
   
   return $body;
 }
-?>
+
+function mailnode_count_new_messages($message) {
+    $count = 0;
+    if ($message['status'] === "new") {
+      $count++;
+    }
+    $count += count(array_keys($message)) - 2;
+    
+    return $count;
+}

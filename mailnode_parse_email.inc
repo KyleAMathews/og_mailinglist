@@ -30,6 +30,10 @@ function _mailnode_rewrite_headers($email, $node, $space, $messageid,
   $new_headers['List-Post'] = "<mailto:" . $space->purl . "@island.byu.edu>";
   $new_headers['List-Archive'] = url("node/" . $space->sid, array('absolute' => TRUE));
   
+  // Thread-URL header. We use this to match new comments to their node.
+  global $base_url;
+  $new_headers['X-Thread-Url'] = $base_url . "/node/" . $node->nid;
+  
   $email['structure']->headers = $new_headers;
   
   dd_log($new_headers);

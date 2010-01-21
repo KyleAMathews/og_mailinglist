@@ -25,7 +25,7 @@ function mailnode_send_comment_email($comment, $node) {
                                     ));
   
   // Add custom headers.
-  $mailer = mailnode_add_headers($mailer, $messageid, $space);
+  $mailer = mailnode_add_web_headers($mailer, $messageid, $space, $node);
   
   // Decorate subject.
   $mailer->Subject = "Re: [" . $space->purl . "] " . $node->title;
@@ -86,7 +86,7 @@ function mailnode_send_node_email($node) {
                                     ));
   
   // Add custom headers.
-  $mailer = mailnode_add_headers($mailer, $messageid, $space);
+  $mailer = mailnode_add_web_headers($mailer, $messageid, $space, $node);
 
   // Decorate subject.
   $mailer->Subject = "[" . $space->purl . "] " . $node->title;
