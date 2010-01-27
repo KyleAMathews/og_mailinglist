@@ -49,7 +49,6 @@ function _mailnode_get_subscribers($space, $node = NULL, $new_node = FALSE) {
 }
 
 function array_to_comma_delimited_string($array) {
-  dd_log($array);
   foreach ($array as $data) {
     $string .= $data . ",";
   }
@@ -57,13 +56,11 @@ function array_to_comma_delimited_string($array) {
   return $string;
 }
 
-function _mailnode_build_footer($space, $node, $messageid) {
+function _mailnode_build_footer($space, $node) {
     $footer = "______________________________________
 Full discussion: " .  url("node/" . $node->nid, array('absolute' => TRUE))   . "
 Manage my subscriptions: https://island.byu.edu/mailnode/subscriptions
-Stop emails for this discussion: " . url("mailnode/unsubscribe/" . $node->nid, array("absolute" => TRUE))
-. "\n"
-. $messageid;
+Stop emails for this discussion: " . url("mailnode/unsubscribe/" . $node->nid, array("absolute" => TRUE));
   
   return $footer;
 }
@@ -111,21 +108,23 @@ function _mailnode_email_already_sent($nid, $cid = 0) {
 }
 
 
-function mailnode_build_web_footer($space, $node, $body, $messageid, $cid = 0) {
-  $footer = _mailnode_build_footer($space, $node, $messageid);
+function mailnode_build_web_footer($space, $node, $body, $cid = 0) {
+  $footer = _mailnode_build_footer($space, $node);
   $footer = mailnode_prepare_web_content($footer);
   return $body . "\n" . $footer;
 }
   
 
-function mailnode_add_web_headers($mailer, $messageid, $space, $node) {
+function mailnode_add_web_headers($mailer, $space, $node) {
   global $base_url;
   
-  $mailer->AddCustomHeader($mailer->HeaderLine("Message-ID", "<" . $messageid . ">"));
   $mailer->AddCustomHeader($mailer->HeaderLine("List-Id", "<" . $space->purl . "@island.byu.edu>"));
   $mailer->AddCustomHeader($mailer->HeaderLine("List-Post", "<mailto:" . $space->purl . "@island.byu.edu>"));
   $mailer->AddCustomHeader($mailer->HeaderLine("List-Archive", url("node/" . $space->sid, array('absolute' => TRUE))));
   $mailer->AddCustomHeader($mailer->HeaderLine("X-Thread-Url", $base_url . "/node/" . $node->nid));
+  
+  // Set Message-ID.
+  $mailer->MessageID = $base_url . "/node/" . $node->nid;
   
   return $mailer;
 }
@@ -199,3 +198,125 @@ function dd_log($data, $label = "") {
   fclose($fh);
 }
 
+function write_string_to_file($data, $name = "lsjdf") {
+  $myFile = "/tmp/" . $name;
+  $fh = fopen($myFile, 'w') or die("can't open file");
+  ob_start();
+  print_r($data);
+  $stringData = ob_get_clean();
+    
+  fwrite($fh, $stringData . "\n");
+  fclose($fh);
+}
+
+/**
+ * make a recursive copy of an array 
+ *
+ * @param array $aSource
+ * @return array    copy of source array
+ */
+function array_copy ($aSource) {
+    // check if input is really an array
+    if (!is_array($aSource)) {
+        throw new Exception("Input is not an Array");
+    }
+    
+    // initialize return array
+    $aRetAr = array();
+    
+    // get array keys
+    $aKeys = array_keys($aSource);
+    // get array values
+    $aVals = array_values($aSource);
+    
+    // loop through array and assign keys+values to new return array
+    for ($x=0;$x<count($aKeys);$x++) {
+        // clone if object
+        if (is_object($aVals[$x])) {
+            $aRetAr[$aKeys[$x]]=clone $aVals[$x];
+        // recursively add array
+        } elseif (is_array($aVals[$x])) {
+            $aRetAr[$aKeys[$x]]=array_copy ($aVals[$x]);
+        // assign just a plain scalar value
+        } else {
+            $aRetAr[$aKeys[$x]]=$aVals[$x];
+        }
+    }
+    
+    return $aRetAr;
+}
+
+function _mailnode_detect_email_char_set($email_text) {
+  $mail = mailparse_msg_create();
+  mailparse_msg_parse($mail, $email_text);
+  $struct = mailparse_msg_get_structure($mail); 
+  $info = array();
+  foreach($struct as $st) { 
+    $section = mailparse_msg_get_part($mail, $st); 
+    $info = mailparse_msg_get_part_data($section); 
+    if ($info["content-type"] == "text/plain") {
+      break;
+    }
+  }
+  
+  return $info["content-charset"];
+}
+
+/**
+ * Capitalize all words
+ * @param string Data to capitalize
+ * @param string Word delimiters
+ * @return string Capitalized words
+ * Function taken from http://www.php.net/manual/en/function.ucwords.php#95325
+ */
+function capitalizeWords($words, $charList = null) {
+    // Use ucwords if no delimiters are given
+    if (!isset($charList)) {
+        return ucwords($words);
+    }
+    
+    // Go through all characters
+    $capitalizeNext = true;
+    
+    for ($i = 0, $max = strlen($words); $i < $max; $i++) {
+        if (strpos($charList, $words[$i]) !== false) {
+            $capitalizeNext = true;
+        } else if ($capitalizeNext) {
+            $capitalizeNext = false;
+            $words[$i] = strtoupper($words[$i]);
+        }
+    }
+    
+    return $words;
+}
+
+/*
+ * Try to parse nid from the email.
+ */
+function mailnode_parse_nid($email, $subject) {
+  $nid = "";
+  if (preg_match("/[mM]essage-?[iIdD]{2}:\s.*node\/([1-9]+)/s", $email, $matches)) {
+    $nid = $matches[1];
+  }
+  else if (preg_match("/^.*\/unsubscribe\/([1-9]+)/s", $email, $matches)) {
+    $nid = $matches[1];
+  }
+  // Else, as last resort, pick the last node that matches the title in the subject line.
+  else {
+    $nid = _mailnode_nid_of_subject($subject);
+  }
+  return $nid;
+}
+
+function _mailnode_nid_of_subject($subject) {
+  $nid = "";
+  preg_match("/[Rr][Ee]:\s\[.+\]\s(.+)/s", $subject, $matches);
+  $title = $matches[1];
+  if ($title) {
+      $nid = db_result(db_query("SELECT nid
+                               FROM {node}
+                               WHERE title = '%s'
+                               ORDER BY created desc", $title)); 
+  }
+  return $nid;
+}

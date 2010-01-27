@@ -19,20 +19,15 @@ function mailnode_send_comment_email($comment, $node) {
 
   $space = spaces_load('og', array_pop(array_values($node->og_groups)));  
   
-  // Generate messageID
-  $messageid = mailnode_build_messageid(array(
-                                    'nid' => $node->nid,
-                                    ));
-  
   // Add custom headers.
-  $mailer = mailnode_add_web_headers($mailer, $messageid, $space, $node);
+  $mailer = mailnode_add_web_headers($mailer, $space, $node);
   
   // Decorate subject.
   $mailer->Subject = "Re: [" . $space->purl . "] " . $node->title;
 
   // Decorate body.
   $body = mailnode_prepare_web_content($comment->comment); // TODO figure out what the render function for nodes/comments is and use that instead. Current setup inconsistent plus won't shift to other's setups
-  $body = mailnode_build_web_footer($space, $node, $body, $messageid);
+  $body = mailnode_build_web_footer($space, $node, $body);
   
   $mailer->Body = $body;
   $mailer->isHTML = TRUE;
@@ -74,26 +69,18 @@ function mailnode_send_node_email($node) {
   else {
     return;
   }
-
-  dd_log("INSIDE MAILNODE_SEND_NODE_EMAIL");
-
   
   $mailer = mailnode_create_mailer();
   
-  // Generate messageID
-  $messageid = mailnode_build_messageid(array(
-                                    'nid' => $node->nid,
-                                    ));
-  
   // Add custom headers.
-  $mailer = mailnode_add_web_headers($mailer, $messageid, $space, $node);
+  $mailer = mailnode_add_web_headers($mailer, $space, $node);
 
   // Decorate subject.
   $mailer->Subject = "[" . $space->purl . "] " . $node->title;
 
   // Decorate body.
   $body = mailnode_prepare_web_content($node->body);
-  $body = mailnode_build_web_footer($space, $node, $body, $messageid, 0, TRUE);
+  $body = mailnode_build_web_footer($space, $node, $body, 0, TRUE);
 
   
   $mailer->Body = $body;
@@ -101,11 +88,14 @@ function mailnode_send_node_email($node) {
   $mailer->AltBody = drupal_html_to_text($body); 
   
   // Add attachments if any.
-  foreach ($node->files as $file) {
-    $file = (object) $file;
-    $mailer->AddAttachment($_SERVER['DOCUMENT_ROOT'] . base_path() .
-                           $file->filepath, $file->filename);
+  if (isset($node->files)) {
+    foreach ($node->files as $file) {
+      $file = (object) $file;
+      $mailer->AddAttachment($_SERVER['DOCUMENT_ROOT'] . base_path() .
+                             $file->filepath, $file->filename);
+    }
   }
+
 
   $mailer = _mailnode_add_addresses($mailer, $space, $node, TRUE);
   

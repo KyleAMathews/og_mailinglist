@@ -5,7 +5,6 @@ require_once("/usr/share/php/Mail/mimeDecode.php");
 require_once("phpmailer/class.phpmailer.php");
 // Require the QueryPath core. 
 require_once('QueryPath/QueryPath.php');
-require_once('mailnode_parse_email.inc');
 require_once('mailnode_utilities.inc');
 require_once('mailnode_api.inc');
 
@@ -124,11 +123,38 @@ try {
     throw new Exception(t("You are not a member of this group.  Please join the group via the web site before posting."));
   }
   
-  # get the message id (if we're replying to a discussion/comment email sent from our module.
-  $email['messageid'] = mailnode_parse_messageid($email['mailbody']);
-  
+  # get the Node ID (if we're replying to a discussion/comment email sent from our module.
+  $email['nid'] = mailnode_parse_nid($email['original_email_text'], $email['structure']->headers['subject']);
+  dd_log($email);
   // create the new content in Drupal.
-  if ($email['messageid']['nid']) { # a new commentj
+  if ($email['nid']) { # a new comment
+    // Two checks. There are at least two reasons why an email could have a nid
+    // but not be intended as a new comment.
+    // First, someone could be forwarding an email to a different group.
+    // Second, it's common on mailinglists to fork discussions by changing
+    // the subject line. We need to check for both.
+    
+    // Does the detected nid belong to the same group as the email was forwarded to?
+    $nid_groupid = db_result(db_query("SELECT group_nid
+                                      FROM {og_ancestry}
+                                      WHERE nid = %d", $email['nid']));
+    
+    if ($nid_groupid != $email['groupid']) {
+      mailnode_save_discussion($email);
+      exit(0); // So we don't save a comment as well
+    }
+    
+    // Is the subject line different than the expected node title?
+    // If the subject_nid is empty, that means the subject is new so email is new discussion.
+    // If the subject_nid is different, that also means the email is a new discussion but
+    // that it coincidentally matched an earlier discussion.
+    $subject_nid = _mailnode_nid_of_subject($email['structure']->headers['subject']);
+    if (!empty($subect_nid) || $subject_nid != $email['nid']) {
+      mailnode_save_discussion($email);
+      exit(0); // So we don't save a comment as well.
+    }
+    
+    // If we got this far, the email is definitely intended as a new comment.
     mailnode_save_comment($email);
     
   }else {  # a new discussion
@@ -175,7 +201,7 @@ On $msgdate, $msgfrom wrote:
 }
 
 function mailnode_save_comment($email) {
-  $nid = $email['messageid']['nid'];
+  $nid = $email['nid'];
   
   # set the user account to this poster (comment_save checks the global user rights)
   global $user;
@@ -194,21 +220,8 @@ function mailnode_save_comment($email) {
   //$mailbody = preg_replace("/Â/", "", $email['mailbody']); // TODO figure out why seperator scrambled rather than brute forcing fix.
   $mailbody = $email['mailbody'];
   
-  //dd_log(mb_detect_encoding($mailbody));
-  //dd_log("=======================before cleaning");
-  //dd_log($mailbody);
-  # parse the text from the message body
-  //$email['mailbody'] = mailnode_parse_messagebody($mailbody);
-  
-  # clean up the email
-  //if (variable_get('mailnode_cleaner', 0) == 1) {
-    //$email = mailnode_clean_email($email);
-  //}   
   $email = tidyEmail($email);
   $mailbody = $email['mailbody'];
-  
-  //dd_log("=======================after cleaning");
-  //dd_log($mailbody);
   
   # ensure the body is not empty
   if (empty($mailbody)) {
@@ -323,56 +336,32 @@ function mailnode_save_discussion($email) {
 }
 
 function _mailnode_email_node_email($email, $node) {
-  
   // Load the space.
   $space = spaces_load('og', $email['groupid']);
   
-  // Generate messageID
-  $messageid = mailnode_build_messageid(array(
-                                    'nid' => $node->nid,
-                                    ));
-  
-  $email = _mailnode_rewrite_headers($email, $node, $space, $messageid, true);
-  
-  $footer = _mailnode_build_footer($space, $node, $messageid);
-  dd_log($footer);
-  
+  // Build new email.
+  $email = _mailnode_rewrite_headers($email, $node, $space, true);
+  $footer = _mailnode_build_footer($space, $node);
   $email = _mailnode_add_footer($email, $footer);
-
   $email['new_email_text'] = _mailnode_encode_email(array($email['structure']));
   
+  // Send it off.
   _mailnode_send_raw_email($email['new_email_text']);
-  
   mailnode_log_email_sent('email', $node->nid);
 }
 
 function _mailnode_email_comment_email($email, $node, $comment) {
-
+  // Load the space.
   $space = spaces_load('og', $email['groupid']);
   
-  // Generate messageID
-  $messageid = mailnode_build_messageid(array(
-                                    'nid' => $node->nid
-                                    ));
-                             
-  $email = _mailnode_rewrite_headers($email, $node, $space, $messageid);
-  
-  $footer = _mailnode_build_footer($space, $node, $messageid);
-  dd_log($footer);
-  
+  // Build new email.
+  $email = _mailnode_rewrite_headers($email, $node, $space);
+  $footer = _mailnode_build_footer($space, $node);
   $email = _mailnode_add_footer($email, $footer);
-
   $email['new_email_text'] = _mailnode_encode_email(array($email['structure']));
   
+  // Send it off.
   _mailnode_send_raw_email($email['new_email_text']);
-  
-  //if ($success) {
-  //  // Think happy thoughts. We've already logged this up above. :)
-  //}
-  //else {
-  //  watchdog('mailnode', "Mailnode couldn't send a new node email.", null,
-  //           WATCHDOG_ERROR);
-  //}
 }
 
 function _mailnode_parse_email($email) {
@@ -388,7 +377,7 @@ function _mailnode_parse_email($email) {
   // it seems.
   foreach ($structure->parts as &$part) { 
     // Check if attachment then add to new email.
-    if (isset($part->disposition) and ($part->disposition=='attachment')) {
+    if (isset($part->disposition) and ($part->disposition==='attachment')) {
       $info['data'] = $part->body;
       $info['filemime'] = $part->ctype_primary . "/" . $part->ctype_secondary;
       $info['filename'] = $part->ctype_parameters['name'];
@@ -402,6 +391,7 @@ function _mailnode_parse_email($email) {
   
   $xml = Mail_mimeDecode::getXML($structure);
   
+  // QueryPath requires text be utf-8.
   $xml = @iconv($email['char_set'], 'utf-8//TRANSLIT', $xml);
   
   // Initialize the QueryPath object.
@@ -438,54 +428,6 @@ function _mailnode_parse_email($email) {
   $email['orig_mailbody'] = $email['mailbody']; 
  
   return $email;  
-}
-
-function write_string_to_file($data, $name = "lsjdf") {
-  $myFile = "/tmp/" . $name;
-  $fh = fopen($myFile, 'w') or die("can't open file");
-  ob_start();
-  print_r($data);
-  $stringData = ob_get_clean();
-    
-  fwrite($fh, $stringData . "\n");
-  fclose($fh);
-}
-
-/**
- * make a recursive copy of an array 
- *
- * @param array $aSource
- * @return array    copy of source array
- */
-function array_copy ($aSource) {
-    // check if input is really an array
-    if (!is_array($aSource)) {
-        throw new Exception("Input is not an Array");
-    }
-    
-    // initialize return array
-    $aRetAr = array();
-    
-    // get array keys
-    $aKeys = array_keys($aSource);
-    // get array values
-    $aVals = array_values($aSource);
-    
-    // loop through array and assign keys+values to new return array
-    for ($x=0;$x<count($aKeys);$x++) {
-        // clone if object
-        if (is_object($aVals[$x])) {
-            $aRetAr[$aKeys[$x]]=clone $aVals[$x];
-        // recursively add array
-        } elseif (is_array($aVals[$x])) {
-            $aRetAr[$aKeys[$x]]=array_copy ($aVals[$x]);
-        // assign just a plain scalar value
-        } else {
-            $aRetAr[$aKeys[$x]]=$aVals[$x];
-        }
-    }
-    
-    return $aRetAr;
 }
 
 function _mailnode_save_files(&$node) {
@@ -657,22 +599,6 @@ function _mailnode_sanitise_filename($filename) {
   return $filename;
 }
 
-function _mailnode_detect_email_char_set($email_text) {
-  $mail = mailparse_msg_create();
-  mailparse_msg_parse($mail, $email_text);
-  $struct = mailparse_msg_get_structure($mail); 
-  $info = array();
-  foreach($struct as $st) { 
-    $section = mailparse_msg_get_part($mail, $st); 
-    $info = mailparse_msg_get_part_data($section); 
-    if ($info["content-type"] == "text/plain") {
-      break;
-    }
-  }
-  
-  return $info["content-charset"];
-}
-
 function _mailnode_create_new_email($email) {
   $structure = clone $email['structure'];
   $structure = _mailnode_rewrite_headers($structure, $email);
@@ -682,24 +608,13 @@ function _mailnode_create_new_email($email) {
   return $email;
 }
 
-
-
 // Turn structure back into a plain text email using recursion.
 function _mailnode_encode_email($structure, $boundary = "", $email = "") {
-  foreach($structure as $part) {
-    //echo "\n\n\n\n===========================NEW PART======================\n\n";
-    //print_r($part);
-    
+  foreach($structure as $part) {   
     if (empty($boundary)) {
       $boundary = $part->ctype_parameters['boundary'];
     }
-    
-    //$email .= "boundary: " . $boundary . "\n";
-    
-    
-    
     if (isset($part->parts)) {
-      
       $email .= _mailnode_encode_email_headers($part->headers) . "\n";
       $email .= "--" . $part->ctype_parameters['boundary'] . "\n";
       $email = _mailnode_encode_email($part->parts, $part->ctype_parameters['boundary'], $email);
@@ -715,8 +630,7 @@ function _mailnode_encode_email($structure, $boundary = "", $email = "") {
       }
       
       $email .= _mailnode_encode_email_headers($part->headers) . "\n";
-      //$email .= "encoding: " . mb_detect_encoding($part->body);
-      // Encode the body if necessary
+      // Encode the body as base64 if necessary
       if ($part->headers['content-transfer-encoding'] == "base64") {
         $email .= wordwrap(base64_encode($part->body), 76, "\n", true);
         $email .= "\n";
@@ -725,7 +639,6 @@ function _mailnode_encode_email($structure, $boundary = "", $email = "") {
         $email .= $part->body . "\n";
       }
     }
-    
   }
   return $email;
 }
@@ -734,7 +647,8 @@ function _mailnode_encode_email_headers($array) {
   $header = "";
   foreach ($array as $key => $value) {
     // We remove quoted-printable as content-transfer-encoding
-    // because mime_decode decodes that and PHP doesn't know how to reencode it.
+    // because mime_decode decodes that and PHP doesn't have a function
+    // AFAIK to reencode the text.
     if ($value && $value !== "quoted-printable") { 
       $header .= capitalizeWords($key, " -") . ": " . $value . "\n";  
     }
@@ -743,30 +657,117 @@ function _mailnode_encode_email_headers($array) {
   return $header;
 }
 
-/**
- * Capitalize all words
- * @param string Data to capitalize
- * @param string Word delimiters
- * @return string Capitalized words
- * Function taken from http://www.php.net/manual/en/function.ucwords.php#95325
- */
-function capitalizeWords($words, $charList = null) {
-    // Use ucwords if no delimiters are given
-    if (!isset($charList)) {
-        return ucwords($words);
-    }
+// Keep mime-version, date, subject, from, to, and content-type
+function _mailnode_rewrite_headers($email, $node, $space, $new_node = FALSE) {
+  $headers = $email['structure']->headers;
+  $new_headers = array();
+  $new_headers['mime-version'] = $headers['mime-version'];
+  $new_headers['date'] = $headers['date'];
+  if ($new_node) {
+    $new_headers['subject'] = "[" . $space->purl . "] " . $node->title;  
+  }
+  else {
+    $new_headers['subject'] = $headers['subject'];
+  }
+  
+  $new_headers['from'] = $headers['from'];
+  $new_headers['to'] = $headers['to'];
+  $new_headers['cc'] = $headers['cc'];
+  $new_headers['bcc'] = array_to_comma_delimited_string(_mailnode_get_subscribers($space, $node, TRUE));
+  $new_headers['content-type'] = $headers['content-type'];
+  $new_headers['content-transfer-encoding'] =  $headers['content-transfer-encoding'];
+  
+  // Add list headers.
+  $new_headers['List-Id'] = "<" . $space->purl . "@island.byu.edu>";
+  $new_headers['List-Post'] = "<mailto:" . $space->purl . "@island.byu.edu>";
+  $new_headers['List-Archive'] = url("node/" . $space->sid, array('absolute' => TRUE));
+  
+  // Thread-URL header.
+  global $base_url;
+  $new_headers['X-Thread-Url'] = $base_url . "/node/" . $node->nid;
+  
+  // Message-Id We use this to match new comments to their node.
+  $new_headers['Message-ID'] = $base_url . "/node/" . $node->nid;
+  
+  $email['structure']->headers = $new_headers;
+  
+  return $email;
+}
+
+function _mailnode_add_footer($email, $footer) {
+  $headers = $email['structure']->headers;
+  $structure = $email['structure'];
+  
+  // If message is 7/8bit text/plain and uses us-ascii charecter set, just 
+  // append the footer.
+  if (preg_match('/^text\/plain/i', $headers['content-type']) &&
+      isset($structure->body)) {
+     $structure->body .= "\n" . $footer;
+  }
+  // If message is already multipart, just append new part with footer to end
+  // /^multipart\/(mixed|related)/i
+  elseif (preg_match('/^multipart\/(mixed|related)/i', $headers['content-type']) 
+            && isset($structure->parts)) {
+    $structure->parts[] = (object) array(
+    "headers" => array(
+      "content-type" => 'text/plain; charset="us-ascii"',
+      "mime-version" => '1.0',
+      "content-transfer-encoding" => '7bit',
+      "content-disposition" => 'inline',
+    ),  
+      "ctype_primary" => 'text',
+      "ctype_secondary" => 'plain',
+      "ctype_parameters" => array(
+        "charset" => 'us-ascii',
+      ),
+
+    "disposition" => 'inline',
+    "body" => $footer,
+    );
+  }
+  else {  
+    // Else, move existing fields into new MIME entity surrounded by new multipart
+    // and append footer field to end.
+    $structure->headers['mime-version'] = "1.0";
+    $boundary = "Drupal-Mailing-List--" . rand(100000000, 9999999999999);
     
-    // Go through all characters
-    $capitalizeNext = true;
+    // Copy email, remove headers from copy, rewrite the content-type, add
+    // email copy as parts.
+    $content_type = $structure->headers['content-type'];
+    $str_clone = clone $structure;
+    $str_clone->headers = array('content-type' => $content_type);
     
-    for ($i = 0, $max = strlen($words); $i < $max; $i++) {
-        if (strpos($charList, $words[$i]) !== false) {
-            $capitalizeNext = true;
-        } else if ($capitalizeNext) {
-            $capitalizeNext = false;
-            $words[$i] = strtoupper($words[$i]);
-        }
-    }
-    
-    return $words;
+    $structure->headers['content-type'] = "multipart/mixed; boundary=\"" .
+        $boundary . "\"";
+    $structure->ctype_primary = "multipart";
+    $structure->ctype_secondary = "mixed";
+    $structure->ctype_parameters = array('boundary' => $boundary);
+    $structure->parts = array($str_clone);
+       $structure->parts[] = (object) array(
+      "headers" => array(
+        "content-type" => 'text/plain; charset="us-ascii"',
+        "mime-version" => '1.0',
+        "content-transfer-encoding" => '7bit',
+        "content-disposition" => 'inline',
+      ),  
+        "ctype_primary" => 'text',
+        "ctype_secondary" => 'plain',
+        "ctype_parameters" => array(
+          "charset" => 'us-ascii',
+        ),
+  
+      "disposition" => 'inline',
+      "body" => $footer,
+      );
+  }
+  
+  $email['structure'] = $structure;
+  
+  return $email;
+}
+
+function _mailnode_send_raw_email($email_text) {
+  $rand_str = rand(1000, 10000);
+  write_string_to_file($email_text, $rand_str);
+  system("/usr/sbin/exim4 -t < /tmp/" . $rand_str);
 }

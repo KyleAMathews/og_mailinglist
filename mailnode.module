@@ -419,24 +419,6 @@ function mailnode_build_messageid($params) {
   return implode('.', $elements) . '@' . variable_get('mailnode_server_string', 'example.com');
 }
 
-
-/** Parse messageid into the parameters */
-function mailnode_parse_messageid($mailbody) {
-  $params = Array();
-  if (preg_match("/(\d+)\.(\d+)\.(\d+)\.(\d+)\@" . variable_get('mailnode_server_string', 'example.com') . "/", $messageid, $matches)) {
-    $params['uid'] = $matches[1];
-    $params['nid'] = $matches[2];
-    $params['cid'] = $matches[3];
-    $params['time'] = $matches[4];
-  }
-  else {
-    preg_match("/(\d+)\@" . variable_get('mailnode_server_string', 'example.com') . "/", $mailbody, $matches);
-    dd_log($matches);
-    $params['nid'] = $matches[1];
-  }
-  return $params;
-}
-
 /*
  * Implement hook_mail_alter mail messages to add comment history
  */
