@@ -174,7 +174,7 @@ foreach ($digest_groups as $gid) {
   
   foreach ($uids as $email) {
     $mailer = mailnode_create_mailer();
-    $mailer->From = "no_reply@island.byu.edu";
+    $mailer->From = "no_reply@" . variable_get("mailnode_server_string", "example.com");
     $mailer->FromName = $purl_id . "@" .
     variable_get("mailnode_server_string", "example.com");
     $mailer->AddAddress($email);

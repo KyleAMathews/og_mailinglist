@@ -23,28 +23,6 @@ function _mailnode_get_subscribers($space, $node = NULL, $new_node = FALSE) {
   // Add Kyle to every list:
   $subscribers[3] = "mathews.kyle@gmail.com";
   
-  //  // If node/comment written on the website.
-  //  if (!empty($comment)) {
-  //    $author = user_load(array('uid' => $comment->uid));
-  //  }
-  //  else {
-  //    $author = user_load(array('uid' => $node->uid));
-  //  }
-  //  $sql = "SELECT c.field_name_value
-  //          FROM content_type_uprofile c, node n
-  //          WHERE c.nid = n.nid
-  //          AND n.uid = %d";
-  //  $author_name = db_result(db_query($sql, $author->uid));
-  //  
-  //  $mailer->From = $author->mail;
-  //  $mailer->FromName = $author_name;
-  //  $mailer->AddAddress($space->purl . "@island.byu.edu", $space->title);
-  //
-  //// Add emails to BCC
-  //foreach ($subscribers as $subscriber) {
-  //  $mailer->AddBCC($subscriber);
-  //}
-  
   return $subscribers;
 }
 
@@ -59,32 +37,19 @@ function array_to_comma_delimited_string($array) {
 function _mailnode_build_footer($space, $node) {
     $footer = "______________________________________
 Full discussion: " .  url("node/" . $node->nid, array('absolute' => TRUE))   . "
-Manage my subscriptions: https://island.byu.edu/mailnode/subscriptions
+Manage my subscriptions: " . url("mailnode/subscriptions", array('absolute' => TRUE)) . "
 Stop emails for this discussion: " . url("mailnode/unsubscribe/" . $node->nid, array("absolute" => TRUE));
   
   return $footer;
 }
 
-function _mailnode_extract_email($email) {
+function _mailnode_extract_emails($string) {
   // Parse email address. Regex borrowed from valid_email_adddress().
   $regex = "([a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?\`\|\{\}~\']+@(?:(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.?)+)";
-  $search = preg_match("/" . $regex . "/s"
-                       , $email, $matches);
+  $search = preg_match_all("/" . $regex . "/s"
+                       , $string, $matches);
   
-  $address = $matches[1];
-
-  // Query for name (it'd be better perhaps to parse out name as well...
-  // but regex is hurting my brain this morning. Maybe later).
-  $sql = "SELECT c.field_name_value
-          FROM content_type_uprofile c, node n, users u
-          WHERE c.nid = n.nid
-          AND u.uid = n.uid
-          AND u.mail = '%s'";
-  
-  $name = "";
-  $name = db_result(db_query($sql, $address));
-  
-  return array('name' => $name, 'address' => $address);
+  return $matches[0];
 }
 
 function mailnode_create_mailer() {
@@ -118,10 +83,14 @@ function mailnode_build_web_footer($space, $node, $body, $cid = 0) {
 function mailnode_add_web_headers($mailer, $space, $node) {
   global $base_url;
   
-  $mailer->AddCustomHeader($mailer->HeaderLine("List-Id", "<" . $space->purl . "@island.byu.edu>"));
-  $mailer->AddCustomHeader($mailer->HeaderLine("List-Post", "<mailto:" . $space->purl . "@island.byu.edu>"));
-  $mailer->AddCustomHeader($mailer->HeaderLine("List-Archive", url("node/" . $space->sid, array('absolute' => TRUE))));
-  $mailer->AddCustomHeader($mailer->HeaderLine("X-Thread-Url", $base_url . "/node/" . $node->nid));
+  $mailer->AddCustomHeader($mailer->HeaderLine("List-Id", "<" . $space->purl .
+            "@" . variable_get('mailnode_server_string', 'example.com') . ">"));
+  $mailer->AddCustomHeader($mailer->HeaderLine("List-Post", "<mailto:" . $space->purl .
+            "@" . variable_get('mailnode_server_string', 'example.com') . ">"));
+  $mailer->AddCustomHeader($mailer->HeaderLine("List-Archive", url("node/" .
+            $space->sid, array('absolute' => TRUE))));
+  $mailer->AddCustomHeader($mailer->HeaderLine("X-Thread-Url", $base_url .
+            "/node/" . $node->nid));
   
   // Set Message-ID.
   $mailer->MessageID = $base_url . "/node/" . $node->nid;
@@ -132,31 +101,7 @@ function mailnode_add_web_headers($mailer, $space, $node) {
 function _mailnode_add_addresses($mailer, $space, $node, $new_node = FALSE,
                                  $comment = NULL, $email = NULL) {
   
-  // If new node, save subscriptions for new node to mailnode_thread.
-  // If new comment, just load subscriptions.
-  if ($new_node) {
-    $subscribers = mailnode_get_space_subscriptions($space->sid, $space->type);
-    // Clean bad emails from list.
-    
-    
-    
-    
-    foreach ($subscribers as $uid => $mail) {
-      if (!valid_email_address($mail)) {
-        dd_log($mail);
-        unset($subscribers[$uid]);
-      }
-    }
-    
-    // Save users to mailnode_thread
-    mailnode_save_thread_subscriptions($node->nid, array_keys($subscribers));  
-  }
-  else { // this is a new comment.
-    $subscribers = mailnode_get_thread_subscriptions($node->nid);
-  }
-  
-  // Add Kyle to every list:
-  $subscribers[3] = "mathews.kyle@gmail.com";
+  $subscribers = _mailnode_get_subscribers($space, $node = NULL, $new_node = FALSE);
     
   if (!empty($comment)) {
     $author = user_load(array('uid' => $comment->uid));
@@ -172,7 +117,8 @@ function _mailnode_add_addresses($mailer, $space, $node, $new_node = FALSE,
   
   $mailer->From = $author->mail;
   $mailer->FromName = $author_name;
-  $mailer->AddAddress($space->purl . "@island.byu.edu", $space->title);
+  $mailer->AddAddress($space->purl . "@" .
+          variable_get('mailnode_server_string', 'example.com'), $space->title);
  
   // Add emails to BCC
   foreach ($subscribers as $subscriber) {
@@ -295,10 +241,10 @@ function capitalizeWords($words, $charList = null) {
  */
 function mailnode_parse_nid($email, $subject) {
   $nid = "";
-  if (preg_match("/[mM]essage-?[iIdD]{2}:\s.*node\/([1-9]+)/s", $email, $matches)) {
+  if (preg_match("/[mM]essage-?[iIdD]{2}:\s.*node\/([0-9]+)/s", $email, $matches)) {
     $nid = $matches[1];
   }
-  else if (preg_match("/^.*\/unsubscribe\/([1-9]+)/s", $email, $matches)) {
+  else if (preg_match("/^.*\/unsubscribe\/([0-9]+)/s", $email, $matches)) {
     $nid = $matches[1];
   }
   // Else, as last resort, pick the last node that matches the title in the subject line.
@@ -319,4 +265,13 @@ function _mailnode_nid_of_subject($subject) {
                                ORDER BY created desc", $title)); 
   }
   return $nid;
+}
+
+function _mailnode_remove_subscribers($subscribers, $headers) {
+  $emails = _mailnode_extract_emails($headers);
+  foreach ($emails as $email) {
+    unset($subscribers[array_search($email, $subscribers)]);
+  }
+  
+  return $subscribers;
 }

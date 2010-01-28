@@ -671,15 +671,20 @@ function _mailnode_rewrite_headers($email, $node, $space, $new_node = FALSE) {
   }
   
   $new_headers['from'] = $headers['from'];
-  $new_headers['to'] = $headers['to'];
-  $new_headers['cc'] = $headers['cc'];
-  $new_headers['bcc'] = array_to_comma_delimited_string(_mailnode_get_subscribers($space, $node, TRUE));
+  $new_headers['to'] = $space->purl . "@" . variable_get('mailnode_server_string', 'example.com');
+  $new_headers['bcc'] =
+    array_to_comma_delimited_string(
+      _mailnode_remove_subscribers(
+        _mailnode_get_subscribers($space, $node, TRUE),
+          $headers['from'] . " " . $headers['to'] . " " . $headers['cc']));
   $new_headers['content-type'] = $headers['content-type'];
   $new_headers['content-transfer-encoding'] =  $headers['content-transfer-encoding'];
   
   // Add list headers.
-  $new_headers['List-Id'] = "<" . $space->purl . "@island.byu.edu>";
-  $new_headers['List-Post'] = "<mailto:" . $space->purl . "@island.byu.edu>";
+  $new_headers['List-Id'] = "<" . $space->purl . "@" .
+                variable_get('mailnode_server_string', 'example.com') . ">";
+  $new_headers['List-Post'] = "<mailto:" . $space->purl . "@" .
+                variable_get('mailnode_server_string', 'example.com') . ">";
   $new_headers['List-Archive'] = url("node/" . $space->sid, array('absolute' => TRUE));
   
   // Thread-URL header.
@@ -729,7 +734,7 @@ function _mailnode_add_footer($email, $footer) {
     // Else, move existing fields into new MIME entity surrounded by new multipart
     // and append footer field to end.
     $structure->headers['mime-version'] = "1.0";
-    $boundary = "Drupal-Mailing-List--" . rand(100000000, 9999999999999);
+    $boundary = "Drupal-OG-Mailing-List--" . rand(100000000, 9999999999999);
     
     // Copy email, remove headers from copy, rewrite the content-type, add
     // email copy as parts.
