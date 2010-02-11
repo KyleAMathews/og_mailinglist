@@ -5,3 +5,13 @@
   text-decoration: underline;
   color: #755507;
 }
+.quoted-text {
+  display: none;
+  color: #000033;
+}
+
+.toggle-quoted-text {
+  font-size: smaller;
+  color: #000033;
+  cursor: pointer;
+}

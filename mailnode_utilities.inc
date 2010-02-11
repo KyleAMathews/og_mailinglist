@@ -101,7 +101,7 @@ function mailnode_add_web_headers($mailer, $space, $node) {
 function _mailnode_add_addresses($mailer, $space, $node, $new_node = FALSE,
                                  $comment = NULL, $email = NULL) {
   
-  $subscribers = _mailnode_get_subscribers($space, $node = NULL, $new_node = FALSE);
+  $subscribers = _mailnode_get_subscribers($space, $node, $new_node);
     
   if (!empty($comment)) {
     $author = user_load(array('uid' => $comment->uid));
@@ -255,14 +255,15 @@ function mailnode_parse_nid($email, $subject) {
 }
 
 function _mailnode_nid_of_subject($subject) {
-  $nid = "";
+  $nid = ""; 
   preg_match("/[Rr][Ee]:\s\[.+\]\s(.+)/s", $subject, $matches);
   $title = $matches[1];
   if ($title) {
       $nid = db_result(db_query("SELECT nid
                                FROM {node}
-                               WHERE title = '%s'
-                               ORDER BY created desc", $title)); 
+                               WHERE title like '%%s%'
+                               ORDER BY created desc
+                               LIMIT 1", $title)); 
   }
   return $nid;
 }

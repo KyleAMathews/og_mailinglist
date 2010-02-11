@@ -148,11 +148,11 @@ try {
     // If the subject_nid is empty, that means the subject is new so email is new discussion.
     // If the subject_nid is different, that also means the email is a new discussion but
     // that it coincidentally matched an earlier discussion.
-    $subject_nid = _mailnode_nid_of_subject($email['structure']->headers['subject']);
-    if (!empty($subect_nid) || $subject_nid != $email['nid']) {
-      mailnode_save_discussion($email);
-      exit(0); // So we don't save a comment as well.
-    }
+    //$subject_nid = _mailnode_nid_of_subject($email['structure']->headers['subject']);
+    //if (!empty($subect_nid) || $subject_nid != $email['nid']) {
+    //  mailnode_save_discussion($email);
+    //  exit(0); // So we don't save a comment as well.
+    //}
     
     // If we got this far, the email is definitely intended as a new comment.
     mailnode_save_comment($email);
@@ -675,7 +675,7 @@ function _mailnode_rewrite_headers($email, $node, $space, $new_node = FALSE) {
   $new_headers['bcc'] =
     array_to_comma_delimited_string(
       _mailnode_remove_subscribers(
-        _mailnode_get_subscribers($space, $node, TRUE),
+        _mailnode_get_subscribers($space, $node, $new_node),
           $headers['from'] . " " . $headers['to'] . " " . $headers['cc']));
   $new_headers['content-type'] = $headers['content-type'];
   $new_headers['content-transfer-encoding'] =  $headers['content-transfer-encoding'];
