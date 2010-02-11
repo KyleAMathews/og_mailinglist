@@ -56,8 +56,6 @@ try {
   // Detect email character set.
   $email['char_set'] = _mailnode_detect_email_char_set($email['original_email_text']);
   
-  dd_log("this this is on");
-  dd_log($email);
   // Extract all the needed info from the email into a simple array.
   $email = _mailnode_parse_email($email);
   
@@ -125,7 +123,7 @@ try {
   
   # get the Node ID (if we're replying to a discussion/comment email sent from our module.
   $email['nid'] = mailnode_parse_nid($email['original_email_text'], $email['structure']->headers['subject']);
-  dd_log($email);
+
   // create the new content in Drupal.
   if ($email['nid']) { # a new comment
     // Two checks. There are at least two reasons why an email could have a nid
@@ -274,11 +272,6 @@ function mailnode_save_comment($email) {
  
 function mailnode_save_discussion($email) {
   
-  //# clean up the email
-  //if (variable_get('mailnode_cleaner', 0) == 1) {
-  //  $email = mailnode_clean_email($email);
-  //}
-  $email = tidyEmail($email);
   $mailbody = $email['mailbody'];
   
   # ensure the body is not empty
@@ -315,7 +308,7 @@ function mailnode_save_discussion($email) {
   //  $node->mailnode_attachments = $nodeattachments;
   //  _mailnode_save_files($node);
   //}
-  //dd_log($node);
+
   node_save($node);
   
   # save the ancestry (puts it in a group)
@@ -417,9 +410,6 @@ function _mailnode_parse_email($email) {
   $email['headers']['subject'] = html_entity_decode(
                                       $email['headers']['subject'], ENT_QUOTES);
 
-  //dd_log("===BODY TEXT/PLAIN===\n" . $email['text_plain']);
-  //dd_log("===BODY TEXT/HTML===\n" . $email['text_html']);
-
   // Move the html version (if available) text version to mailbody.
   $email['mailbody'] = $email['text_plain'];
   $email['isHTML'] = false;
@@ -431,10 +421,9 @@ function _mailnode_parse_email($email) {
 }
 
 function _mailnode_save_files(&$node) {
-  dd_log("inside save file(s)");
   global $user;
   $user = user_load(array('uid' => $node->uid));
-  dd_log('user: ' . $user->uid);
+  
   // If $node->mailnode_attachments is empty or upload not installed just return
   if (!$node->mailnode_attachments || !module_exists('upload')) {
     return;
@@ -446,8 +435,6 @@ function _mailnode_save_files(&$node) {
     echo "didn't have permissions?\n\n";
     return;
   }
-  
-  dd_log($node->mailnode_attachments);
   
   // Convert $node->mailnode_attachments to $node->files ready for upload to use
   foreach ($node->mailnode_attachments as $filekey => $attachment) {
@@ -482,7 +469,6 @@ function _mailnode_save_files(&$node) {
 // This started as a copy of file_save_upload
 //function _mailnode_node_file($attachment, $source, $validators = array(), $dest = FALSE, $replace = FILE_EXISTS_RENAME) {
 function _mailnode_save_file($attachment, $validators = array()) {
-  dd_log("inside save file");
   global $user;
 
   // Add in our check of the the file name length.
@@ -523,8 +509,7 @@ function _mailnode_save_file($attachment, $validators = array()) {
     array_unshift($args, $file);
     $errors = array_merge($errors, call_user_func_array($function, $args));
   }
-  dd_log($file);
-  dd_log($errors);
+
   // Check for validation errors.
   if (!empty($errors)) {
     watchdog('mailhandler', 'The selected file %name could not be uploaded.', array('%name' => $file->filename), WATCHDOG_WARNING);
@@ -554,7 +539,6 @@ function _mailnode_save_file($attachment, $validators = array()) {
 }
 
 function _mailnode_save_attachments_temp_dir($attachments) {
-  dd_log("inside save attachments to temp dir");
   // Parse each mime part in turn
   foreach ($attachments as $info) {
     // Save the data to temporary file
@@ -571,7 +555,6 @@ function _mailnode_save_attachments_temp_dir($attachments) {
   }
   file_save_data("hello world", file_directory_path() . "/temp");
   
-  dd_log($node_attachments);
   // Return the attachments
   return $node_attachments;
 
@@ -582,7 +565,6 @@ function _mailnode_save_attachments_temp_dir($attachments) {
  * Return a sanitised filename that should be ok for use by modules that want to save the file
  */
 function _mailnode_sanitise_filename($filename) {
-  dd_log("inside sanatize filename");
   // Decode multibyte encoded filename
   $filename = mb_decode_mimeheader($filename);
 

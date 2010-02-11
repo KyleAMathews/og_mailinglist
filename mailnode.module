@@ -253,7 +253,6 @@ function mailnode_subscribe_thread($node) {
  * Implementation of hook_nodeapi().
  */
 function mailnode_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
-  //dd_log($op);
   if ($op == "insert" && $node->status && $node->type != "eduglu_group_reader_feed") {
     mailnode_send_node_email($node);
   }

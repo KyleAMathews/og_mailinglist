@@ -11,10 +11,6 @@ function mailnode_send_comment_email($comment, $node) {
     return;
   }
 
-  dd_log("inside mailnode_send_comment_email");
-  dd_log($node->nid);
-  dd_log($node->title);
-
   $mailer = mailnode_create_mailer();
 
   $space = spaces_load('og', array_pop(array_values($node->og_groups)));  
@@ -32,8 +28,6 @@ function mailnode_send_comment_email($comment, $node) {
   $mailer->Body = $body;
   $mailer->isHTML = TRUE;
   $mailer->AltBody = drupal_html_to_text($body);
-
-  dd_log($node->files);    
 
   //// Add attachments if any.
   //foreach ($email['attachments'] as $info) { 
