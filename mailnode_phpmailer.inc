@@ -1,29 +1,29 @@
 <?php
 // $Id$
 
-require_once('mailnode_utilities.inc');
-require_once('mailnode_api.inc');
+require_once('og_mailinglist_utilities.inc');
+require_once('og_mailinglist_api.inc');
 
-function mailnode_send_comment_email($comment, $node) {
+function og_mailinglist_send_comment_email($comment, $node) {
   
   // Check if comment arrived via email so already sent.
-  if (_mailnode_email_already_sent($comment->nid, $comment->cid)) {
+  if (_og_mailinglist_email_already_sent($comment->nid, $comment->cid)) {
     return;
   }
 
-  $mailer = mailnode_create_mailer();
+  $mailer = og_mailinglist_create_mailer();
 
   $space = spaces_load('og', array_pop(array_values($node->og_groups)));  
   
   // Add custom headers.
-  $mailer = mailnode_add_web_headers($mailer, $space, $node);
+  $mailer = og_mailinglist_add_web_headers($mailer, $space, $node);
   
   // Decorate subject.
   $mailer->Subject = "Re: [" . $space->purl . "] " . $node->title;
 
   // Decorate body.
-  $body = mailnode_prepare_web_content($comment->comment); // TODO figure out what the render function for nodes/comments is and use that instead. Current setup inconsistent plus won't shift to other's setups
-  $body = mailnode_build_web_footer($space, $node, $body);
+  $body = og_mailinglist_prepare_web_content($comment->comment); // TODO figure out what the render function for nodes/comments is and use that instead. Current setup inconsistent plus won't shift to other's setups
+  $body = og_mailinglist_build_web_footer($space, $node, $body);
   
   $mailer->Body = $body;
   $mailer->isHTML = TRUE;
@@ -34,25 +34,25 @@ function mailnode_send_comment_email($comment, $node) {
   //  $mailer->AddStringAttachment($info['data'], $info['filename']);
   //}
   
-  $mailer = _mailnode_add_addresses($mailer, $space, $node, FALSE,
+  $mailer = _og_mailinglist_add_addresses($mailer, $space, $node, FALSE,
                                  $comment);
   
   $success = $mailer->Send();
   
   if ($success) {
-    mailnode_log_email_sent('web', $node->nid, $comment->cid);
+    og_mailinglist_log_email_sent('web', $node->nid, $comment->cid);
   }
   else {
-    watchdog('mailnode', "Mailnode couldn't send a new node email.", NULL,
+    watchdog('og_mailinglist', "Mailnode couldn't send a new node email.", NULL,
              WATCHDOG_ERROR);
   }
   
   return;
 }
 
-function mailnode_send_node_email($node) { 
+function og_mailinglist_send_node_email($node) { 
   // Check if node arrived via email so already sent.
-  if (_mailnode_email_already_sent($node->nid)) {
+  if (_og_mailinglist_email_already_sent($node->nid)) {
     return;
   }
   
@@ -64,17 +64,17 @@ function mailnode_send_node_email($node) {
     return;
   }
   
-  $mailer = mailnode_create_mailer();
+  $mailer = og_mailinglist_create_mailer();
   
   // Add custom headers.
-  $mailer = mailnode_add_web_headers($mailer, $space, $node);
+  $mailer = og_mailinglist_add_web_headers($mailer, $space, $node);
 
   // Decorate subject.
   $mailer->Subject = "[" . $space->purl . "] " . $node->title;
 
   // Decorate body.
-  $body = mailnode_prepare_web_content($node->body);
-  $body = mailnode_build_web_footer($space, $node, $body, 0, TRUE);
+  $body = og_mailinglist_prepare_web_content($node->body);
+  $body = og_mailinglist_build_web_footer($space, $node, $body, 0, TRUE);
 
   
   $mailer->Body = $body;
@@ -91,15 +91,15 @@ function mailnode_send_node_email($node) {
   }
 
 
-  $mailer = _mailnode_add_addresses($mailer, $space, $node, TRUE);
+  $mailer = _og_mailinglist_add_addresses($mailer, $space, $node, TRUE);
   
   $success = $mailer->Send();
   
   if ($success) {
-    mailnode_log_email_sent('web', $node->nid);
+    og_mailinglist_log_email_sent('web', $node->nid);
   }
   else {
-    watchdog('mailnode', "Mailnode couldn't send a new node email.", NULL,
+    watchdog('og_mailinglist', "Mailnode couldn't send a new node email.", NULL,
              WATCHDOG_ERROR);
   }
 

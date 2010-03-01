@@ -4,19 +4,19 @@
 ###############################################################################
 ###   This script is called from Exim4.  It is a "queryprogram" type of 
 ###   router that says whether we'll accept an email or not.  It also requires
-###   a transport file: mailnode_exim4_transport.php
+###   a transport file: og_mailinglist_exim4_transport.php
 ###
 ###   Written by Conan Albrecht   March 2009
 ###
 ###   Here's the code that needs to go into Exim4's configuration:
 ###   (note you need to customize the path in the command line)
 ###
-###   drupal_mailnode:
+###   drupal_og_mailinglist:
 ###     driver = queryprogram
-###     command = /var/mailnode/mailnode_exim4_router.php $local_part $domain
+###     command = /var/og_mailinglist/og_mailinglist_exim4_router.php $local_part $domain
 ###     command_user = mail
 ###     command_group = mail
-###     transport = drupal_mailnode 
+###     transport = drupal_og_mailinglist 
 ###
 
 # set command line arguments (sent by the exim4 router) to variables we can read
@@ -43,7 +43,7 @@ if (strtolower($mail_domain) != "island.byu.edu") {
 }
 
 # boostrap drupal
-require_once('mailnode_exim4_boostrap_database.php');
+require_once('og_mailinglist_exim4_boostrap_database.php');
 
 # if the user field is not to one of our groups, kick out
 $sql = "SELECT value FROM {purl} WHERE LOWER(value)= '%s'";

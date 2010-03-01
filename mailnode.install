@@ -3,8 +3,8 @@
 /**
  * Implementation of hook_install().
  */
-function mailnode_install() {
-  $success = drupal_install_schema('mailnode');
+function og_mailinglist_install() {
+  $success = drupal_install_schema('og_mailinglist');
 
 
   if ($success) {
@@ -18,9 +18,9 @@ function mailnode_install() {
 /**
  * Implementation of hook_uninstall().
  */
-function mailnode_uninstall() {
-  drupal_uninstall_schema('mailnode');
-  $result = db_query("SELECT name FROM {variable} WHERE name LIKE 'mailnode_%'");
+function og_mailinglist_uninstall() {
+  drupal_uninstall_schema('og_mailinglist');
+  $result = db_query("SELECT name FROM {variable} WHERE name LIKE 'og_mailinglist_%'");
   while ($row = db_fetch_object($result)) {
     variable_del($row->name);
   }
@@ -31,10 +31,10 @@ function mailnode_uninstall() {
 /**
  * Implementation of hook_schema().
  */
-function mailnode_schema() {
+function og_mailinglist_schema() {
   $schema = array();
 
-  $schema['mailnode_source'] = array(
+  $schema['og_mailinglist_source'] = array(
     'fields' => array(
       'nid' => array(
         'description' => 'The nid for the new posting.',
@@ -62,7 +62,7 @@ function mailnode_schema() {
     ),
   );
 
-  $schema['mailnode_thread'] = array(
+  $schema['og_mailinglist_thread'] = array(
     'fields' => array(
       'nid' => array(
         'description' => 'The nid of the thread.',
@@ -84,7 +84,7 @@ function mailnode_schema() {
     ),
   );
 
-  $schema['mailnode_subscription'] = array(
+  $schema['og_mailinglist_subscription'] = array(
     'fields' => array(
       'sid' => array(
         'description' => 'The sid of the Group or Space.',

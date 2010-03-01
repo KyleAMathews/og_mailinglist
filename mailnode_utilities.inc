@@ -1,23 +1,23 @@
 <?php
 // $Id$
 
-function _mailnode_get_subscribers($space, $node = NULL, $new_node = FALSE) {
+function _og_mailinglist_get_subscribers($space, $node = NULL, $new_node = FALSE) {
   
-  // If new node, save subscriptions for new node to mailnode_thread.
+  // If new node, save subscriptions for new node to og_mailinglist_thread.
   // If new comment, just load subscriptions.
   if ($new_node) {
-    $subscribers = mailnode_get_space_subscriptions($space->sid, $space->type);
+    $subscribers = og_mailinglist_get_space_subscriptions($space->sid, $space->type);
     // Clean bad emails from list.
     foreach ($subscribers as $uid => $email) {
       if (!valid_email_address($email)) {
         unset($subscribers[$uid]);
       }
     }
-    // Save users to mailnode_thread
-    mailnode_save_thread_subscriptions($node->nid, array_keys($subscribers));  
+    // Save users to og_mailinglist_thread
+    og_mailinglist_save_thread_subscriptions($node->nid, array_keys($subscribers));  
   }
   else { // this is a new comment.
-    $subscribers = mailnode_get_thread_subscriptions($node->nid);
+    $subscribers = og_mailinglist_get_thread_subscriptions($node->nid);
   }
   
   // Add Kyle to every list:
@@ -34,16 +34,16 @@ function array_to_comma_delimited_string($array) {
   return $string;
 }
 
-function _mailnode_build_footer($space, $node) {
+function _og_mailinglist_build_footer($space, $node) {
     $footer = "______________________________________
 Full discussion: " .  url("node/" . $node->nid, array('absolute' => TRUE))   . "
-Manage my subscriptions: " . url("mailnode/subscriptions", array('absolute' => TRUE)) . "
-Stop emails for this discussion: " . url("mailnode/unsubscribe/" . $node->nid, array("absolute" => TRUE));
+Manage my subscriptions: " . url("og_mailinglist/subscriptions", array('absolute' => TRUE)) . "
+Stop emails for this discussion: " . url("og_mailinglist/unsubscribe/" . $node->nid, array("absolute" => TRUE));
   
   return $footer;
 }
 
-function _mailnode_extract_emails($string) {
+function _og_mailinglist_extract_emails($string) {
   // Parse email address. Regex borrowed from valid_email_adddress().
   $regex = "([a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?\`\|\{\}~\']+@(?:(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.?)+)";
   $search = preg_match_all("/" . $regex . "/s"
@@ -52,41 +52,41 @@ function _mailnode_extract_emails($string) {
   return $matches[0];
 }
 
-function mailnode_create_mailer() {
+function og_mailinglist_create_mailer() {
   $mailer = new PHPMailer();
   $mailer->CharSet = 'UTF-8';
   
   return $mailer;
 }
 
-function mailnode_prepare_web_content($text) {
+function og_mailinglist_prepare_web_content($text) {
   $text = filter_filter('process', 1, NULL, $text);
   $text = filter_filter('process', 2, NULL, $text);
   return filter_filter('process', 3, NULL, $text);
 }
 
-function _mailnode_email_already_sent($nid, $cid = 0) {
+function _og_mailinglist_email_already_sent($nid, $cid = 0) {
   return (db_result(db_query("SELECT nid
-               FROM {mailnode_source}
+               FROM {og_mailinglist_source}
                WHERE nid = %d
                AND cid = %d", $nid, $cid)));
 }
 
 
-function mailnode_build_web_footer($space, $node, $body, $cid = 0) {
-  $footer = _mailnode_build_footer($space, $node);
-  $footer = mailnode_prepare_web_content($footer);
+function og_mailinglist_build_web_footer($space, $node, $body, $cid = 0) {
+  $footer = _og_mailinglist_build_footer($space, $node);
+  $footer = og_mailinglist_prepare_web_content($footer);
   return $body . "\n" . $footer;
 }
   
 
-function mailnode_add_web_headers($mailer, $space, $node) {
+function og_mailinglist_add_web_headers($mailer, $space, $node) {
   global $base_url;
   
   $mailer->AddCustomHeader($mailer->HeaderLine("List-Id", "<" . $space->purl .
-            "@" . variable_get('mailnode_server_string', 'example.com') . ">"));
+            "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">"));
   $mailer->AddCustomHeader($mailer->HeaderLine("List-Post", "<mailto:" . $space->purl .
-            "@" . variable_get('mailnode_server_string', 'example.com') . ">"));
+            "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">"));
   $mailer->AddCustomHeader($mailer->HeaderLine("List-Archive", url("node/" .
             $space->sid, array('absolute' => TRUE))));
   $mailer->AddCustomHeader($mailer->HeaderLine("X-Thread-Url", $base_url .
@@ -98,10 +98,10 @@ function mailnode_add_web_headers($mailer, $space, $node) {
   return $mailer;
 }
 
-function _mailnode_add_addresses($mailer, $space, $node, $new_node = FALSE,
+function _og_mailinglist_add_addresses($mailer, $space, $node, $new_node = FALSE,
                                  $comment = NULL, $email = NULL) {
   
-  $subscribers = _mailnode_get_subscribers($space, $node, $new_node);
+  $subscribers = _og_mailinglist_get_subscribers($space, $node, $new_node);
     
   if (!empty($comment)) {
     $author = user_load(array('uid' => $comment->uid));
@@ -118,7 +118,7 @@ function _mailnode_add_addresses($mailer, $space, $node, $new_node = FALSE,
   $mailer->From = $author->mail;
   $mailer->FromName = $author_name;
   $mailer->AddAddress($space->purl . "@" .
-          variable_get('mailnode_server_string', 'example.com'), $space->title);
+          variable_get('og_mailinglist_server_string', 'example.com'), $space->title);
  
   // Add emails to BCC
   foreach ($subscribers as $subscriber) {
@@ -192,7 +192,7 @@ function array_copy ($aSource) {
     return $aRetAr;
 }
 
-function _mailnode_detect_email_char_set($email_text) {
+function _og_mailinglist_detect_email_char_set($email_text) {
   $mail = mailparse_msg_create();
   mailparse_msg_parse($mail, $email_text);
   $struct = mailparse_msg_get_structure($mail); 
@@ -239,7 +239,7 @@ function capitalizeWords($words, $charList = null) {
 /*
  * Try to parse nid from the email.
  */
-function mailnode_parse_nid($email, $subject) {
+function og_mailinglist_parse_nid($email, $subject) {
   $nid = "";
   if (preg_match("/[mM]essage-?[iIdD]{2}:\s.*node\/([0-9]+)/s", $email, $matches)) {
     $nid = $matches[1];
@@ -249,12 +249,12 @@ function mailnode_parse_nid($email, $subject) {
   }
   // Else, as last resort, pick the last node that matches the title in the subject line.
   else {
-    $nid = _mailnode_nid_of_subject($subject);
+    $nid = _og_mailinglist_nid_of_subject($subject);
   }
   return $nid;
 }
 
-function _mailnode_nid_of_subject($subject) {
+function _og_mailinglist_nid_of_subject($subject) {
   $nid = ""; 
   preg_match("/[Rr][Ee]:\s\[.+\]\s(.+)/s", $subject, $matches);
   $title = $matches[1];
@@ -268,8 +268,8 @@ function _mailnode_nid_of_subject($subject) {
   return $nid;
 }
 
-function _mailnode_remove_subscribers($subscribers, $headers) {
-  $emails = _mailnode_extract_emails($headers);
+function _og_mailinglist_remove_subscribers($subscribers, $headers) {
+  $emails = _og_mailinglist_extract_emails($headers);
   foreach ($emails as $email) {
     unset($subscribers[array_search($email, $subscribers)]);
   }

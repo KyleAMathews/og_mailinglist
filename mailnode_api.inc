@@ -8,9 +8,9 @@
  * @return array of UIDs and email addresses that are subscribed to this thread.
  *  Format = key (UID) => value (email address)
  */
-function mailnode_get_space_subscriptions($sid, $space_type) {
+function og_mailinglist_get_space_subscriptions($sid, $space_type) {
   $result = db_query("SELECT uid
-                     FROM {mailnode_subscription}
+                     FROM {og_mailinglist_subscription}
                      WHERE sid = %d
                      And space_type = '%s'
                      AND subscription_type = 'email'", $sid, $space_type);
@@ -34,9 +34,9 @@ function mailnode_get_space_subscriptions($sid, $space_type) {
  * @return array of UIDs and email addresses that are subscribed to this thread.
  *  Format = key (UID) => value (email address)
  */
-function mailnode_get_thread_subscriptions($nid) {
+function og_mailinglist_get_thread_subscriptions($nid) {
   $result = db_query("SELECT uid
-                     FROM {mailnode_thread}
+                     FROM {og_mailinglist_thread}
                      WHERE nid = %d", $nid);
   
   $uids = array();
@@ -60,9 +60,9 @@ function mailnode_get_thread_subscriptions($nid) {
  *
  * @return null.
  */
-function mailnode_save_thread_subscriptions($nid, $uids) {
+function og_mailinglist_save_thread_subscriptions($nid, $uids) {
   foreach ($uids as $uid) {
-    db_query("INSERT INTO {mailnode_thread}
+    db_query("INSERT INTO {og_mailinglist_thread}
              VALUES (%d, %d)", $nid, $uid);
   }
 }
@@ -72,9 +72,9 @@ function mailnode_save_thread_subscriptions($nid, $uids) {
  * @param string $space_type Space type e.g. og.
  * @param array $uids array of User IDs to add group subscriptions.
  */
-function mailnode_save_group_subscriptions($sid, $space_type, $uids) {
+function og_mailinglist_save_group_subscriptions($sid, $space_type, $uids) {
   foreach ($uids as $uid) {
-    db_query("INSERT INTO {mailnode_subscription}
+    db_query("INSERT INTO {og_mailinglist_subscription}
              VALUES (%d, '%s', %d, 'email')", $sid, $space_type, $uid);
   }
 }
@@ -84,22 +84,22 @@ function mailnode_save_group_subscriptions($sid, $space_type, $uids) {
  * @param string $space_type Space type e.g. og.
  * @param array $uids array of User IDs to add group subscriptions.
  */
-function mailnode_delete_group_subscriptions($sid, $space_type, $uids) {
+function og_mailinglist_delete_group_subscriptions($sid, $space_type, $uids) {
   foreach ($uids as $uid) {
     // Delete subscription.
-    db_query("DELETE FROM {mailnode_subscription}
+    db_query("DELETE FROM {og_mailinglist_subscription}
              WHERE sid = %d
              AND space_type = '%s'
              AND uid = %d", $sid, $space_type, $uid);
     
-    mailnode_delete_group_threads($sid, $uid);
+    og_mailinglist_delete_group_threads($sid, $uid);
   }
 }
 
 /*
  * Adds person to 15 latest threads in a group.
  */
-function mailnode_subscribe_group_threads($gid, $uid) {
+function og_mailinglist_subscribe_group_threads($gid, $uid) {
   // Select threads created in the past month.
   $results = db_query("SELECT o.nid
                       FROM {og_ancestry} o
@@ -110,22 +110,22 @@ function mailnode_subscribe_group_threads($gid, $uid) {
                       LIMIT 15", $gid);
   
   while ($data = db_fetch_array($results)) {
-    mailnode_save_thread_subscriptions($data['nid'], array($uid));
+    og_mailinglist_save_thread_subscriptions($data['nid'], array($uid));
   }
   
 }
 
-function mailnode_delete_group_threads($gid, $uid) {
+function og_mailinglist_delete_group_threads($gid, $uid) {
   // Delete threads.
-  db_query("DELETE FROM {mailnode_thread} m
+  db_query("DELETE FROM {og_mailinglist_thread} m
            INNER JOIN {og_ancestry} o
            WHERE o.nid = m.nid
            AND m.uid = %d
            AND o.group_nid = %d", $uid, $gid);  
 }
 
-function mailnode_delete_thread_subscription($nid, $uid) {
-  return db_query("DELETE FROM {mailnode_thread}
+function og_mailinglist_delete_thread_subscription($nid, $uid) {
+  return db_query("DELETE FROM {og_mailinglist_thread}
            WHERE nid = %d
            AND uid = %d", $nid, $uid);
 }
@@ -133,7 +133,7 @@ function mailnode_delete_thread_subscription($nid, $uid) {
 /*
  * Log successful sent email.
  */
-function mailnode_log_email_sent($source, $nid, $cid = 0) {
-  return db_query("INSERT INTO {mailnode_source}
+function og_mailinglist_log_email_sent($source, $nid, $cid = 0) {
+  return db_query("INSERT INTO {og_mailinglist_source}
            VALUES (%d, %d, '%s')", $nid, $cid, $source);
 }

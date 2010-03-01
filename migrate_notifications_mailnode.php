@@ -23,7 +23,7 @@ drupal_bootstrap(DRUPAL_BOOTSTRAP_FULL);
 # restore error reporting to its normal setting
 error_reporting(E_ALL);
 
-// Push all subsriptions in og_uid to mailnode_subscriptions.
+// Push all subsriptions in og_uid to og_mailinglist_subscriptions.
 // Then update for no email and digest email from notifications.
 // Using just data from notifications seemed to miss people somehow.
 
@@ -31,7 +31,7 @@ $results = db_query("SELECT nid, uid FROM {og_uid}");
   
 while ($data = db_fetch_array($results)) {
   //print_r($data);
-  echo db_query("INSERT INTO {mailnode_subscription}
+  echo db_query("INSERT INTO {og_mailinglist_subscription}
            VALUES (%d, 'og', %d, 'email')", $data['nid'], $data['uid']);
 }
 
@@ -49,20 +49,20 @@ $results = db_query($sql);
 while ($data = db_fetch_array($results)) {
   echo "uid: " . $data['uid'] . " gid: " . $data['gid'] . " interval: " . $data['send_interval'] . "\n";
   if ($data['send_interval'] == -1) {
-    echo db_query("UPDATE {mailnode_subscription}
+    echo db_query("UPDATE {og_mailinglist_subscription}
          SET subscription_type = 'no email'
          WHERE sid = %d
          AND uid = %d", $data['gid'], $data['uid']);
   }
   else {
-    echo db_query("UPDATE {mailnode_subscription}
+    echo db_query("UPDATE {og_mailinglist_subscription}
          SET subscription_type = 'digest email'
          WHERE sid = %d
          AND uid = %d", $data['gid'], $data['uid']);
   }  
 }
 
-//echo "=== Inserting data into mailnode_thread for past month of conversations ==";
+//echo "=== Inserting data into og_mailinglist_thread for past month of conversations ==";
 //// Get list of nodes created in past month
 //$results = db_query("SELECT nid
 //                    FROM {node}
@@ -75,18 +75,18 @@ while ($data = db_fetch_array($results)) {
 //                         WHERE nid = %d", $data['nid']))) {
 //    
 //    // Node is in a group.
-//    $subs = mailnode_get_space_subscriptions($group_nid, 'og');
-//    mailnode_save_thread_subscriptions($data['nid'], array_keys($subs));
+//    $subs = og_mailinglist_get_space_subscriptions($group_nid, 'og');
+//    og_mailinglist_save_thread_subscriptions($data['nid'], array_keys($subs));
 //    echo "Saved subscriptions for nid: " . $data['nid'] . "\n";
 //  }
 //}
 
-//echo "testing mailnode_get_space_subscriptions \n\n";
-//$subs = mailnode_get_space_subscriptions(251, 'og');
+//echo "testing og_mailinglist_get_space_subscriptions \n\n";
+//$subs = og_mailinglist_get_space_subscriptions(251, 'og');
 //print_r($subs);
 //
-//mailnode_save_thread_subscriptions(2232342, array_keys($subs));
+//og_mailinglist_save_thread_subscriptions(2232342, array_keys($subs));
 //
-//$thread_subs = mailnode_get_thread_subscriptions(2232342);
+//$thread_subs = og_mailinglist_get_thread_subscriptions(2232342);
 //
 //print_r($thread_subs);

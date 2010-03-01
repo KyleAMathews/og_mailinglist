@@ -1,7 +1,7 @@
-#mailnode-subscriptions-settings-form select {
+#og_mailinglist-subscriptions-settings-form select {
   margin: 0;
 }
-#mailnode_undo {
+#og_mailinglist_undo {
   text-decoration: underline;
   color: #755507;
 }

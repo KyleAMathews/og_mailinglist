@@ -10,17 +10,17 @@ require_once('QueryPath/QueryPath.php');
 ###############################################################################
 ###   This script is called from Exim4.  It is a "pipe" type of 
 ###   transport that takes an email and processes it.  It also requires
-###   a router file: mailnode_exim4_router.php
+###   a router file: og_mailinglist_exim4_router.php
 ###
 ###   Written by Conan Albrecht   March 2009
 ###
 ###   Here's the code that needs to go into Exim4's configuration:
 ###   (note you need to customize the path in the command line)
 ###
-###   drupal_mailnode:
+###   drupal_og_mailinglist:
 ###     driver = pipe
 ###     path = "/bin:/usr/bin:/usr/local/bin"
-###     command = /var/mailnode/mailnode_exim4_transport.php $local_part
+###     command = /var/og_mailinglist/og_mailinglist_exim4_transport.php $local_part
 ###     user = mail
 ###     group = mail
 ###     return_path_add
@@ -73,18 +73,18 @@ try {
   }
   
   // Detect email character set.
-  $char_set = _mailnode_detect_email_char_set($email_text);
+  $char_set = _og_mailinglist_detect_email_char_set($email_text);
   
   $email = array();
   
   // Extract all the needed info from the email into a simple array.
-  $email = _mailnode_parse_email($email_text, $char_set);  
+  $email = _og_mailinglist_parse_email($email_text, $char_set);  
 }
 catch (Exception $e) {
   echo $e;
 }
 
-function _mailnode_parse_email($email_text, $char_set) {
+function _og_mailinglist_parse_email($email_text, $char_set) {
   // Initialize $email array.
   $email = array();
   
@@ -98,15 +98,15 @@ function _mailnode_parse_email($email_text, $char_set) {
   $structure = Mail_mimeDecode::decode($params);
   
   //print_r($structure);
-  $structure = _mailnode_rewrite_headers($structure);
-  $structure = _mailnode_add_footer($structure);
-  $new_email = _mailnode_encode_email(array($structure));
+  $structure = _og_mailinglist_rewrite_headers($structure);
+  $structure = _og_mailinglist_add_footer($structure);
+  $new_email = _og_mailinglist_encode_email(array($structure));
   print_r($new_email);
   exit();
 }
 
 // Keep mime-version, date, subject, from, to, and content-type
-function _mailnode_rewrite_headers($structure) {
+function _og_mailinglist_rewrite_headers($structure) {
   $headers = $structure->headers;
   $new_headers = array();
   $new_headers['mime-version'] = $headers['mime-version'];
@@ -123,7 +123,7 @@ function _mailnode_rewrite_headers($structure) {
   return $structure;
 }
 
-function _mailnode_add_footer($structure) {
+function _og_mailinglist_add_footer($structure) {
   $headers = $structure->headers;
   // If message is 7/8bit text/plain and uses us-ascii charecter set, just 
   // append the footer.
@@ -202,7 +202,7 @@ to multipart/mixed',
 }
 
 // Turn structure back into a plain text email using recursion.
-function _mailnode_encode_email($structure, $boundary = "", $email = "") {
+function _og_mailinglist_encode_email($structure, $boundary = "", $email = "") {
   foreach($structure as $part) {
     //echo "\n\n\n\n===========================NEW PART======================\n\n";
     //print_r($part);
@@ -217,9 +217,9 @@ function _mailnode_encode_email($structure, $boundary = "", $email = "") {
     
     if (isset($part->parts)) {
       
-      $email .= _mailnode_encode_email_headers($part->headers) . "\n";
+      $email .= _og_mailinglist_encode_email_headers($part->headers) . "\n";
       $email .= "--" . $part->ctype_parameters['boundary'] . "\n";
-      $email = _mailnode_encode_email($part->parts, $part->ctype_parameters['boundary'], $email);
+      $email = _og_mailinglist_encode_email($part->parts, $part->ctype_parameters['boundary'], $email);
       $email .= "--" . $part->ctype_parameters['boundary'] . "--\n";
     }
     else {
@@ -231,7 +231,7 @@ function _mailnode_encode_email($structure, $boundary = "", $email = "") {
         } 
       }
       
-      $email .= _mailnode_encode_email_headers($part->headers) . "\n";
+      $email .= _og_mailinglist_encode_email_headers($part->headers) . "\n";
       //$email .= "encoding: " . mb_detect_encoding($part->body);
       // Encode the body if necessary
       if ($part->headers['content-transfer-encoding'] == "base64") {
@@ -247,7 +247,7 @@ function _mailnode_encode_email($structure, $boundary = "", $email = "") {
   return $email;
 }
 
-function _mailnode_encode_email_headers($array) {
+function _og_mailinglist_encode_email_headers($array) {
   $header = "";
   foreach ($array as $key => $value) {
     // We remove quoted-printable as content-transfer-encoding
@@ -297,7 +297,7 @@ function array_copy ($aSource) {
     return $aRetAr;
 }
 
-function _mailnode_detect_email_char_set($email_text) {
+function _og_mailinglist_detect_email_char_set($email_text) {
   $mail = mailparse_msg_create();
   mailparse_msg_parse($mail, $email_text);
   $struct = mailparse_msg_get_structure($mail); 

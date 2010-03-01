@@ -11,7 +11,7 @@ define("DIGEST_TIME_PERIOD", 86400); // One day currently.
 # boostrap drupal
 # set up the drupal directory -- very important 
 $DRUPAL_DIR = '/var/www/island_prod';
-require_once('mailnode_utilities.inc');
+require_once('og_mailinglist_utilities.inc');
 
 # set some server variables so Drupal doesn't freak out
 $_SERVER['SCRIPT_NAME'] = '/script.php';
@@ -37,7 +37,7 @@ error_reporting(E_ALL);
 // and which had a new post or comment in the last 24 hours.
 
 $new_nodes_sql = 'SELECT DISTINCT s.sid
-          FROM {mailnode_subscription} s
+          FROM {og_mailinglist_subscription} s
           JOIN {og_ancestry} o
           JOIN {node} n
           WHERE s.sid = o.group_nid
@@ -46,7 +46,7 @@ $new_nodes_sql = 'SELECT DISTINCT s.sid
           AND s.subscription_type = "digest email"';
           
 $new_comments_sql = 'SELECT DISTINCT s.sid
-          FROM {mailnode_subscription} s
+          FROM {og_mailinglist_subscription} s
           JOIN {og_ancestry} o
           JOIN {comments} c
           WHERE s.sid = o.group_nid
@@ -102,7 +102,7 @@ foreach ($digest_groups as $gid) {
   // Count # of messages.
   $message_count = 0;
   foreach ($nids as $nid) {
-    $message_count += mailnode_count_new_messages($nid);
+    $message_count += og_mailinglist_count_new_messages($nid);
   }
   
   $purl_id = db_result(db_query("SELECT value
@@ -110,7 +110,7 @@ foreach ($digest_groups as $gid) {
                                       WHERE provider = 'spaces_og'
                                       AND id = %d", $gid));
   
-  $subject = "Digest for " . $purl_id . "@" . variable_get("mailnode_server_string", "example.com")
+  $subject = "Digest for " . $purl_id . "@" . variable_get("og_mailinglist_server_string", "example.com")
         . " - " . $message_count . " Messages in " . count($nids) . " Discussions";
   
   // Assemble message
@@ -121,7 +121,7 @@ foreach ($digest_groups as $gid) {
   foreach ($nids as $nid) {
     $body .= "<li>" . l($nid['node_obj']->title, "node/" . $nid['node_obj']->nid,
                          array('absolute' => TRUE)) . " (" .
-                         mailnode_count_new_messages($nid) . " New)</li>\n";
+                         og_mailinglist_count_new_messages($nid) . " New)</li>\n";
   }
   $body .= "</ul>\n";
   $body .= "<hr />\n";
@@ -135,12 +135,12 @@ foreach ($digest_groups as $gid) {
     $body .= "<blockquote>\n";
     // If new node created today.
     if ($nid['status'] === "new") {
-      $body .= mailnode_style_node_message($nid['node_obj']);
+      $body .= og_mailinglist_style_node_message($nid['node_obj']);
     }
     
     foreach ($nid as $cid => $comment) {
       if (is_numeric($cid)) {
-        $body .= mailnode_style_comment_message($comment);
+        $body .= og_mailinglist_style_comment_message($comment);
       }
     }
     $body .= "</blockquote>\n";
@@ -150,15 +150,15 @@ foreach ($digest_groups as $gid) {
   $body .= "________________________________<br />";
   $body .= "You received this message because you are a member of the \"" .
             $group->title . "\" group on " .
-            variable_get("mailnode_server_string", "example.com") . "<br />";
+            variable_get("og_mailinglist_server_string", "example.com") . "<br />";
   $body .= "To unsubscribe to this group, visit " .
-            url("mailnode/subscriptions", array("absolute" => true)) . "<br />";
+            url("og_mailinglist/subscriptions", array("absolute" => true)) . "<br />";
   $body .= "To post a new message to this group, email " . $purl_id . "@" .
-    variable_get("mailnode_server_string", "example.com") . "<br />";
+    variable_get("og_mailinglist_server_string", "example.com") . "<br />";
  
   // For each person, send out an email.
   $result = db_query("SELECT uid
-                     FROM {mailnode_subscription}
+                     FROM {og_mailinglist_subscription}
                      WHERE sid = %d
                      AND subscription_type = \"digest email\"", $gid);
   $uids = array();
@@ -173,10 +173,10 @@ foreach ($digest_groups as $gid) {
   $uids['3'] = "mathews.kyle@gmail.com";
   
   foreach ($uids as $email) {
-    $mailer = mailnode_create_mailer();
-    $mailer->From = "no_reply@" . variable_get("mailnode_server_string", "example.com");
+    $mailer = og_mailinglist_create_mailer();
+    $mailer->From = "no_reply@" . variable_get("og_mailinglist_server_string", "example.com");
     $mailer->FromName = $purl_id . "@" .
-    variable_get("mailnode_server_string", "example.com");
+    variable_get("og_mailinglist_server_string", "example.com");
     $mailer->AddAddress($email);
     $mailer->Subject = $subject; 
     $mailer->Body = $body;
@@ -186,27 +186,27 @@ foreach ($digest_groups as $gid) {
   }
 }
 
-function mailnode_style_node_message($node) {
+function og_mailinglist_style_node_message($node) {
   $user = user_load(array('uid' => $node->uid));
   $body .= "<div style=\"" . MESSAGE_HEADER . "\"><strong>" . $user->realname . "</strong> " . $user->mail . " " .
                 date("d M Y — g:ia O", $node->created) . "</div>\n";
-  $body .= mailnode_prepare_web_content($node->body); // TODO -- node_view and comment_view don't work -- they add too much junk. Just want body.
+  $body .= og_mailinglist_prepare_web_content($node->body); // TODO -- node_view and comment_view don't work -- they add too much junk. Just want body.
   $body .= "<br />\n"; // Plus need realname + need to convert dates into something readable + add num new messages per discussion
   
   return $body;
 }
 
-function mailnode_style_comment_message($comment) {
+function og_mailinglist_style_comment_message($comment) {
   $user = user_load(array('uid' => $comment->uid));
   $body .= "<div style=\"" . MESSAGE_HEADER . "\"><strong>" . $user->realname . "</strong> " . $user->mail . " " .
               date("d M Y — g:ia O", $comment->timestamp) . "</div>\n";
-  $body .= mailnode_prepare_web_content($comment->comment);
+  $body .= og_mailinglist_prepare_web_content($comment->comment);
   $body .= "<br />\n";
   
   return $body;
 }
 
-function mailnode_count_new_messages($message) {
+function og_mailinglist_count_new_messages($message) {
     $count = 0;
     if ($message['status'] === "new") {
       $count++;

@@ -26,7 +26,7 @@ INSTALLATION INSTRUCTIONS:
 
 * Unzip the og_mailinglist files into a subdirectory in the Drupal modules/ directory.  This is the same as installing any other Drupal module (see the Drupal manual for more information on general module installation).
 
-* Go to the Modules page in Drupal and enable the module (like normal).  After saving, navigate to admin/messaging/mailnode and set options to your liking.
+* Go to the Modules page in Drupal and enable the module (like normal).  After saving, navigate to admin/messaging/og_mailinglist and set options to your liking.
 
 * Modify the $DRUPAL_DIR variable in og_mailinglist_exim4_bootstrap_command_line.php to point at your Drupal installation directory.  This has to be set per installation -- since the script runs outside of Drupal, it can't just read the directory location from the Drupal settings.  After setting the variable, you can run the file in a terminal with "php og_mailinglist_exim4_bootstrap_command_line.php".  It will throw errors if anything is wrong.
 
