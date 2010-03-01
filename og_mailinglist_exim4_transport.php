@@ -215,12 +215,6 @@ function og_mailinglist_save_comment($email) {
     throw new Exception(t("Comments have been disabled for this discussion."));
   }
   
-  //$mailbody = preg_replace("/Â/", "", $email['mailbody']); // TODO figure out why seperator scrambled rather than brute forcing fix.
-  $mailbody = $email['mailbody'];
-  
-  $email = tidyEmail($email);
-  $mailbody = $email['mailbody'];
-  
   # ensure the body is not empty
   if (empty($mailbody)) {
     throw new Exception(t("Could not parse message body from your email.  Did you remove the separator text (e.g. 'Reply above this line')?"));
