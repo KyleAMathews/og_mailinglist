@@ -43,7 +43,7 @@ function og_mailinglist_send_comment_email($comment, $node) {
     og_mailinglist_log_email_sent('web', $node->nid, $comment->cid);
   }
   else {
-    watchdog('og_mailinglist', "Mailnode couldn't send a new node email.", NULL,
+    watchdog('og_mailinglist', "OG_Mailinglist couldn't send a new node email.", NULL,
              WATCHDOG_ERROR);
   }
   
@@ -99,7 +99,7 @@ function og_mailinglist_send_node_email($node) {
     og_mailinglist_log_email_sent('web', $node->nid);
   }
   else {
-    watchdog('og_mailinglist', "Mailnode couldn't send a new node email.", NULL,
+    watchdog('og_mailinglist', "OG_Mailinglist couldn't send a new node email.", NULL,
              WATCHDOG_ERROR);
   }
 

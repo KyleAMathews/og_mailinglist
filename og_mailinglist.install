@@ -8,10 +8,10 @@ function og_mailinglist_install() {
 
 
   if ($success) {
-    drupal_set_message(st('Mailnode module installed tables successfully.'));
+    drupal_set_message(st('OG_Mailinglist module installed tables successfully.'));
   }
   else {
-    drupal_set_message(st('The installation of Mailnode module failed.'), 'error');
+    drupal_set_message(st('The installation of OG_Mailinglist module failed.'), 'error');
   }
 }
 
@@ -25,7 +25,7 @@ function og_mailinglist_uninstall() {
     variable_del($row->name);
   }
 
-  drupal_set_message(t('Mailnode has been uninstalled.'));
+  drupal_set_message(t('OG_Mailinglist has been uninstalled.'));
 }
 
 /**

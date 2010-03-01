@@ -68,7 +68,7 @@ function og_mailinglist_init() {
 function og_mailinglist_help($path, $arg) {
   switch ($path) {
     case 'admin/messaging/og_mailinglist':
-      return '<p>' . t("Mailnode allows users to start new discussions by email and post comments on existing discussions
+      return '<p>' . t("OG_Mailinglist allows users to start new discussions by email and post comments on existing discussions
        by simply replying to emails.  It plugs directly into the Exim mail server, which allows it to process emails
        immediately upon receipt in the system.  It assumes you are using the Organic Groups module for groups and
        the Notifications Framework for site email.  It also assume your installed mail server is Exim 4. 
