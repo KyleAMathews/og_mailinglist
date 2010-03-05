@@ -4,8 +4,6 @@
 // TODO rewrite header info here.
 require_once("/usr/share/php/Mail/mimeDecode.php");
 require_once("phpmailer/class.phpmailer.php");
-// Require the QueryPath core. 
-require_once(drupal_get_path('module', 'querypath') . "/" . 'QueryPath/QueryPath.php');
 require_once('og_mailinglist_utilities.inc');
 require_once('og_mailinglist_api.inc');
 
@@ -41,6 +39,9 @@ require_once('og_mailinglist_api.inc');
 try {
   // Boostrap drupal.
   require_once('og_mailinglist_exim4_boostrap_command_line.php');
+  // Get Drupal files now that boostrap is done.
+  // Require the QueryPath core.
+  require_once(drupal_get_path('module', 'querypath') . "/" . 'QueryPath/QueryPath.php');
 
   $email = array();
   
