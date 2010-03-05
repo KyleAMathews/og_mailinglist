@@ -208,34 +208,6 @@ function _og_mailinglist_detect_email_char_set($email_text) {
   return $info["content-charset"];
 }
 
-/**
- * Capitalize all words
- * @param string Data to capitalize
- * @param string Word delimiters
- * @return string Capitalized words
- * Function taken from http://www.php.net/manual/en/function.ucwords.php#95325
- */
-function capitalizeWords($words, $charList = null) {
-    // Use ucwords if no delimiters are given
-    if (!isset($charList)) {
-        return ucwords($words);
-    }
-    
-    // Go through all characters
-    $capitalizeNext = true;
-    
-    for ($i = 0, $max = strlen($words); $i < $max; $i++) {
-        if (strpos($charList, $words[$i]) !== false) {
-            $capitalizeNext = true;
-        } else if ($capitalizeNext) {
-            $capitalizeNext = false;
-            $words[$i] = strtoupper($words[$i]);
-        }
-    }
-    
-    return $words;
-}
-
 /*
  * Try to parse nid from the email.
  */
