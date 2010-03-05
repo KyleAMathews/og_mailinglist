@@ -295,7 +295,6 @@ function og_mailinglist_og($op, $gid, $uid, $args) {
  */
 function og_mailinglist_filter($op, $delta = 0, $format = -1, $text = "") {
   switch ($op) {
-  
     case 'list':
       return array(
         0 => t('Hide quoted text from comments created via email')
@@ -309,7 +308,6 @@ function og_mailinglist_filter($op, $delta = 0, $format = -1, $text = "") {
     
     case 'process':
       return _og_mailinglist_build_quotes_toggle($text);
-      
   }
 }
 
