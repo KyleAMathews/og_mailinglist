@@ -52,13 +52,6 @@ function _og_mailinglist_extract_emails($string) {
   return $matches[0];
 }
 
-function og_mailinglist_create_mailer() {
-  $mailer = new PHPMailer();
-  $mailer->CharSet = 'UTF-8';
-  
-  return $mailer;
-}
-
 function og_mailinglist_prepare_web_content($text) {
   $text = filter_filter('process', 1, NULL, $text);
   $text = filter_filter('process', 2, NULL, $text);

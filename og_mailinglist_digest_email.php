@@ -12,6 +12,7 @@ define("DIGEST_TIME_PERIOD", 86400); // One day currently.
 # set up the drupal directory -- very important 
 $DRUPAL_DIR = '/var/www/island_prod';
 require_once('og_mailinglist_utilities.inc');
+require_once('og_mailinglist_api.inc');
 
 # set some server variables so Drupal doesn't freak out
 $_SERVER['SCRIPT_NAME'] = '/script.php';

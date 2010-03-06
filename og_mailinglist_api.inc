@@ -137,3 +137,13 @@ function og_mailinglist_log_email_sent($source, $nid, $cid = 0) {
   return db_query("INSERT INTO {og_mailinglist_source}
            VALUES (%d, %d, '%s')", $nid, $cid, $source);
 }
+/*
+ * @return PHPMailer object.
+ */
+function og_mailinglist_create_mailer() {
+  require_once("phpmailer/class.phpmailer.php");
+  $mailer = new PHPMailer();
+  $mailer->CharSet = 'UTF-8';
+
+  return $mailer;
+}
