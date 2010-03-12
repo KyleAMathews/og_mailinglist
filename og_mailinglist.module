@@ -365,8 +365,10 @@ function _og_mailinglist_filter_quotes($text) {
  * Implementation of hook_cron().
  */
 function og_mailinglist_cron() {
+  // On first run, set digest to run today.
   $next_digest_runtime = variable_get('og_mailinglist_digest_runtime',
-          mktime(17, date("I"), date("s"), date("n"), date("j") + 1));
+          mktime(17, date("I"), date("s"), date("n"), date("j")));
+
   if (time() > $next_digest_runtime) {
     module_load_include('inc', 'og_mailinglist', 'og_mailing_list_digest_email');
 
