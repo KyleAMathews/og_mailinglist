@@ -120,7 +120,9 @@ foreach ($digest_groups as $gid) {
   $body .= "Group: " . url("node/" . $gid, array('absolute' => TRUE)) . "\n";
   $body .= "<ul>\n";
   foreach ($nids as $nid) {
-    $body .= "<li>" . l($nid['node_obj']->title, "#node/" . $nid['node_obj']->nid)
+    $body .= "<li>" . l($nid['node_obj']->title, "",
+            array('fragment' => "digest-" . $nid['node_obj']->nid,
+            'external' => true))
             . " (" . og_mailinglist_count_new_messages($nid) . " New)</li>\n";
   }
   $body .= "</ul>\n";
@@ -128,11 +130,10 @@ foreach ($digest_groups as $gid) {
 
   // Add individual discussions
   foreach ($nids as $nid) {
+    $body .= '<a name="digest-' . $nid['node_obj']->nid . '"></a>';
     $body .= '<div style="' . DISCUSSION_HEADER . '">';
     $body .= "Discussion: " . l($nid['node_obj']->title, "node/" .
-              $nid['node_obj']->nid, array('absolute' => TRUE,
-                attributes =>
-                array('id' => "#node/" . $nid['node_obj']->nid))) . "\n";
+        $nid['node_obj']->nid, array('absolute' => TRUE)) . "\n";
     $body .= "</div>";
     $body .= "<blockquote>\n";
     // If new node created today.

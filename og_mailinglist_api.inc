@@ -112,7 +112,6 @@ function og_mailinglist_subscribe_group_threads($gid, $uid) {
   while ($data = db_fetch_array($results)) {
     og_mailinglist_save_thread_subscriptions($data['nid'], array($uid));
   }
-  
 }
 
 function og_mailinglist_delete_group_threads($gid, $uid) {
