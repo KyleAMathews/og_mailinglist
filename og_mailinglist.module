@@ -10,6 +10,7 @@
 ###   rather than to a single email address.
 ###
 ###   Original version written by Conan Albrecht   March 2009
+###   Maintained since by Kyle Mathews
 ###
 
 require_once("phpmailer/class.phpmailer.php");
@@ -358,4 +359,21 @@ function _og_mailinglist_filter_quotes($text) {
   }
   
   return $quotes_imploded;
+}
+
+/*
+ * Implementation of hook_cron().
+ */
+function og_mailinglist_cron() {
+  $next_digest_runtime = variable_get('og_mailinglist_digest_runtime',
+          mktime(17, date("I"), date("s"), date("n"), date("j") + 1));
+  if (time() > $next_digest_runtime) {
+    module_load_include('inc', 'og_mailinglist', 'og_mailing_list_digest_email');
+
+    // Send off digest emails.
+    _og_mailinglist_send_digest_emails();
+
+    // Set tomorrow's run time.
+    variable_set('og_mailinglist_digest_runtime', mktime(17, date("I"), date("s"), date("n"), date("j") + 1));
+  }
 }
