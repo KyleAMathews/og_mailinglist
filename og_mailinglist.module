@@ -370,7 +370,7 @@ function og_mailinglist_cron() {
           mktime(17, date("I"), date("s"), date("n"), date("j")));
 
   if (time() > $next_digest_runtime) {
-    module_load_include('inc', 'og_mailinglist', 'og_mailing_list_digest_email');
+    module_load_include('inc', 'og_mailinglist', 'og_mailinglist_digest_email');
 
     // Send off digest emails.
     _og_mailinglist_send_digest_emails();
