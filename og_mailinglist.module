@@ -254,10 +254,12 @@ function og_mailinglist_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   if ($op == "insert" && $node->status && $node->type != "eduglu_group_reader_feed") { // TODO create hook so individual features can turn off
     // email notifications + on admin interface, let people turn off notifications there as well.
     //
-    // User might not be automatically subscribed to new threads. Subscribe them now.
-    og_mailinglist_save_thread_subscriptions($node->nid, array($node->uid));
-    
-    // Semd emails
+    // User might not be automatically subscribed to new threads. Subscribe now if they aren't signed up to get emails normally.
+dpm($node);
+    if (og_mailinglist_get_group_subscription_type($node->og_groups[0], $node->uid) != "email") {
+      og_mailinglist_save_thread_subscriptions($node->nid, array($node->uid));
+    }    
+    // Send emails
     og_mailinglist_send_node_email($node);
   }
 }

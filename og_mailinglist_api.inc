@@ -68,6 +68,16 @@ function og_mailinglist_save_thread_subscriptions($nid, $uids) {
 }
 
 /*
+ * @return subscription type for the given group and user.
+ */
+function og_mailinglist_get_group_subscription_type($gid, $uid) {
+  return db_result(db_query("SELECT subscription_type
+                            FROM {og_mailinglist_subscription}
+                            WHERE sid = %d
+                            AND uid = %d", $gid, $uid));
+}
+
+/*
  * @param int $sid Space id.
  * @param string $space_type Space type e.g. og.
  * @param array $uids array of User IDs to add group subscriptions.
