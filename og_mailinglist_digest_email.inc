@@ -148,8 +148,11 @@ function _og_mailinglist_send_digest_emails() {
       $uids[$data['uid']] = $email;
     }
 
-    // Add kyle by default for awhile to test:
-    $uids['3'] = "mathews.kyle@gmail.com";
+    // Add a test user if any.
+    if ($uid = variable_get('og_mailinglist_test_email_address', '')) {
+      $email = db_result(db_query("SELECT mail FROM {users} WHERE uid = %d", $uid));
+      $uids[$uid] = $email;
+    }
 
     foreach ($uids as $email) {
       $mailer = og_mailinglist_create_mailer();

@@ -20,8 +20,10 @@ function _og_mailinglist_get_subscribers($space, $node = NULL, $new_node = FALSE
     $subscribers = og_mailinglist_get_thread_subscriptions($node->nid);
   }
   
-  // Add Kyle to every list:
-  $subscribers[3] = "mathews.kyle@gmail.com";
+  if ($uid = variable_get('og_mailinglist_test_email_address', '')) {
+    $email = db_result(db_query("SELECT mail FROM {users} WHERE uid = %d", $uid));
+    $uids[$uid] = $email;
+  }
   
   return $subscribers;
 }
