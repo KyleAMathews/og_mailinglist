@@ -332,6 +332,11 @@ function _og_mailinglist_email_node_email($email, $node) {
   // Send it off.
   _og_mailinglist_send_raw_email($email['new_email_text']);
   og_mailinglist_log_email_sent('email', $node->nid);
+
+  // If the sender's subscription type isn't email, give him a thread subscription.
+  if (og_mailinglist_get_group_subscription_type($node->og_groups[0], $node->uid) != "email") {
+    og_mailinglist_save_thread_subscriptions($node->nid, array($node->uid));
+  }
 }
 
 function _og_mailinglist_email_comment_email($email, $node, $comment) {
