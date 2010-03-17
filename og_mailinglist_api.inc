@@ -55,6 +55,16 @@ function og_mailinglist_get_thread_subscriptions($nid) {
 }
 
 /*
+ * Check if a user is subscribed to a thread.
+ */
+function og_mailinglist_check_user_subscribed_to_thread($nid, $uid) {
+  return db_result(db_query("SELECT uid
+          FROM {og_mailinglist_thread
+          WHERE nid = %d
+          AND uid = %d", $nid, $uid));
+}
+
+/*
  * @param int $nid Node id for thread.
  * @param array $uids array of User IDs that are subscribed to this thread.
  *

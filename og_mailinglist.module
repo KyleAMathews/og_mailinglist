@@ -279,8 +279,11 @@ function og_mailinglist_comment($comment, $op) {
     if ($node->status) {
       og_mailinglist_send_comment_email($comment, $node);
       
-      // User might not be subscribed to thread. Subscribe them now.
-      og_mailinglist_save_thread_subscriptions($comment->nid, array($comment->uid));
+      // User might not be subscribed to thread. Subscribe them now if not
+      // already subscribed.
+      if (!og_mailinglist_check_user_subscribed_to_thread($comment->nid, array($comment->uid)) {
+        og_mailinglist_save_thread_subscriptions($comment->nid, array($comment->uid));
+      }
     }
   }
 }
