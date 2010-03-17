@@ -281,7 +281,7 @@ function og_mailinglist_comment($comment, $op) {
       
       // User might not be subscribed to thread. Subscribe them now if not
       // already subscribed.
-      if (!og_mailinglist_check_user_subscribed_to_thread($comment->nid, array($comment->uid)) {
+      if (!og_mailinglist_check_user_subscribed_to_thread($comment->nid, $comment->uid)) {
         og_mailinglist_save_thread_subscriptions($comment->nid, array($comment->uid));
       }
     }
