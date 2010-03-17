@@ -32,9 +32,7 @@ function og_mailinglist_menu() {
     'description' => t('Allows users to manage their space subscriptions'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('og_mailinglist_subscriptions_settings_form'),
-    'access arguments' => array('create blog entries'), // This is a hack to 
-    // restrict access to authenticated users as can't restrict menu items by role AFAIK.
-    // TODO right thing to do actually is define new permission for this module... Silly me.
+    'access arguments' => array('manage og_mailinglist subscriptions'),
   );
   $items['og_mailinglist/unsubscribe/%node'] = array(
     'title' => t('Unsubscribe from discussion'),
@@ -42,8 +40,7 @@ function og_mailinglist_menu() {
                        comments on the node.'),
     'page callback' => 'og_mailinglist_unsubscribe_thread',
     'page arguments' => array(2),
-    'access arguments' => array('create blog entries'), // This is a hack to 
-    // restrict access to authenticated users as can't restrict menu items by role AFAIK.
+    'access arguments' => array('manage og_mailinglist subscriptions'),
   );
   $items['og_mailinglist/subscribe/%node'] = array(
     'title' => t('Subscribe to discussion'),
@@ -51,10 +48,16 @@ function og_mailinglist_menu() {
                        comments on the node.'),
     'page callback' => 'og_mailinglist_subscribe_thread',
     'page arguments' => array(2),
-    'access arguments' => array('create blog entries'), // This is a hack to 
-    // restrict access to authenticated users as can't restrict menu items by role AFAIK.
+    'access arguments' => array('manage og_mailinglist subscriptions'),
   );
   return $items;
+}
+
+/*
+ * Implementation of hook_perm().
+ */
+function og_mailinglist_perm() {
+  return array('manage og_mailinglist subscriptions');
 }
 
 /*
