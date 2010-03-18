@@ -136,7 +136,7 @@ function og_mailinglist_subscribe_group_threads($gid, $uid) {
 
 function og_mailinglist_delete_group_threads($gid, $uid) {
   // Delete threads.
-  db_query("DELETE FROM {og_mailinglist_thread} m
+  db_query("DELETE m FROM {og_mailinglist_thread} m
            INNER JOIN {og_ancestry} o
            WHERE o.nid = m.nid
            AND m.uid = %d
