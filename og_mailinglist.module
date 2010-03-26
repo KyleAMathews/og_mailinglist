@@ -203,59 +203,6 @@ function og_mailinglist_subscribe_thread($node) {
            . "</div>";
 }
 
-// TODO copy regexes to filter.
-  ////file_save_data(var_export($mailbody, true), '/tmp/messaging_object.txt', FILE_EXISTS_RENAME);
-  //# strip off anything below the email signature, assuming the user has a standard signature separator
-  //$search = preg_match_all("/^-- [\n\r]*$/m", $mailbody, $matches, PREG_OFFSET_CAPTURE);
-  //if (!empty($matches[0])) {
-  //  $temp = end($matches[0]);
-  //  $mailbody = substr($mailbody, 0, $temp[1]); # parse last one off, since that is probably the signature
-  //}
-  //# Remove Gmail cruft-- remove the reply start text (On this date, so and so said...)
-  //$gmail_search = preg_match("/On\s[a-zA-Z]{3},\s[a-zA-Z]{3}\s[0-9]{1,2},\s[0-9]{4}\sat\s[0-9]{1,2}:[0-9]{2}\s[PM|AM]/s",
-  //                           $mailbody, $gmail_matches, PREG_OFFSET_CAPTURE);
-  //if (!empty($gmail_matches[0])) {
-  //  $mailbody = substr($mailbody, 0, $gmail_matches[0][1]);
-  //}
-  //
-  //# Remove Outlook cruft.
-  //$outlook_search = preg_match("/-{4,7}Original.Message-{4,7}.From:\s[a-zA-Z\s.\-@\[\]_123:]{0,100}(Sender|Sent):\s/s",
-  //                     $mailbody, $outlook_matches, PREG_OFFSET_CAPTURE);
-  //if (!empty($outlook_matches[0])) {
-  //  $mailbody = substr($mailbody, 0, $outlook_matches[0][1]);
-  //}
-  //
-  //# Remove unknown email client #1 cruft.
-  //# Sample text = From: Matthew Ehle information-systems@island.byu.edu [1] To: nrodgers@byu.net [2] Sent: Monday, August 17, 2009 1:18:59 PM Subject: [Information Systems] Java Programmer
-  //$client1_search = preg_match("/From:.[a-zA-Z]{3,}.[a-zA-Z]{3,}\s[a-zA-Z0-9._-]+@[a-zA-Z0-9-]+\.[a-zA-Z.]{2,5}.*To:.*@.*Sent:.*,.*Subject:/s",
-  //                     $mailbody, $client1_matches, PREG_OFFSET_CAPTURE);
-  //if (!empty($client1_matches[0])) {
-  //  $mailbody = substr($mailbody, 0, $client1_matches[0][1]);
-  //}
-  //
-  //# Remove unknown email cilent #2 cruft.
-  //# Sample text = On Aug 13, 2009, at 12:36 PM, Jonathan B Criddle wrote:
-  //$client2_search = preg_match("/On\s[a-zA-Z]{3}\s[0-9]{1,2},\s[0-9]{4},\sat\s[0-9:]{4,5}.[AMP]{2},/",
-  //                     $mailbody, $client2_matches, PREG_OFFSET_CAPTURE);
-  //if (!empty($client2_matches[0])) {
-  //  $mailbody = substr($mailbody, 0, $client2_matches[0][1]);
-  //}
-  //
-  //# Remove unknown email cilent #3 cruft.
-  ///* Sample text:
-  //  > To: jwfergie@hotmail.com
-  //> Subject: Re: [Information Systems] Win7 a win
-  //> From: information-systems@island.byu.edu
-  //> Date: Fri, 21 Aug 2009 13:48:47 -0600
-  //> 
-  //> */
-  //$client3_search = preg_match("/>.To:.[a-zA-Z0-9._-]+@[a-zA-Z0-9-]+\.[a-zA-Z.]{2,5}[>\s]{2,}Subject:.Re:.\[[a-zA-Z\s]{3,}\].[a-zA-Z0-9\s>]{3,}From:.[a-zA-Z0-9._-]+@[a-zA-Z0-9-]+\.[a-zA-Z.]{2,5}/s",
-  //                     $mailbody, $client3_matches, PREG_OFFSET_CAPTURE);
-  //if (!empty($client3_matches[0])) {
-  //  $mailbody = substr($mailbody, 0, $client3_matches[0][1]);
-  //}
-  //
-
 /*
  * Implementation of hook_nodeapi().
  */
@@ -331,11 +278,49 @@ function og_mailinglist_filter($op, $delta = 0, $format = -1, $text = "") {
 }
 
 function _og_mailinglist_build_quotes_toggle($text) {
-  $quotes = _og_mailinglist_filter_quotes($text);
-  foreach ($quotes as $quote) {
-    $replace = '<br /><span class="toggle-quoted-text">- Show quoted text -</span><div class="quoted-text">'. $quote .'</div>';
-    $text = str_replace($quote, $replace, $text); 
-  }  
+  $quotes = array();
+  
+  // Some email clients are "special". They don't like to place ">" in front of
+  // quotes. We need to give them their own special functions.
+  $hotmail = _og_mailinglist_filter_hotmail_quotes($text);
+  $outlook = _og_mailinglist_filter_outlook_quotes($text);
+  $android_gmail = _og_mailinglist_filter_android_gmail_quotes($text);
+  $unknown_client = _og_mailinglist_filter_unknown_client_quotes($text);
+  $nice_clients_quotes = _og_mailinglist_filter_quotes($text);
+  
+  // Identify the longest quoted section of all possible matches and only
+  // remove that one.
+  $quotes = _og_mailinglist_longest_string(array($hotmail, $outlook,
+                $android_gmail, $unknown_client, $nice_clients_quotes));  
+  
+  $text = _og_mailinglist_wrap_quotes($quotes, $text);
+  
+  
+  return $text;
+}
+
+/*
+ * Identify the longest quoted section as that should contain all the others
+ * that are possibly within it.
+ */
+function _og_mailinglist_longest_string ($quotes) {
+  $longest = array();
+  foreach($quotes as $quote) {
+    if (key($longest) < strlen(implode("", $quote))) {
+      $longest = array(strlen(implode("", $quote)) => $quote);
+    }
+  }
+  
+  return end($longest);
+}
+
+function _og_mailinglist_wrap_quotes($quotes, $text) {
+  if (!empty($quotes)) {
+    foreach ($quotes as $quote) {
+      $replace = '<br /><span class="toggle-quoted-text">- Show quoted text -</span><div class="quoted-text">'. $quote .'</div>';
+      $text = str_replace($quote, $replace, $text);    
+    }
+  } 
   
   return $text;
 }
@@ -351,14 +336,28 @@ function _og_mailinglist_filter_quotes($text) {
   $quotes = array();
   $count = 0;
   foreach ($lines as $line) {
-    if (preg_match("/On\s[a-zA-Z]{3},\s[a-zA-Z]{3}\s[0-9]{1,2},\s[0-9]{4}\sat\s[0-9]{1,2}:[0-9]{2}\s[PM|AM]/s", #Gmail
+    if (preg_match("/On\s\w{3},\s\w{3}\s\d{1,2},\s\d{4}\sat\s\d{1,2}:\d{2}\s[PM|AM]/s", #Gmail
                              $line, $matches)
-      || preg_match("/On\s[a-zA-Z]{3}\s[0-9]{2},\s[0-9]{4},\sat\s[0-9]{2}:[0-9]{2}\s(AM|PM),\s/s", #Apple mail
+      || preg_match("/On\s\w{3}\s\d{1,2},\s\d{4},\sat\s\d{1,2}:\d{2}\s(AM|PM),\s/s", #Apple mail
+                            $line, $matches)    
+      || preg_match("/On\s\w{3}\s\d{2},\s\d{4},\sat\s[0-9:]{4,5}\s(PM|AM),\s[a-zA-Z\s]+wrote:/s", #unknown as of yet
+                            $line, $matches)
+      || preg_match("/On\s\d{1,2}\/\d{1,2}\/\d{1,2},\s.+?<[a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?\`\|\{\}~\']+@(?:(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.?)+>\swrote:/s", # Some mobile email client, blackberry maybe?
                             $line, $matches)) {
+      
       $quotes[$count][] = $line;
       $in_quote = true;
     }
-    else if ($in_quote && (trim($line) === "" || substr(trim($line), 0, 1) === ">")) {
+    else if ($in_quote && (trim($line) === "" || substr(trim($line), 0, 1) === ">"
+      // or the previous line ended w/ a "<" Long emails addresses
+      // (e.g. <someaddress@gmail.com>) sometimes get truncated
+      // leaving the second part of the line on the next line.
+            || substr(trim(array_pop(end($quotes))), -1) === "<" 
+      // Same situation as above. But here the <someaddress@gmail.com> is
+      // brought down to the next line so the < is at the start of the line.
+            || substr(trim($line), 0, 1) === "<"
+      // And wrote: is also sometimes shoved down to the next line.
+            || substr(trim($line), 0, 6) === "wrote:")) {
       $quotes[$count][] = $line;
     }
     else {
@@ -372,6 +371,66 @@ function _og_mailinglist_filter_quotes($text) {
   }
   
   return $quotes_imploded;
+}
+
+/*
+ * Filter quotes out of emails from hotmail.com.
+ *
+ * The assumption here is that once the headers to the quoted section begins,
+ * all content after that is quotes. This seems to be how in practice people
+ * send emails but occasionaly this might filter the wrong text.
+ */
+function _og_mailinglist_filter_hotmail_quotes($text) {
+  $regex = "/Date:\s\w{3},\s\d{1,2}\s\w{3}\s\d{4}\s\d{2}:\d{2}:\d{2}\s-\d{4}.Subject:\s.*?From:.*?To:\s.*/s";
+  preg_match($regex, $text, $matches);
+  if (!empty($matches)) {
+    return $matches;
+  }
+  else {
+    return array();
+  }
+}
+
+/*
+ * Filter quotes out of emails from hotmail.com.
+ */
+function _og_mailinglist_filter_outlook_quotes($text) {
+  $regex = "/From:\s\w+\s\w+.+?\[mailto:\w+.+?Sent:\s\w+,\s\w+\s\d{2},\s\d{4}\s\d{1,2}:\d{1,2}\s[AM|PM]+.To:\s.+?Subject:\s.*/s";
+  preg_match($regex, $text, $matches);
+  if (!empty($matches)) {
+    return $matches;
+  }
+  else {
+    return array();
+  }  
+}
+
+/*
+ * Filter quotes out of emails from Android's email client.
+ */
+function _og_mailinglist_filter_android_gmail_quotes($text) {
+  $regex = "/On\s\w{3}\s\d{1,2},\s\d{4}\s\d{1,2}:\d{2}\s[PM|AM]+,\s.*/s";
+  preg_match($regex, $text, $matches);
+  if (!empty($matches)) {
+    return $matches;
+  }
+  else {
+    return array();
+  }  
+}
+
+/*
+ * Filter quotes out of emails from some other microsoftie looking email client.
+ */
+function _og_mailinglist_filter_unknown_client_quotes($text) {
+  $regex = "/From:\s\".*?\"\s<.*?@.*?>.Date:\s\w{3},.*?To:.*?<.*?@.*?>.*?Cc:\s.*?<.*?@.*?>.*?Subject:.*/s";
+  preg_match($regex, $text, $matches);
+  if (!empty($matches)) {
+    return $matches;
+  }
+  else {
+    return array();
+  }  
 }
 
 /*
