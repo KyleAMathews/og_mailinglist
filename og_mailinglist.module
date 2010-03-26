@@ -294,9 +294,10 @@ function _og_mailinglist_remove_quotes($text) {
   $quotes = _og_mailinglist_find_quoted_sections($text);
   if (!empty($quotes)) {
     foreach ($quotes as $quote) {
-      $text = str_replace($quote, '', $text);    
+      $text = str_replace($quote, '', $text);
     }
-  } 
+  }
+  return $text;
 }
 
 function _og_mailinglist_find_quoted_sections($text) {
