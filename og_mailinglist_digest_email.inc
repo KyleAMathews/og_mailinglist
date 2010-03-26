@@ -183,6 +183,9 @@ function og_mailinglist_style_comment_message($comment) {
   $user = user_load(array('uid' => $comment->uid));
   $body .= "<div style=\"" . MESSAGE_HEADER . "\"><strong>" . $user->realname . "</strong> " . $user->mail . " " .
               date("d M Y — g:ia O", $comment->timestamp) . "</div>\n";
+
+  // Filter out quoted sections of emails.
+  $comment->comment = _og_mailinglist_remove_quotes($comment->comment);
   $body .= og_mailinglist_prepare_web_content($comment->comment);
   $body .= "<br />\n";
   
