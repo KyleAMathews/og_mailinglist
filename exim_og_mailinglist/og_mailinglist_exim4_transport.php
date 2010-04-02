@@ -17,7 +17,6 @@ $sites = og_mailinglist_site_aliases();
 $mail_username = $argv[1];
 $mail_domain = $argv[2];
  
-//echo $mail_username . " " . $mail_domain . "\n"; 
 foreach ($sites as $domain => $drush_alias) {
   if (strtolower($mail_domain) === $domain) {
     // This email is to one of our domains. Let's post it.
@@ -25,7 +24,7 @@ foreach ($sites as $domain => $drush_alias) {
     exec("EMAIL=$(cat <<EOF\n" . escapeshellarg($raw_email) . "\nEOF\n);
          drush " . $drush_alias . " ogm-post-email \"\$EMAIL\" " . $mail_username,
          $result);
-    echo "the result:\n";
-    print_r($result);
+    //echo "the result:\n";
+    //print_r($result);
   }
 }
