@@ -290,6 +290,8 @@ function _og_mailinglist_build_quotes_toggle($text) {
   return $text;
 }
 
+// TODO would be useful at some point to add option to truncate long words
+// URLs tend to stick out side of comment box which is ugly.
 function _og_mailinglist_remove_quotes($text) {
   $quotes = _og_mailinglist_find_quoted_sections($text);
   if (!empty($quotes)) {
@@ -300,6 +302,15 @@ function _og_mailinglist_remove_quotes($text) {
   return $text;
 }
 
+// Possible way to simplify this. Drop the find start of quoted section and loop through it
+// and just do as doing with Hotmail/Outlook and other clients that don't quote
+// properly and match all the quoted section w/ regex.
+// This rests on the assumption that everyone will either top-post or
+// properly trim their emails where they bottom post. It seems the vast majority
+// of people do that.
+// Making the switch would vastly simplify the code.
+// We could then hold the regex for each email client in an array and just pass
+// that and the text into a function. 
 function _og_mailinglist_find_quoted_sections($text) {
   $quotes = array();
   

@@ -1,4 +1,3 @@
-#!/usr/bin/php
 <?php
 // TODO move mimeDecode + phpmailer to libraries + add QueryPath as dependent module
 // TODO rewrite header info here.
@@ -36,174 +35,167 @@ require_once('og_mailinglist_api.inc');
 ###       where email.txt is an email saved to a file.
 ###
 
-try {
-  // Boostrap drupal.
-  require_once('og_mailinglist_exim4_boostrap_command_line.php');
-  // Get Drupal files now that boostrap is done.
-  // Require the QueryPath core.
-  require_once(drupal_get_path('module', 'querypath') . "/" . 'QueryPath/QueryPath.php');
-
-  $email = array();
-  
-  // Set command line arguments (sent by the exim4 transport) to variables we can read.
-  $mail_username = $argv[1];
-
-  // Grab the email message from stdin, then parse the parts.
-  // We only use the text/plain part right now.
-  $fd = fopen("php://stdin", "r");
-  while (!feof($fd)) {
-    $email['original_email_text'] .= fread($fd, 1024);
-  }
-  
-  // Detect email character set.
-  $email['char_set'] = _og_mailinglist_detect_email_char_set($email['original_email_text']);
-  
-  // Extract all the needed info from the email into a simple array.
-  $email = _og_mailinglist_parse_email($email);
-  
-  // Did we actually get email text back? If not, throw an exception.
-  if ($email['mailbody'] == "") {
-    throw new Exception(t("Could not parse message body from the text/plain portion of the email."));
-  }
-  
-  // Check the size of the body and kick out if too large (for security).
-  if (strlen($email['mailbody']) >
-      variable_get('og_mailinglist_max_message_size', 200) * 1024) {  // 200 Kb
-    throw new Exception(t("Discussion items sent via email must be less than 200 Kb Mb. For security reasons, please post larger messages through the web interface."));
-  }
-
-  // This regex worries me... do *all* email clients place email addresses between <>?
-  // Get the user id.
-  $mailfrom = $email['headers']['from'];
-  if (preg_match("/<(.*?)>/", $email['headers']['from'], $matches)) { 
-    $mailfrom = $matches[1];
-  }
-  
-  if (!$email['userid'] = db_result(db_query("SELECT uid
-                                    FROM {users}
-                                    WHERE mail='%s'", $mailfrom))) {
-    // If not posting from their normal email account, let's try their mail alias.
-    $email['userid'] = db_result(db_query("SELECT uid
-                                          FROM {users}
-                                          WHERE data LIKE '%%%s%%'", $mailfrom));
-  }
-  if (!$email['userid']) {
-    throw new Exception(t("Could not locate the user account for $mailfrom.  For security reasons, please post from the email account you are registered with. If you'd like to post from an email account different than the one you registered with, edit your account page to add that email address as an email alias."));
-  }
-  // Check how many posts have been made by this user (for security).
-  if (variable_get('og_mailinglist_max_posts_per_hour', 20) > 0) {
-    $one_hour_ago = time() - (60 * 60);
-    $num_recent_posts = db_result(db_query("SELECT count(*)
-                                           FROM {node}
-                                           WHERE uid=%d AND
-                                           created > %d",
-                                           $email['userid'], $one_hour_ago));
-    if ($num_recent_posts > variable_get('og_mailinglist_max_posts_per_hour', 20)) {
-     throw new Exception(t("You have posted via email too many times in the last hour.  For security reasons, please wait a while or post through the regular web interface."));
-    }
-  }
-  
-  // Get the group id.
-  $email['groupid'] = db_result(db_query("SELECT id
-                                         FROM {purl}
-                                         WHERE provider='spaces_og' AND
-                                         LOWER(value)='%s'", $mail_username));
-  if (!$email['groupid']) { 
-    throw new Exception(t("Could not locate group named $mail_username"));
-  }
-  
-  // Check the this user is a member of this group (for security).
-  $results = db_query("SELECT og.nid, n.title
-                      FROM {og_uid} og JOIN {node} n
-                      JOIN {og} o
-                      WHERE og.uid=%d AND
-                      og.nid=%d AND
-                      og.nid=n.nid AND
-                      o.nid=og.nid", $email['userid'], $email['groupid']);   
-  if (!db_result($results)) { // TODO also check if person is subscribed to this thread -- if they are, let them comment by email.
-    throw new Exception(t("You are not a member of this group.  Please join the group via the web site before posting."));
-  }
-  
-  // Try to get the Node ID. If the email is a comment to a node, we should be
-  // able to get the Node ID of the original node.
-  $email['nid'] = og_mailinglist_parse_nid($email['original_email_text'], $email['structure']->headers['subject']);
-
-  // create the new content in Drupal.
-  if ($email['nid']) { // a new comment
-    
-    // Two checks first before creating the comment.
-    // There are at least two reasons why an email could have a nid but not be
-    // intended as a new comment.
-    // First, someone could be forwarding an email to a different group.
-    // Second, it's common on mailinglists to fork discussions by changing
-    // the subject line. We need to check for both.
-    
-    // Does the detected nid belong to the same group as the email was forwarded to?
-    $nid_groupid = db_result(db_query("SELECT group_nid
-                                      FROM {og_ancestry}
-                                      WHERE nid = %d", $email['nid']));
-    
-    if ($nid_groupid != $email['groupid']) {
-      og_mailinglist_save_discussion($email);
-      exit(0); // So we don't save a comment as well
-    }
-    
-    // TODO -- this is incredibly buggy right now. Every so often, seemingly random,
-    // this bit of code decides a comment is actually a new node. Turned off for now.
-    
-    // Is the subject line different than the expected node title?
-    // If the subject_nid is empty, that means the subject is new so email is new discussion.
-    // If the subject_nid is different, that also means the email is a new discussion but
-    // that it coincidentally matched an earlier discussion.
-    //$subject_nid = _og_mailinglist_nid_of_subject($email['structure']->headers['subject']);
-    //if (!empty($subect_nid) || $subject_nid != $email['nid']) {
-    //  og_mailinglist_save_discussion($email);
-    //  exit(0); // So we don't save a comment as well.
-    //}
-    
-    // If we got this far, the email is definitely intended as a new comment.
-    og_mailinglist_save_comment($email);
-    
-  }else {  // A new discussion.
-    og_mailinglist_save_discussion($email);
-  }
-  
-  // Tell Exim4 we had success!
-  exit(0);  
-
-}catch (Exception $e) {
+function _og_mailinglist_process_email($raw_email, $mail_username) {
   try {
-    // Compose an email back to the sender informing them of the problem.
-    $head = Array();
-    $head[] = 'From: ' . variable_get("og_mailinglist_noreply_email", t("no-reply@" . variable_get("og_mailinglist_server_string", "example.com")));
-    $head[] = 'References: ' . $email['headers']['message-id'];
-    $head[] = 'In-Reply-To: ' . $email['headers']['message-id'];
-    $errormsg = $e->getMessage();
-    $msgdate = $email['headers']['date'];
-    $msgfrom = $email['headers']['from'];
-    $commentedbody = str_replace("\n", "\n> ", $mailbody);
-    $body = "An error occurred while processing your submission:
-    
-     $errormsg
+    // Require the QueryPath core.
+    require_once(drupal_get_path('module', 'querypath') . "/" . 'QueryPath/QueryPath.php');
+  
+    $email = array();
+    echo $raw_email;
+    echo "we got it!";
 
-Please correct this error and try again, or contact the system administrator.  Thank you.
-
-On $msgdate, $msgfrom wrote:
-> $commentedbody";
+    $email['original_email_text'] = $raw_email;
     
-    // send it off
-    if (!mail($email['headers']['from'], "Error processing message", $body, implode("\n", $head))) {
-      throw new Exception("Mail error");
+    // Detect email character set.
+    $email['char_set'] = _og_mailinglist_detect_email_char_set($email['original_email_text']);
+    
+    // Extract all the needed info from the email into a simple array.
+    $email = _og_mailinglist_parse_email($email);
+    
+    // Did we actually get email text back? If not, throw an exception.
+    if ($email['mailbody'] == "") {
+      throw new Exception(t("Could not parse message body from the text/plain portion of the email."));
+    }
+    
+    // Check the size of the body and kick out if too large (for security).
+    if (strlen($email['mailbody']) >
+        variable_get('og_mailinglist_max_message_size', 200) * 1024) {  // 200 Kb
+      throw new Exception(t("Discussion items sent via email must be less than 200 Kb Mb. For security reasons, please post larger messages through the web interface."));
     }
   
-    // print error message to log, then quit
-    echo t("Error: " . $e->getMessage() . "\n");
-    exit(0);
+    // This regex worries me... do *all* email clients place email addresses between <>?
+    // Get the user id.
+    $mailfrom = $email['headers']['from'];
+    if (preg_match("/<(.*?)>/", $email['headers']['from'], $matches)) { 
+      $mailfrom = $matches[1];
+    }
     
-  }catch (Exception $e2) {
-    // if we get here, we couldn't even send an email back to sender, so just have Exim compose an error message and send back
-    echo t("Error: ") . $e2->getMessage() . " ::: Embedded Error: " . $e->getMessage() . "\n";
-    exit(1);
+    if (!$email['userid'] = db_result(db_query("SELECT uid
+                                      FROM {users}
+                                      WHERE mail='%s'", $mailfrom))) {
+      // If not posting from their normal email account, let's try their mail alias.
+      $email['userid'] = db_result(db_query("SELECT uid
+                                            FROM {users}
+                                            WHERE data LIKE '%%%s%%'", $mailfrom));
+    }
+    if (!$email['userid']) {
+      throw new Exception(t("Could not locate the user account for $mailfrom.  For security reasons, please post from the email account you are registered with. If you'd like to post from an email account different than the one you registered with, edit your account page to add that email address as an email alias."));
+    }
+    // Check how many posts have been made by this user (for security).
+    if (variable_get('og_mailinglist_max_posts_per_hour', 20) > 0) {
+      $one_hour_ago = time() - (60 * 60);
+      $num_recent_posts = db_result(db_query("SELECT count(*)
+                                             FROM {node}
+                                             WHERE uid=%d AND
+                                             created > %d",
+                                             $email['userid'], $one_hour_ago));
+      if ($num_recent_posts > variable_get('og_mailinglist_max_posts_per_hour', 20)) {
+       throw new Exception(t("You have posted via email too many times in the last hour.  For security reasons, please wait a while or post through the regular web interface."));
+      }
+    }
+    
+    // Get the group id.
+    $email['groupid'] = db_result(db_query("SELECT id
+                                           FROM {purl}
+                                           WHERE provider='spaces_og' AND
+                                           LOWER(value)='%s'", $mail_username));
+    if (!$email['groupid']) { 
+      throw new Exception(t("Could not locate group named $mail_username"));
+    }
+    
+    // Check the this user is a member of this group (for security).
+    $results = db_query("SELECT og.nid, n.title
+                        FROM {og_uid} og JOIN {node} n
+                        JOIN {og} o
+                        WHERE og.uid=%d AND
+                        og.nid=%d AND
+                        og.nid=n.nid AND
+                        o.nid=og.nid", $email['userid'], $email['groupid']);   
+    if (!db_result($results)) { // TODO also check if person is subscribed to this thread -- if they are, let them comment by email.
+      throw new Exception(t("You are not a member of this group.  Please join the group via the web site before posting."));
+    }
+    
+    // Try to get the Node ID. If the email is a comment to a node, we should be
+    // able to get the Node ID of the original node.
+    $email['nid'] = og_mailinglist_parse_nid($email['original_email_text'], $email['structure']->headers['subject']);
+  
+    // create the new content in Drupal.
+    if ($email['nid']) { // a new comment
+      
+      // Two checks first before creating the comment.
+      // There are at least two reasons why an email could have a nid but not be
+      // intended as a new comment.
+      // First, someone could be forwarding an email to a different group.
+      // Second, it's common on mailinglists to fork discussions by changing
+      // the subject line. We need to check for both.
+      
+      // Does the detected nid belong to the same group as the email was forwarded to?
+      $nid_groupid = db_result(db_query("SELECT group_nid
+                                        FROM {og_ancestry}
+                                        WHERE nid = %d", $email['nid']));
+      
+      if ($nid_groupid != $email['groupid']) {
+        og_mailinglist_save_discussion($email);
+        exit(0); // So we don't save a comment as well
+      }
+      
+      // TODO -- this is incredibly buggy right now. Every so often, seemingly random,
+      // this bit of code decides a comment is actually a new node. Turned off for now.
+      
+      // Is the subject line different than the expected node title?
+      // If the subject_nid is empty, that means the subject is new so email is new discussion.
+      // If the subject_nid is different, that also means the email is a new discussion but
+      // that it coincidentally matched an earlier discussion.
+      //$subject_nid = _og_mailinglist_nid_of_subject($email['structure']->headers['subject']);
+      //if (!empty($subect_nid) || $subject_nid != $email['nid']) {
+      //  og_mailinglist_save_discussion($email);
+      //  exit(0); // So we don't save a comment as well.
+      //}
+      
+      // If we got this far, the email is definitely intended as a new comment.
+      og_mailinglist_save_comment($email);
+      
+    }else {  // A new discussion.
+      og_mailinglist_save_discussion($email);
+    }
+    
+    // Tell Exim4 we had success!
+    exit(0);  
+  
+  }catch (Exception $e) {
+    try {
+      // Compose an email back to the sender informing them of the problem.
+      $head = Array();
+      $head[] = 'From: ' . variable_get("og_mailinglist_noreply_email", t("no-reply@" . variable_get("og_mailinglist_server_string", "example.com")));
+      $head[] = 'References: ' . $email['headers']['message-id'];
+      $head[] = 'In-Reply-To: ' . $email['headers']['message-id'];
+      $errormsg = $e->getMessage();
+      $msgdate = $email['headers']['date'];
+      $msgfrom = $email['headers']['from'];
+      $commentedbody = str_replace("\n", "\n> ", $mailbody);
+      $body = "An error occurred while processing your submission:
+      
+       $errormsg
+  
+  Please correct this error and try again, or contact the system administrator.  Thank you.
+  
+  On $msgdate, $msgfrom wrote:
+  > $commentedbody";
+      
+      // send it off
+      if (!mail($email['headers']['from'], "Error processing message", $body, implode("\n", $head))) {
+        throw new Exception("Mail error");
+      }
+    
+      // print error message to log, then quit
+      echo t("Error: " . $e->getMessage() . "\n");
+      exit(0);
+      
+    }catch (Exception $e2) {
+      // if we get here, we couldn't even send an email back to sender, so just have Exim compose an error message and send back
+      echo t("Error: ") . $e2->getMessage() . " ::: Embedded Error: " . $e->getMessage() . "\n";
+      exit(1);
+    }
   }
 }
 
