@@ -41,8 +41,6 @@ function _og_mailinglist_process_email($raw_email, $mail_username) {
     require_once(drupal_get_path('module', 'querypath') . "/" . 'QueryPath/QueryPath.php');
   
     $email = array();
-    echo $raw_email;
-    echo "we got it!";
 
     $email['original_email_text'] = $raw_email;
     
