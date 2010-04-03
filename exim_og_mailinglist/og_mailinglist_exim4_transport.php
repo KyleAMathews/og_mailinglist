@@ -24,7 +24,7 @@ foreach ($sites as $domain => $drush_alias) {
     exec("EMAIL=$(cat <<EOF\n" . escapeshellarg($raw_email) . "\nEOF\n);
          drush " . $drush_alias . " ogm-post-email \"\$EMAIL\" " . $mail_username,
          $result);
-    //echo "the result:\n";
-    //print_r($result);
   }
 }
+
+

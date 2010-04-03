@@ -84,11 +84,8 @@ function _og_mailinglist_post_email() {
   $raw_email = $args[0];
   $mail_username = $args[1];
   
-  // Remove extra single quotes introduced by shellescapearg()
-  $raw_email = trim($raw_email, "' ");
-  $raw_email = str_replace("\''", "", $raw_email);
 
   //echo "raw email: " . $raw_email . "\n";
-  echo "we're posting an email to " . $mail_username . "\n";
+  //echo "we're posting an email to " . $mail_username . "\n";
   _og_mailinglist_process_email($raw_email, $mail_username);
 }

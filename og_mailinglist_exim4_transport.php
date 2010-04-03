@@ -41,6 +41,10 @@ function _og_mailinglist_process_email($raw_email, $mail_username) {
     require_once(drupal_get_path('module', 'querypath') . "/" . 'QueryPath/QueryPath.php');
   
     $email = array();
+    
+    // Remove extra single quotes introduced by shellescapearg()
+    $raw_email = trim($raw_email, "' ");
+    $raw_email = str_replace("\''", "", $raw_email);
 
     $email['original_email_text'] = $raw_email;
     
