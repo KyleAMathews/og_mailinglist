@@ -79,7 +79,7 @@ function _og_mailinglist_check_group_exists() {
  */
 function _og_mailinglist_post_email() {
   // Load file
-  require_once(drupal_get_path('module', 'og_mailinglist') . "/og_mailinglist_exim4_transport.php");
+  require_once(drupal_get_path('module', 'og_mailinglist') . "/og_mailinglist_transport.inc");
   $args = func_get_args();
   $raw_email = $args[0];
   $mail_username = $args[1];
