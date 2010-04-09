@@ -17,7 +17,9 @@ require_once("phpmailer/class.phpmailer.php");
 require_once("og_mailinglist_phpmailer.inc");
 require_once('og_mailinglist_api.inc');
 
-/** Implementation of hook_menu(). */
+/**
+ * Implementation of hook_menu(). 
+ */
 function og_mailinglist_menu() {
   # Administration
   $items['admin/messaging/og_mailinglist'] = array(
@@ -316,18 +318,18 @@ function _og_mailinglist_find_quoted_sections($text) {
   
   // Some email clients are "special". They don't like to place ">" in front of
   // quotes. We need to give them their own special functions.
-  $hotmail = _og_mailinglist_filter_hotmail_quotes($text);
-  $outlook = _og_mailinglist_filter_outlook_quotes($text);
-  $android_gmail = _og_mailinglist_filter_android_gmail_quotes($text);
-  $unknown_client = _og_mailinglist_filter_unknown_client_quotes($text);
-  $unknown_client2 = _og_mailinglist_filter_unknown_client2_quotes($text);
-  $nice_clients_quotes = _og_mailinglist_filter_quotes($text);
+  $quotes[] = array();
+  $quotes[] = _og_mailinglist_filter_hotmail_quotes($text);
+  $quotes[] = _og_mailinglist_filter_outlook_quotes($text);
+  $quotes[] = _og_mailinglist_filter_android_gmail_quotes($text);
+  $quotes[] = _og_mailinglist_filter_unknown_client_quotes($text);
+  $quotes[] = _og_mailinglist_filter_unknown_client2_quotes($text);
+  $quotes[] = _og_mailinglist_filter_unknown_client3_quotes($text);
+  $quotes[] = _og_mailinglist_filter_quotes($text);
   
   // Identify the longest quoted section of all possible matches and only
   // remove that one.
-  $quotes = _og_mailinglist_longest_string(array($hotmail, $outlook,
-                $android_gmail, $unknown_client, $unknown_client2,
-                $nice_clients_quotes));
+  $quotes = _og_mailinglist_longest_string($quotes);
   
   return $quotes;
 }
@@ -427,10 +429,8 @@ function _og_mailinglist_filter_outlook_quotes($text) {
   }  
 }
 
-
-
 /*
- * Filter quotes out of emails from Android's email client.
+ * Filter quotes out of emails from Android's GMail client.
  */
 function _og_mailinglist_filter_android_gmail_quotes($text) {
   $regex = "/On\s\w{3}\s\d{1,2},\s\d{4}\s\d{1,2}:\d{2}\s[PM|AM]+,\s.*/s";
@@ -471,6 +471,25 @@ function _og_mailinglist_filter_unknown_client2_quotes($text) {
   }  
 }
 
+/*
+ * Filter quotes out of emails from yet another microsoftie looking email client.
+ *
+ * From: Dave [mailto:bob@example.com]
+ * Sent: Monday, April 05, 2010 5:30 PM
+ * To: A group
+ * Subject: [a-group] SQL Server Express
+ * 
+ */
+function _og_mailinglist_filter_unknown_client3_quotes($text) {
+  $regex = "/From:\s.*?\[.*?@.*?\].*?Sent:\s\w*?,\s\w*?\s\d{1,2},\s\d{4}\s\d{1,2}:\d{2}\s(PM|AM).*?To:\s.*?Subject:.*/s";
+  preg_match($regex, $text, $matches);
+  if (!empty($matches)) {
+    return $matches;
+  }
+  else {
+    return array();
+  }  
+}
 /*
  * Implementation of hook_cron().
  */

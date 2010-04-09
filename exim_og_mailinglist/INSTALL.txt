@@ -4,4 +4,6 @@ These files are for integrating OG Mailinglist with the EXIM MTA.
 1. Copy this entire folder to /etc/exim4/
 2. Copy router_950_exim4-config_drupal_mailnode to /etc/exim4/conf.d/router/950_exim4-config_drupal_mailnode
 3. Copy transport_95_exim4-config_drupal_mailnode to /etc/exim4/conf.d/transport/95_exim4-config_drupal_mailnode
-4. Restart exim by running "/etc/init.d/exim4 restart"
+4. Add the mapping from your site's domain name to its Drush alias in site_aliases.php.
+5. Restart exim by running "/etc/init.d/exim4 restart".
+6. Test setup by sending email to agroupname@yoursite.com
