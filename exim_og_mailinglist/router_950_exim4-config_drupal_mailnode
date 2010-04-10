@@ -1,8 +1,8 @@
 # this is a custom router for the Drupal module og_mailinglist
 
-drupal_mailnode:
+drupal_og_mailinglist:
   driver = queryprogram
   command = /etc/exim4/exim_og_mailinglist/og_mailinglist_exim4_router.php $local_part $domain $sender_address_local_part $sender_address_domain $return_path
   command_user = mail
   command_group = mail
-  transport = drupal_mailnode 
+  transport = drupal_og_mailinglist

@@ -211,7 +211,7 @@ function og_mailinglist_parse_nid($email, $subject) {
   if (preg_match("/[mM]essage-?[iIdD]{2}:\s.*node\/([0-9]+)/s", $email, $matches)) {
     $nid = $matches[1];
   }
-  else if (preg_match("/^.*\/unsubscribe\/([0-9]+)/s", $email, $matches)) {
+  else if (preg_match("/og_mailinglist\/unsubscribe\/([0-9]+)/s", $email, $matches)) {
     $nid = $matches[1];
   }
   // Else, as last resort, pick the last node that matches the title in the subject line.
@@ -223,7 +223,7 @@ function og_mailinglist_parse_nid($email, $subject) {
 
 function _og_mailinglist_nid_of_subject($subject) {
   $nid = ""; 
-  preg_match("/[Rr][Ee]:\s\[.+\]\s(.+)/s", $subject, $matches);
+  preg_match("/[Rr][Ee]:\s\[.*?\]\s(.+)/s", $subject, $matches);
   $title = $matches[1];
   if ($title) {
       $nid = db_result(db_query("SELECT nid
