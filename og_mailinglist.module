@@ -325,6 +325,7 @@ function _og_mailinglist_find_quoted_sections($text) {
   $quotes[] = _og_mailinglist_filter_unknown_client_quotes($text);
   $quotes[] = _og_mailinglist_filter_unknown_client2_quotes($text);
   $quotes[] = _og_mailinglist_filter_unknown_client3_quotes($text);
+  $quotes[] = _og_mailinglist_filter_unknown_client4_quotes($text);
   $quotes[] = _og_mailinglist_filter_quotes($text);
   
   // Identify the longest quoted section of all possible matches and only
@@ -488,8 +489,29 @@ function _og_mailinglist_filter_unknown_client3_quotes($text) {
   }
   else {
     return array();
-  }  
+  }
 }
+/*
+ * Filter quotes out of emails from yet another microsoftie looking email client.
+ *
+ * -----Original Message-----
+ * From: Someone <someone@me.com>
+ * Date: Sat, 10 Apr 2110 12:25:28 
+ * To: Entrepreneurship<entrepreneurship@island.byu.edu>
+ * Subject: Re: [entrepreneurship] Need Tech Guys to Form 
+ * 
+ */
+function _og_mailinglist_filter_unknown_client4_quotes($text) {
+  $regex = "/-----Original\sMessage-----.*?From:\s.*?@.*?Date:\s\w{3},\s\d{1,2}\s.*?:.*?:.*?To:.*?@.*?Subject:.*/s";
+  preg_match($regex, $text, $matches);
+  if (!empty($matches)) {
+    return $matches;
+  }
+  else {
+    return array();
+  }
+}
+
 /*
  * Implementation of hook_cron().
  */
