@@ -11,7 +11,7 @@ require_once('og_mailinglist_api.inc');
 ###   transport that takes an email and processes it.  It also requires
 ###   a router file: og_mailinglist_exim4_router.php
 ###
-###   Written by Conan Albrecht   March 2009
+###   Original version written by Conan Albrecht   March 2009
 ###
 ###   Here's the code that needs to go into Exim4's configuration:
 ###   (note you need to customize the path in the command line)
@@ -119,7 +119,7 @@ function _og_mailinglist_process_email($raw_email, $mail_username) {
     
     // Try to get the Node ID. If the email is a comment to a node, we should be
     // able to get the Node ID of the original node.
-    $email['nid'] = og_mailinglist_parse_nid($email['original_email_text'], $email['structure']->headers['subject']);
+    $email['nid'] = og_mailinglist_parse_nid($email['text_plain'], $email['structure']->headers['subject']);
   
     // create the new content in Drupal.
     if ($email['nid']) { // a new comment
