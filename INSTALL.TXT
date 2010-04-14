@@ -12,7 +12,11 @@ PREREQUISITES:
 
 * Organic Groups - This module assumes you are using a group-oriented web site.  This essentially allows for a list-per-group.
 
-* PHPMailer
+* Spaces / Purl (these dependecies will be refactored away in a future release).
+
+* PHPMailer 5
+
+* PHP libraries Mailparser and mimeDecode
 
 INSTALLATION INSTRUCTIONS:
 
