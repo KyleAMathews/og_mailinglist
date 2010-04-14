@@ -1,4 +1,8 @@
 <?php
+/*
+ * @file If you're migrating a site from notifications/messaging to og_mailinglist, use this script to migrate user's settings. It doesn't work 100% perfect
+ * so you might have to tweak things. Improvements to the script are highly welcome.
+ */
 
 # set up the drupal directory -- very important 
 $DRUPAL_DIR = '/var/www/island_prod';
