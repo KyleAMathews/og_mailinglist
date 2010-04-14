@@ -19,7 +19,7 @@ function og_mailinglist_send_comment_email($comment, $node) {
   $mailer = og_mailinglist_add_web_headers($mailer, $space, $node);
   
   // Decorate subject.
-  $mailer->Subject = "Re: [" . $space->purl . "] " . $node->title;
+  $mailer->Subject = "Re: [" . $space->group->purl . "] " . $node->title;
 
   // Decorate body.
   $body = og_mailinglist_prepare_web_content($comment->comment); // TODO figure out what the render function for nodes/comments is and use that instead. Current setup inconsistent plus won't shift to other's setups
@@ -70,7 +70,7 @@ function og_mailinglist_send_node_email($node) {
   $mailer = og_mailinglist_add_web_headers($mailer, $space, $node);
 
   // Decorate subject.
-  $mailer->Subject = "[" . $space->purl . "] " . $node->title;
+  $mailer->Subject = "[" . $space->group->purl . "] " . $node->title;
 
   // Decorate body.
   $body = og_mailinglist_prepare_web_content($node->body);

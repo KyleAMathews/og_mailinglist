@@ -636,14 +636,14 @@ function _og_mailinglist_rewrite_headers($email, $node, $space, $new_node = FALS
   $new_headers['mime-version'] = $headers['mime-version'];
   $new_headers['date'] = $headers['date'];
   if ($new_node) {
-    $new_headers['subject'] = "[" . $space->purl . "] " . $node->title;  
+    $new_headers['subject'] = "[" . $space->group->purl . "] " . $node->title;  
   }
   else {
     $new_headers['subject'] = $headers['subject'];
   }
   
   $new_headers['from'] = $headers['from'];
-  $new_headers['to'] = $space->purl . "@" . variable_get('og_mailinglist_server_string', 'example.com');
+  $new_headers['to'] = $space->group->purl . "@" . variable_get('og_mailinglist_server_string', 'example.com');
   $new_headers['bcc'] =
     array_to_comma_delimited_string(
       _og_mailinglist_remove_subscribers(
@@ -653,11 +653,11 @@ function _og_mailinglist_rewrite_headers($email, $node, $space, $new_node = FALS
   $new_headers['content-transfer-encoding'] =  $headers['content-transfer-encoding'];
   
   // Add list headers.
-  $new_headers['List-Id'] = "<" . $space->purl . "@" .
+  $new_headers['List-Id'] = "<" . $space->group->purl . "@" .
                 variable_get('og_mailinglist_server_string', 'example.com') . ">";
-  $new_headers['List-Post'] = "<mailto:" . $space->purl . "@" .
+  $new_headers['List-Post'] = "<mailto:" . $space->group->purl . "@" .
                 variable_get('og_mailinglist_server_string', 'example.com') . ">";
-  $new_headers['List-Archive'] = url("node/" . $space->sid, array('absolute' => TRUE));
+  $new_headers['List-Archive'] = url("node/" . $space->id, array('absolute' => TRUE));
   
   // Thread-URL header.
   global $base_url;

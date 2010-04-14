@@ -6,7 +6,7 @@ function _og_mailinglist_get_subscribers($space, $node = NULL, $new_node = FALSE
   // If new node, save subscriptions for new node to og_mailinglist_thread.
   // If new comment, just load subscriptions.
   if ($new_node) {
-    $subscribers = og_mailinglist_get_space_subscriptions($space->sid, $space->type);
+    $subscribers = og_mailinglist_get_space_subscriptions($space->id, $space->type);
     // Clean bad emails from list.
     foreach ($subscribers as $uid => $email) {
       if (!valid_email_address($email)) {
@@ -60,7 +60,7 @@ function og_mailinglist_prepare_web_content($text) {
   return filter_filter('process', 3, NULL, $text);
 }
 
-function _og_mailinglist_email_already_sent($nid, $cid = 0) {
+ function _og_mailinglist_email_already_sent($nid, $cid = 0) {
   return (db_result(db_query("SELECT nid
                FROM {og_mailinglist_source}
                WHERE nid = %d
@@ -78,12 +78,12 @@ function og_mailinglist_build_web_footer($space, $node, $body, $cid = 0) {
 function og_mailinglist_add_web_headers($mailer, $space, $node) {
   global $base_url;
   
-  $mailer->AddCustomHeader($mailer->HeaderLine("List-Id", "<" . $space->purl .
+  $mailer->AddCustomHeader($mailer->HeaderLine("List-Id", "<" . $space->group->purl .
             "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">"));
-  $mailer->AddCustomHeader($mailer->HeaderLine("List-Post", "<mailto:" . $space->purl .
+  $mailer->AddCustomHeader($mailer->HeaderLine("List-Post", "<mailto:" . $space->group->purl .
             "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">"));
   $mailer->AddCustomHeader($mailer->HeaderLine("List-Archive", url("node/" .
-            $space->sid, array('absolute' => TRUE))));
+            $space->id, array('absolute' => TRUE))));
   $mailer->AddCustomHeader($mailer->HeaderLine("X-Thread-Url", $base_url .
             "/node/" . $node->nid));
   
@@ -112,7 +112,7 @@ function _og_mailinglist_add_addresses($mailer, $space, $node, $new_node = FALSE
   
   $mailer->From = $author->mail;
   $mailer->FromName = $author_name;
-  $mailer->AddAddress($space->purl . "@" .
+  $mailer->AddAddress($space->group->purl . "@" .
           variable_get('og_mailinglist_server_string', 'example.com'), $space->title);
  
   // Add emails to BCC

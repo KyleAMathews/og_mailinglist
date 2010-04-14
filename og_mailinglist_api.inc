@@ -5,7 +5,7 @@
  * @param int $sid Space id to query for subscriptions
  * @param string $space_type Space type e.g. og
  * 
- * @return array of UIDs and email addresses that are subscribed to this thread.
+ * @return array of UIDs and email addresses that are subscribed to this space.
  *  Format = key (UID) => value (email address)
  */
 function og_mailinglist_get_space_subscriptions($sid, $space_type) {

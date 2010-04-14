@@ -5,7 +5,7 @@
  * @file
  * OG Mailinglist Drush commands
  */
-
+// TODO Some other useful drush commands. Download phpmailer, resend comment, send test digest email for a group and user, subscribe all users to a group thread.
 /**
  * Implementation of hook_drush_command().
  *
