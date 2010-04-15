@@ -1,4 +1,4 @@
-OG <ailinglist - Turns Drupal into a multi-group email list.
+OG Mailinglist - Turns Drupal into a multi-group email list.
                 
 
 OG Mailinglist allows users to start new discussions by email and post comments on existing discussions by simply replying to emails.  You get the best of both worlds: a browser-based discussion site and an email-based list.
