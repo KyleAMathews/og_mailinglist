@@ -16,7 +16,7 @@ PREREQUISITES:
 
 * PHPMailer 5
 
-* PHP libraries Mailparser and mimeDecode
+* PHP libraries Mailparse and mimeDecode
 
 INSTALLATION INSTRUCTIONS:
 
@@ -24,7 +24,7 @@ INSTALLATION INSTRUCTIONS:
 
 * Download the latest PHPMailer 5.x to modules/og_mailinglist/phpmailer - http://sourceforge.net/projects/phpmailer/files/phpmailer%20for%20php5_6/
 
-* Install two PHP libraries, Mailparser and mimeDecode. On Debian/Ubuntu run from the command line, "pecl install mailparser; echo "extension=mailparse.so" >> /etc/php5/cli/php.ini; /etc/init.d/apache2 restart" and "apt-get install php-mail-mimedecode"
+* Install two PHP libraries, Mailparser and mimeDecode. On Debian/Ubuntu run from the command line, "pecl install mailparse; echo "extension=mailparse.so" >> /etc/php5/cli/php.ini; /etc/init.d/apache2 restart" and "apt-get install php-mail-mimedecode"
 
 * Go to the Modules page in Drupal and enable the module (like normal).  After saving, navigate to admin/og_mailinglist and configure per your server setup.
 
