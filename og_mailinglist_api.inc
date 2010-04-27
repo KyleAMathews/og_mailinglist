@@ -88,6 +88,17 @@ function og_mailinglist_get_group_subscription_type($gid, $uid) {
 }
 
 /*
+ * Update a user's subscription type for one of their groups.
+ */
+function og_mailinglist_update_group_subcription_type($gid, $uid, $subscription_type) {
+  db_query("UPDATE {og_mailinglist_subscription}
+         SET subscription_type = '%s'
+         WHERE uid = %d
+         AND sid = %d
+         AND space_type = 'og'", $subscription_type, $uid, $gid);
+}
+
+/*
  * @param int $sid Space id.
  * @param string $space_type Space type e.g. og.
  * @param array $uids array of User IDs to add group subscriptions.

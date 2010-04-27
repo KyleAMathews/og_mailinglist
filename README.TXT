@@ -25,12 +25,3 @@ This module essentially allows group members to post to your site directly from 
 CREDITS:
 
 Thanks to the mail_comment module for the inspiration for some of the code in this module.
-
-TODOs:
-We're working towards reworking this module so we can do an initial release on Drupal.org. The following is a hopefully comprehensive list of the remaining tasks.
-
-* Remove legacy code for integration with the Messaging.
-* Move hardcoded values to variables.
-* Revamp admin page.
-* Change name of module from mailnode to og_mailinglist
-

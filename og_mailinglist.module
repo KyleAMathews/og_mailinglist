@@ -149,17 +149,28 @@ function og_mailinglist_subscriptions_settings_form() {
   $form = array();
   
   while ($data = db_fetch_array($results)) {
-    $form['og_mailinglist_og'][$data['gid']] = array(
-      '#type' => 'select',
+    $form[$data['gid']] = array(
+      '#type' => 'fieldset',
       '#title' => l(t($data['title']), "node/" . $data['gid']),
+      '#tree' => TRUE,
+    );
+    $form[$data['gid']]['subscription-type'] = array(
+      '#type' => 'select',
+      '#title' => "Email Settings",
       '#default_value' => $data['subscription_type'],
       '#options' => $subscription_options,
     );
+    $form[$data['gid']]["leave-group"] = array(
+      '#type' => 'checkbox',
+      '#title' => "Leave the " . t($data['title']) . " group",
+      '#suffix' => "<hr />",
+    );
   }
-  
+  // link + js to submit, when returns success, then hide the content (slide up), add text at top of page to message div that says "you've left group x [undo]" put in span with id of group-#
+  // if someone does click undo, then add them back to group and then remove the undo span and add back another span that says you're back in.
     $form['submit'] = array(
       '#type' => 'submit',
-      '#value' => t('Save')
+      '#value' => t('Save Settings')
     );
   
   return $form;
@@ -167,21 +178,24 @@ function og_mailinglist_subscriptions_settings_form() {
 
 function og_mailinglist_subscriptions_settings_form_submit($form, &$form_state) {
   global $user;
-  foreach ($form_state['values'] as $gid => $sub_type) {
+  foreach ($form_state['values'] as $gid => $settings) {
     // We only care about GIDs and their values.
     if (is_numeric($gid)) {
-      db_query("UPDATE {og_mailinglist_subscription}
-               SET subscription_type = '%s'
-               WHERE uid = %d
-               AND sid = %d
-               AND space_type = 'og'", $sub_type, $user->uid, $gid);
-      
+      og_mailinglist_update_group_subcription_type($gid, $user->uid, $settings['subscription-type']);
+
       if ($sub_type != "email") {
         og_mailinglist_delete_group_threads($gid, $user->uid);
       }
+
+      // If they choose to leave the group.
+      if ($settings['leave-group']) {
+        og_delete_subscription($gid, $user->uid);
+        $group_name = db_result(db_query("SELECT title FROM {node} WHERE nid = %d", $gid));
+        drupal_set_message(t("You are no longer in the <a href='@gid'>@group_name</a> group", array("@gid" => url("node/" . $gid), "@group_name" => $group_name)));
+      }
     }
   }
-  drupal_set_message("Group subscriptions updated.");
+  drupal_set_message("Your group subscriptions were updated.");
 }
 
 function og_mailinglist_unsubscribe_thread($node) {

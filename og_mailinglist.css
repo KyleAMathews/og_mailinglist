@@ -15,3 +15,17 @@
   color: #000033;
   cursor: pointer;
 }
+#og-mailinglist-subscriptions-settings-form fieldset {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+#og-mailinglist-subscriptions-settings-form fieldset legend{
+  font-size: 150%;
+}
+#og-mailinglist-subscriptions-settings-form .form-item {
+  margin: 0;
+  margin-top: 5px;
+}
+#og-mailinglist-subscriptions-settings-form hr {
+  margin-bottom: 10px;
+}
