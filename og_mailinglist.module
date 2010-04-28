@@ -16,7 +16,8 @@
 require_once("phpmailer/class.phpmailer.php");
 require_once("og_mailinglist_phpmailer.inc");
 require_once('og_mailinglist_api.inc');
-
+// decide on what data needs to be stored in the og_mailinglist table (if that's the right name), check if spaces_og is enabled, if so, just add extra submit handler to the group add form and save the purl data to our
+// table. If it's not there, we'll add the field ourself and save the data to our table in the same manner. 
 // TODO remove thread subscriptions older than 3 months. If someone ressurrects a thread, then readd people to thread. Probably need a table to track which threads have been retired.
 /**
  * Implementation of hook_menu(). 
@@ -145,7 +146,6 @@ function og_mailinglist_subscriptions_settings_form() {
     'no email' => t('No email'),
     'digest email' => t('Digest email'),
   );
-  // TODO improve formatting + add way to unsubscribe from group (checkboxs maybe)?
   $form = array();
   
   while ($data = db_fetch_array($results)) {
@@ -166,8 +166,6 @@ function og_mailinglist_subscriptions_settings_form() {
       '#suffix' => "<hr />",
     );
   }
-  // link + js to submit, when returns success, then hide the content (slide up), add text at top of page to message div that says "you've left group x [undo]" put in span with id of group-#
-  // if someone does click undo, then add them back to group and then remove the undo span and add back another span that says you're back in.
     $form['submit'] = array(
       '#type' => 'submit',
       '#value' => t('Save Settings')
@@ -298,9 +296,17 @@ function _og_mailinglist_build_quotes_toggle($text) {
   $quotes = _og_mailinglist_find_quoted_sections($text);
   
   if (!empty($quotes)) {
-    foreach ($quotes as $quote) {
+    foreach ($quotes as $quote) {      
       $replace = '<br /><span class="toggle-quoted-text">- Show quoted text -</span><div class="quoted-text">'. $quote .'</div>';
-      $text = str_replace($quote, $replace, $text);    
+      $text = str_replace($quote, $replace, $text);
+      
+      // Remove email addresses. Regex borrowed from valid_email_adddress().
+      $regex = "([a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?\`\|\{\}~\']+@(?:(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.?)+)";
+      preg_match_all($regex, $quote, $matches);
+
+      foreach($matches[0] as $email) {
+        $text = str_replace($email, "***@***.***", $text);
+      }
     }
   } 
   
@@ -342,6 +348,7 @@ function _og_mailinglist_find_quoted_sections($text) {
   $quotes[] = _og_mailinglist_filter_unknown_client2_quotes($text);
   $quotes[] = _og_mailinglist_filter_unknown_client3_quotes($text);
   $quotes[] = _og_mailinglist_filter_unknown_client4_quotes($text);
+  $quotes[] = _og_mailinglist_filter_unknown_client5_quotes($text);
   $quotes[] = _og_mailinglist_filter_quotes($text);
   
   // Identify the longest quoted section of all possible matches and only
@@ -528,6 +535,22 @@ function _og_mailinglist_filter_unknown_client4_quotes($text) {
   }
 }
 
+/*
+ * Filter quotes out of emails from yet another email client.
+ *
+ * On 15 April 2010 21:57, someone someone@example.com wrote:
+ * 
+ */
+function _og_mailinglist_filter_unknown_client5_quotes($text) {
+  $regex = "/On\s\d{1,2}\s\w.*?\s\d{4}\s\d{2}:\d{2},\s.*?@.*?\s.*?wrote:.*/s";
+  preg_match($regex, $text, $matches);
+  if (!empty($matches)) {
+    return $matches;
+  }
+  else {
+    return array();
+  }
+}
 /*
  * Implementation of hook_cron().
  */
