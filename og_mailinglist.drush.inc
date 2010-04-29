@@ -81,9 +81,11 @@ function _og_mailinglist_post_email() {
   // Load file
   require_once(drupal_get_path('module', 'og_mailinglist') . "/og_mailinglist_transport.inc");
   $args = func_get_args();
-  $raw_email = $args[0];
+  $raw_email_filename = $args[0];
   $mail_username = $args[1];
   
+  // Read in the email off the /tmp folder.
+  $raw_email = file_get_contents($raw_email_filename);
 
   //echo "raw email: " . $raw_email . "\n";
   //echo "we're posting an email to " . $mail_username . "\n";

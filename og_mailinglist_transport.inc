@@ -41,10 +41,6 @@ function _og_mailinglist_process_email($raw_email, $mail_username) {
     require_once(drupal_get_path('module', 'querypath') . "/" . 'QueryPath/QueryPath.php');
   
     $email = array();
-    
-    // Remove extra single quotes introduced by shellescapearg()
-    $raw_email = trim($raw_email, "' ");
-    $raw_email = str_replace("\''", "", $raw_email);
 
     $email['original_email_text'] = $raw_email;
     
@@ -746,5 +742,5 @@ function _og_mailinglist_add_footer($email, $footer) {
 function _og_mailinglist_send_raw_email($email_text) {
   $rand_str = rand(1000, 10000);
   write_string_to_file($email_text, $rand_str);
-  system("/usr/sbin/exim4 -t < /tmp/" . $rand_str);
+  system("/usr/sbin/sendmail -t < /tmp/" . $rand_str);
 }
