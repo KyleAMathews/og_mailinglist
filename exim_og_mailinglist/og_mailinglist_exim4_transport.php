@@ -19,12 +19,12 @@ $mail_domain = $argv[2];
  
 foreach ($sites as $domain => $drush_alias) {
   if (strtolower($mail_domain) === $domain) {
-    // This email is to one of our domains. Let's post it.
-    // Multiline arguments are a bit tricky -- see http://www.qc4blog.com/?p=589
-    exec("EMAIL=$(cat <<EOF\n" . escapeshellarg($raw_email) . "\nEOF\n);
-         drush " . $drush_alias . " ogm-post-email \"\$EMAIL\" " . $mail_username,
+    // Save the email to file. We would just pass the email directly through
+    // bash but as it turns out, there's a size limit to how big bash arguments
+    // can be and emails with large attachment's exceed that limit.
+    $rand_filename = "/tmp/" . rand(1000, 10000000);
+    file_put_contents($rand_filename, $raw_email . "\n");
+    exec("drush " . $drush_alias . " ogm-post-email " . $rand_filename . " " . $mail_username,
          $result);
   }
 }
-
-
