@@ -271,6 +271,15 @@ function og_mailinglist_save_discussion($email) {
   // Log that comment came from email so og_mailinglist_phpmailer doesn't send an email as well.
   og_mailinglist_log_email_sent('email', $nid);
   
+  // Is the group public? If not, we need to set the node as private.
+  $is_private = db_result(db_query("SELECT og_private
+                                   FROM {og}
+                                   WHERE nid = %d", $email['groupid']));
+  $is_public = TRUE;
+  if ($is_private) {
+    $is_public = FALSE;
+  }
+  
   // create the new discussion node
   $node->title = $email['headers']['subject'];
   $node->uid = $email['userid'];
@@ -281,8 +290,8 @@ function og_mailinglist_save_discussion($email) {
   $node->body = $mailbody;
   $node->teaser = node_teaser($mailbody);
   $node->type = 'story';
-  // TODO: read whether the group is public or not and set og_public accordingly
-  $node->og_public = TRUE;
+  $node->og_public = $is_public;
+  $node->og_groups[$email['groupid']] = $email['groupid'];
   $node->comment = variable_get("comment_$node_type", COMMENT_NODE_READ_WRITE);
   
   //// Add attachments if any.TODO fix this someday. Best idea -- save mail objects w/ attachments. On cron scoop them up and add them to nodes/comments
@@ -293,14 +302,6 @@ function og_mailinglist_save_discussion($email) {
   //}
 
   node_save($node);
-  
-  // Add new node to og_ancestry.
-  $ancestry = array(
-    'nid' => $node->nid,
-    'group_nid' => $email['groupid'],
-    'is_public' => $node->og_public,
-  );
-  drupal_write_record('og_ancestry', $ancestry);
   
   // Send off email.
   _og_mailinglist_email_node_email($email, $node);
@@ -616,7 +617,7 @@ function _og_mailinglist_encode_email_headers($array) {
   foreach ($array as $key => $value) {
     // We remove quoted-printable as content-transfer-encoding
     // because mime_decode decodes that and PHP doesn't have a function
-    // AFAIK to reencode the text.
+    // AFAIK to reencode the text as quoted-printable.
     if ($value && $value !== "quoted-printable") { 
       $header .= capitalizeWords($key, " -") . ": " . $value . "\n";  
     }
