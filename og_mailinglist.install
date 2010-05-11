@@ -181,7 +181,7 @@ function og_mailinglist_update_6002() {
                            'type' => 'int',
                            'not null' => TRUE,
                            'default' => 0));
-  db_add_primary_key($ret, 'og_mailinglist_subscription', array('nid', 'uid'));
+  
   return $ret;
 }
 
