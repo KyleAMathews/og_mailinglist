@@ -612,7 +612,7 @@ function _og_mailinglist_encode_email_headers($array) {
     // because mime_decode decodes that and PHP doesn't have a function
     // AFAIK to reencode the text as quoted-printable.
     if ($value && $value !== "quoted-printable") { 
-      $header .= capitalizeWords($key, " -") . ": " . $value . "\n";  
+      $header .= capitalize_headers($key, " -") . ": " . $value . "\n";  
     }
   }
   
