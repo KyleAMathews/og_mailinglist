@@ -5,8 +5,10 @@
  */
 function og_mailinglist_install() {
   $success = drupal_install_schema('og_mailinglist');
-
-
+  
+  // Add any previously created groups to og_mailinglist.
+  add_groups_to_og_mailinglist();
+  
   if ($success) {
     drupal_set_message(st('OG_Mailinglist module installed tables successfully.'));
   }
@@ -32,93 +34,202 @@ function og_mailinglist_uninstall() {
  * Implementation of hook_schema().
  */
 function og_mailinglist_schema() {
-  $schema = array();
+ $schema = array();
+ 
+ $schema['og_mailinglist'] = array(
+  'fields' => array(
+   'nid' => array(
+     'description' => 'The nid for the new posting.',
+     'type' => 'int',
+     'unsigned' => TRUE,
+     'not null' => TRUE,
+     'default' => 0),
+    'group_email' => array(
+     'description' => 'The machine/email readable version of the group. Uses purl shortcode if available.',
+     'type' => 'varchar',
+     'length' => '255',
+     'not null' => TRUE,
+     'default' => ''),
+   ),
+   'primary key' => array('nid'),
+ );
+ 
+ $schema['og_mailinglist_source'] = array(
+   'fields' => array(
+     'nid' => array(
+       'description' => 'The nid for the new posting.',
+       'type' => 'int',
+       'unsigned' => TRUE,
+       'not null' => TRUE,
+       'default' => 0),
+     'cid' => array(
+       'description' => 'The cid for the new posting. If 0, means posting was a new node not comment.',
+       'type' => 'int',
+       'unsigned' => TRUE,
+       'not null' => TRUE,
+       'default' => 0),
+     'source' => array(
+       'type' => 'varchar',
+       'description' => 'If the new posting was via email or the web. Should be either "email" or "web"',
+       'length' => '64',
+       'not null' => TRUE,
+       'default' => ''),
+   ),
+   'primary key' => array('nid', 'cid'),
+   'indexes' => array(
+     'source' => array('source'),
+   ),
+ );
 
-  $schema['og_mailinglist_source'] = array(
-    'fields' => array(
-      'nid' => array(
-        'description' => 'The nid for the new posting.',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0),
-      'cid' => array(
-        'description' => 'The cid for the new posting. If 0, means posting was a new node not comment.',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0),
-      'source' => array(
-        'type' => 'varchar',
-        'description' => 'If the new posting was via email or the web. Should be either "email" or "web"',
-        'length' => '64',
-        'not null' => TRUE,
-        'default' => ''
-      ),
-    ),
-    'primary key' => array('nid', 'cid'),
-    'indexes' => array(
-      'source' => array('source'),
-    ),
-  );
+ $schema['og_mailinglist_thread'] = array(
+   'fields' => array(
+     'nid' => array(
+       'description' => 'The nid of the thread.',
+       'type' => 'int',
+       'unsigned' => TRUE,
+       'not null' => TRUE,
+       'default' => 0),
+     'uid' => array(
+       'description' => 'The uid of the user who\'s subscribed to this thead.',
+       'type' => 'int',
+       'unsigned' => TRUE,
+       'not null' => TRUE,
+       'default' => 0),
+   ),
+   'primary key' => array('nid', 'uid'),
+   'indexes' => array(
+     'nid' => array('nid'),
+     'uid' => array('uid'),
+   ),
+ );
 
-  $schema['og_mailinglist_thread'] = array(
-    'fields' => array(
-      'nid' => array(
-        'description' => 'The nid of the thread.',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0),
-      'uid' => array(
-        'description' => 'The uid of the user who\'s subscribed to this thead.',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0),
-    ),
-    'primary key' => array('nid', 'uid'),
-    'indexes' => array(
-      'nid' => array('nid'),
-      'uid' => array('uid'),
-    ),
-  );
-
-  $schema['og_mailinglist_subscription'] = array(
-    'fields' => array(
-      'sid' => array(
-        'description' => 'The sid of the Group or Space.',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0),
-      'space_type' => array(
-        'type' => 'varchar',
-        'description' => 'E.g. og, maps to space type in spaces table.',
-        'length' => '128',
-        'not null' => TRUE,
-        'default' => ''),
-      'uid' => array(
-        'description' => 'The uid of the User.',
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0),
-      'subscription_type' => array(
-        'type' => 'varchar',
-        'description' => 'Subscription type, e.g. "no email", "digest email", or "email"',
-        'length' => '128',
-        'not null' => TRUE,
-        'default' => ''
-      ),
-    ),
-    'primary key' => array('sid', 'space_type', 'uid'),
-    'indexes' => array(
-      'sid_type' => array('sid', 'space_type'),
-      'uid' => array('uid'),
-      'subscription_type' => array('subscription_type'),
-    ),
-  );
-  
-  return $schema;
+ $schema['og_mailinglist_subscription'] = array(
+   'fields' => array(
+     'nid' => array(
+       'description' => 'The nid of the Group.',
+       'type' => 'int',
+       'unsigned' => TRUE,
+       'not null' => TRUE,
+       'default' => 0),
+     'uid' => array(
+       'description' => 'The uid of the User.',
+       'type' => 'int',
+       'unsigned' => TRUE,
+       'not null' => TRUE,
+       'default' => 0),
+     'subscription_type' => array(
+       'type' => 'varchar',
+       'description' => 'Subscription type, e.g. "no email", "digest email", or "email"',
+       'length' => '128',
+       'not null' => TRUE,
+       'default' => ''
+     ),
+   ),
+   'primary key' => array('nid', 'uid'),
+   'indexes' => array(
+     'uid' => array('uid'),
+     'subscription_type' => array('subscription_type'),
+   ),
+ );
+ 
+ return $schema;
 }
+
+/**
+ * Create the og_mailinglist table.
+ */
+function og_mailinglist_update_6000() {
+ // Create table.
+ $ret = array();
+ $schema['og_mailinglist'] = array(
+  'fields' => array(
+   'nid' => array(
+     'description' => 'The nid for the new posting.',
+     'type' => 'int',
+     'unsigned' => TRUE,
+     'not null' => TRUE,
+     'default' => 0),
+    'group_email' => array(
+     'description' => 'The machine/email readable version of the group. Uses purl shortcode if available.',
+     'type' => 'varchar',
+     'length' => '255',
+     'not null' => TRUE,
+     'default' => ''),
+   ),
+   'primary key' => array('nid'),
+ );
+ db_create_table($ret, 'og_mailinglist', $schema['og_mailinglist']);
+ 
+ return $ret;
+}
+
+/**
+ * Add entries to og_mailinglist for previously created groups.
+ */
+function og_mailinglist_update_6001() {
+  add_groups_to_og_mailinglist();
+}
+
+/**
+ * Modify og_mailinglist_subscriptions to remove space integration
+ */
+function og_mailinglist_update_6002() {
+  $ret = array();
+ 
+  db_drop_field($ret, 'og_mailinglist_subscription', 'space_type');
+  db_change_field($ret, 'og_mailinglist_subscription', 'sid', 'nid', array(
+                           'type' => 'int',
+                           'not null' => TRUE,
+                           'default' => 0));
+  db_add_primary_key($ret, 'og_mailinglist_subscription', array('nid', 'uid'));
+  return $ret;
+}
+
+function add_groups_to_og_mailinglist() {
+  if (!module_exists('purl') && !module_exists('spaces_og')) {
+    $results = db_query("SELECT nid, title FROM node WHERE type = 'group'");
+   
+    $groups = array();
+   
+    while ($data = db_fetch_array($results)) {
+      $groups[$data['nid']] = $data['title'];
+    }
+   
+    foreach ($groups as $nid => $title) {
+      $title = string_to_machine_readable($title);
+      $data = array(
+       'nid' => $nid,
+       'group_email' => $title,
+      );
+      
+      drupal_write_record('og_mailinglist', $data);
+    }
+  }
+  // Else, just use the purl entries
+  else {
+    $results = db_query("SELECT id, value
+                        FROM {purl}
+                        WHERE provider = 'spaces_og'");
+    $groups = array();
+    while ($data = db_fetch_array($results)) {
+      $groups[$data['id']] = $data['value'];
+    }
+    foreach ($groups as $nid => $title) {
+      $data = array(
+       'nid' => $nid,
+       'group_email' => $title,
+      );
+      
+      drupal_write_record('og_mailinglist', $data);
+    }
+  }
+}
+
+function string_to_machine_readable($str) {
+    $str = strtolower($str);
+    $str = str_replace("-", "", $str);
+    $str = preg_replace('/[^a-z0-9]/', "-", $str);
+    $str = str_replace("--", "-", $str);
+    $str = trim($str, " -");
+    return $str;
+  }

@@ -93,10 +93,9 @@ function _og_mailinglist_process_email($raw_email, $mail_username) {
     }
     
     // Get the group id.
-    $email['groupid'] = db_result(db_query("SELECT id
-                                           FROM {purl}
-                                           WHERE provider='spaces_og' AND
-                                           LOWER(value)='%s'", $mail_username));
+    $email['groupid'] = db_result(db_query("SELECT nid
+                                           FROM {og_mailinglist}
+                                           WHERE LOWER(group_email)='%s'", $mail_username));
     if (!$email['groupid']) { 
       throw new Exception(t("Could not locate group named $mail_username"));
     }
@@ -311,12 +310,9 @@ function og_mailinglist_save_discussion($email) {
 }
 
 function _og_mailinglist_email_node_email($email, $node) {
-  // Load the space.
-  $space = spaces_load('og', $email['groupid']);
-  
   // Build new email.
-  $email = _og_mailinglist_rewrite_headers($email, $node, $space, true);
-  $footer = _og_mailinglist_build_footer($space, $node);
+  $email = _og_mailinglist_rewrite_headers($email, $node, true);
+  $footer = _og_mailinglist_build_footer($node);
   $email = _og_mailinglist_add_footer($email, $footer);
   $email['new_email_text'] = _og_mailinglist_encode_email(array($email['structure']));
   
@@ -331,12 +327,9 @@ function _og_mailinglist_email_node_email($email, $node) {
 }
 
 function _og_mailinglist_email_comment_email($email, $node, $comment) {
-  // Load the space.
-  $space = spaces_load('og', $email['groupid']);
-  
   // Build new email.
-  $email = _og_mailinglist_rewrite_headers($email, $node, $space);
-  $footer = _og_mailinglist_build_footer($space, $node);
+  $email = _og_mailinglist_rewrite_headers($email, $node);
+  $footer = _og_mailinglist_build_footer($node);
   $email = _og_mailinglist_add_footer($email, $footer);
   $email['new_email_text'] = _og_mailinglist_encode_email(array($email['structure']));
   
@@ -627,34 +620,35 @@ function _og_mailinglist_encode_email_headers($array) {
 }
 
 // Keep mime-version, date, subject, from, to, and content-type
-function _og_mailinglist_rewrite_headers($email, $node, $space, $new_node = FALSE) {
+function _og_mailinglist_rewrite_headers($email, $node, $new_node = FALSE) {
+  $group_node = _og_mailinglist_load_group($node);
   $headers = $email['structure']->headers;
   $new_headers = array();
   $new_headers['mime-version'] = $headers['mime-version'];
   $new_headers['date'] = $headers['date'];
   if ($new_node) {
-    $new_headers['subject'] = "[" . $space->group->purl . "] " . $node->title;  
+    $new_headers['subject'] = "[" . $group_node->ogm_email . "] " . $node->title;  
   }
   else {
     $new_headers['subject'] = $headers['subject'];
   }
   
   $new_headers['from'] = $headers['from'];
-  $new_headers['to'] = $space->group->purl . "@" . variable_get('og_mailinglist_server_string', 'example.com');
+  $new_headers['to'] = $group_node->ogm_email . "@" . variable_get('og_mailinglist_server_string', 'example.com');
   $new_headers['bcc'] =
     array_to_comma_delimited_string(
       _og_mailinglist_remove_subscribers(
-        _og_mailinglist_get_subscribers($space, $node, $new_node),
+        _og_mailinglist_get_subscribers($node, $new_node),
           $headers['from'] . " " . $headers['to'] . " " . $headers['cc']));
   $new_headers['content-type'] = $headers['content-type'];
   $new_headers['content-transfer-encoding'] =  $headers['content-transfer-encoding'];
   
   // Add list headers.
-  $new_headers['List-Id'] = "<" . $space->group->purl . "@" .
+  $new_headers['List-Id'] = "<" . $group_node->ogm_email . "@" .
                 variable_get('og_mailinglist_server_string', 'example.com') . ">";
-  $new_headers['List-Post'] = "<mailto:" . $space->group->purl . "@" .
+  $new_headers['List-Post'] = "<mailto:" . $group_node->ogm_email . "@" .
                 variable_get('og_mailinglist_server_string', 'example.com') . ">";
-  $new_headers['List-Archive'] = url("node/" . $space->id, array('absolute' => TRUE));
+  $new_headers['List-Archive'] = url("node/" . $group_node->nid, array('absolute' => TRUE));
   
   // Thread-URL header.
   global $base_url;

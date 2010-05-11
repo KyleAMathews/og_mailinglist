@@ -2,18 +2,16 @@
 // $Id$
 
 /*
- * @param int $sid Space id to query for subscriptions
- * @param string $space_type Space type e.g. og
+ * @param int $gid Group id to query for subscriptions
  * 
- * @return array of UIDs and email addresses that are subscribed to this space.
+ * @return array of UIDs and email addresses that are subscribed to this group.
  *  Format = key (UID) => value (email address)
  */
-function og_mailinglist_get_space_subscriptions($sid, $space_type) {
+function og_mailinglist_get_group_subscriptions($gid) {
   $result = db_query("SELECT uid
                      FROM {og_mailinglist_subscription}
-                     WHERE sid = %d
-                     And space_type = '%s'
-                     AND subscription_type = 'email'", $sid, $space_type);
+                     WHERE nid = %d
+                     AND subscription_type = 'email'", $gid);
   
   $uids = array();
   while ($data = db_fetch_array($result)) {
@@ -83,7 +81,7 @@ function og_mailinglist_save_thread_subscriptions($nid, $uids) {
 function og_mailinglist_get_group_subscription_type($gid, $uid) {
   return db_result(db_query("SELECT subscription_type
                             FROM {og_mailinglist_subscription}
-                            WHERE sid = %d
+                            WHERE nid = %d
                             AND uid = %d", $gid, $uid));
 }
 
@@ -94,36 +92,32 @@ function og_mailinglist_update_group_subcription_type($gid, $uid, $subscription_
   db_query("UPDATE {og_mailinglist_subscription}
          SET subscription_type = '%s'
          WHERE uid = %d
-         AND sid = %d
-         AND space_type = 'og'", $subscription_type, $uid, $gid);
+         AND nid = %d", $subscription_type, $uid, $gid);
 }
 
 /*
- * @param int $sid Space id.
- * @param string $space_type Space type e.g. og.
+ * @param int $gid Group id.
  * @param array $uids array of User IDs to add group subscriptions.
  */
-function og_mailinglist_save_group_subscriptions($sid, $space_type, $uids) {
+function og_mailinglist_save_group_subscriptions($gid, $uids) {
   foreach ($uids as $uid) {
     db_query("INSERT INTO {og_mailinglist_subscription}
-             VALUES (%d, '%s', %d, 'email')", $sid, $space_type, $uid);
+             VALUES (%d, %d, 'email')", $gid, $uid);
   }
 }
 
 /*
- * @param int $sid Space id.
- * @param string $space_type Space type e.g. og.
+ * @param int $gid Group id.
  * @param array $uids array of User IDs to add group subscriptions.
  */
-function og_mailinglist_delete_group_subscriptions($sid, $space_type, $uids) {
+function og_mailinglist_delete_group_subscriptions($gid, $uids) {
   foreach ($uids as $uid) {
     // Delete subscription.
     db_query("DELETE FROM {og_mailinglist_subscription}
-             WHERE sid = %d
-             AND space_type = '%s'
-             AND uid = %d", $sid, $space_type, $uid);
+             WHERE nid = %d
+             AND uid = %d", $gid, $uid);
     
-    og_mailinglist_delete_group_threads($sid, $uid);
+    og_mailinglist_delete_group_threads($gid, $uid);
   }
 }
 
@@ -176,4 +170,35 @@ function og_mailinglist_create_mailer() {
   $mailer->CharSet = 'UTF-8';
 
   return $mailer;
+}
+
+/*
+ * Save group information upon group creation and update.
+ */
+function og_mailinglist_save_group($nid, $group_email, $new_node) {
+  $data = array(
+      'nid' => $nid,
+      'group_email' => $group_email,
+  );
+  
+  if ($new_node) {
+    drupal_write_record('og_mailinglist', $data);
+  }
+  // Add the primary key.
+  else {
+    drupal_write_record('og_mailinglist', $data, 'nid');
+  }
+}
+
+/*
+ * Delete group information.
+ */
+function og_mailinglist_delete_group($nid) {
+  // Delete information from og_mailinglist.
+  db_query("DELETE FROM {og_mailinglist}
+           WHERE nid = %d", $nid);
+  
+  // Delete group subscriptions from og_mailinglist_subscriptions.
+  db_query("DELETE FROM {og_mailinglist_subscription}
+           WHERE nid = %d", $nid);
 }

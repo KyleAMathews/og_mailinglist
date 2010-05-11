@@ -5,6 +5,7 @@ require_once('og_mailinglist_utilities.inc');
 require_once('og_mailinglist_api.inc');
 
 function og_mailinglist_send_comment_email($comment, $node) {
+  $group_node = _og_mailinglist_load_group($node);
   
   // Check if comment arrived via email so already sent.
   if (_og_mailinglist_email_already_sent($comment->nid, $comment->cid)) {
@@ -12,18 +13,16 @@ function og_mailinglist_send_comment_email($comment, $node) {
   }
 
   $mailer = og_mailinglist_create_mailer();
-
-  $space = spaces_load('og', array_pop(array_values($node->og_groups)));  
   
   // Add custom headers.
-  $mailer = og_mailinglist_add_web_headers($mailer, $space, $node);
+  $mailer = og_mailinglist_add_web_headers($mailer, $node);
   
   // Decorate subject.
-  $mailer->Subject = "Re: [" . $space->group->purl . "] " . $node->title;
+  $mailer->Subject = "Re: [" . $group_node->ogm_email . "] " . $node->title;
 
   // Decorate body.
   $body = og_mailinglist_prepare_web_content($comment->comment); // TODO figure out what the render function for nodes/comments is and use that instead. Current setup inconsistent plus won't shift to other's setups
-  $body = og_mailinglist_build_web_footer($space, $node, $body);
+  $body = og_mailinglist_build_web_footer($node, $body);
   
   $mailer->Body = $body;
   $mailer->isHTML = TRUE;
@@ -34,7 +33,7 @@ function og_mailinglist_send_comment_email($comment, $node) {
   //  $mailer->AddStringAttachment($info['data'], $info['filename']);
   //}
   
-  $mailer = _og_mailinglist_add_addresses($mailer, $space, $node, FALSE,
+  $mailer = _og_mailinglist_add_addresses($mailer, $node, FALSE,
                                  $comment);
   
   $success = $mailer->Send();
@@ -50,31 +49,30 @@ function og_mailinglist_send_comment_email($comment, $node) {
   return;
 }
 
-function og_mailinglist_send_node_email($node) { 
+function og_mailinglist_send_node_email($node) {
+  $group_node = _og_mailinglist_load_group($node);
+  
   // Check if node arrived via email so already sent.
   if (_og_mailinglist_email_already_sent($node->nid)) {
     return;
   }
   
   // If not a group post, return. We only send out emails for group posts.
-  if (!empty($node->og_groups)) {
-    $space = spaces_load('og', array_pop(array_values((array) $node->og_groups)));   
-  }
-  else {
+  if (empty($group_node)) {
     return;
   }
   
   $mailer = og_mailinglist_create_mailer();
   
   // Add custom headers.
-  $mailer = og_mailinglist_add_web_headers($mailer, $space, $node);
+  $mailer = og_mailinglist_add_web_headers($mailer, $node);
 
   // Decorate subject.
-  $mailer->Subject = "[" . $space->group->purl . "] " . $node->title;
-
+  $mailer->Subject = "[" . $group_node->ogm_email . "] " . $node->title;
+  
   // Decorate body.
   $body = og_mailinglist_prepare_web_content($node->body);
-  $body = og_mailinglist_build_web_footer($space, $node, $body, 0, TRUE);
+  $body = og_mailinglist_build_web_footer($node, $body, 0, TRUE);
 
   
   $mailer->Body = $body;
@@ -91,7 +89,7 @@ function og_mailinglist_send_node_email($node) {
   }
 
 
-  $mailer = _og_mailinglist_add_addresses($mailer, $space, $node, TRUE);
+  $mailer = _og_mailinglist_add_addresses($mailer, $node, TRUE);
   
   $success = $mailer->Send();
   

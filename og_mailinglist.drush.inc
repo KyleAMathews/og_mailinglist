@@ -27,7 +27,7 @@ function og_mailinglist_drush_command() {
   // the key in the $items array is the name of the command.
   $items['ogm-group-exists'] = array(
     'callback' => '_og_mailinglist_check_group_exists',
-    'description' => "Checks if a group exists, only works with purl at the moment.",
+    'description' => "Checks if a group exists.",
   );
   $items['ogm-post-email'] = array(
     'callback' => '_og_mailinglist_post_email',
@@ -61,15 +61,15 @@ function example_drush_help($section) {
 /**
  * ogm-group-exists command callback.
  * @return boolean If group exists or not.
- * @param string purl_group_prefix The email username
+ * @param string group_email The email username
  */
 
 function _og_mailinglist_check_group_exists() {
   $args = func_get_args();
-  $purl_group_prefix = strtolower($args[0]);
+  $group_email = strtolower($args[0]);
   
-  $sql = "SELECT value FROM {purl} WHERE LOWER(value)= '%s'";
-  $result = db_result(db_query($sql, $purl_group_prefix));
+  $sql = "SELECT group_email FROM {og_mailinglist} WHERE LOWER(group_email)= '%s'";
+  $result = db_result(db_query($sql, $group_email));
   
   return $result;
 }

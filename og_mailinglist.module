@@ -6,7 +6,7 @@
 ###   This module allows users to email a Drupal installation running the
 ###   Exim email server to create discussions and respond to comments.
 ###   Because it is tied directly to Exim, emails are processed immediately
-###   upon receipt in the mail server.  Mails should be sent to purl_group_prefix@server.com
+###   upon receipt in the mail server.  Mails should be sent to group_prefix@server.com
 ###   rather than to a single email address.
 ###
 ###   Original version written by Conan Albrecht   March 2009
@@ -16,8 +16,6 @@
 require_once("phpmailer/class.phpmailer.php");
 require_once("og_mailinglist_phpmailer.inc");
 require_once('og_mailinglist_api.inc');
-// decide on what data needs to be stored in the og_mailinglist table (if that's the right name), check if spaces_og is enabled, if so, just add extra submit handler to the group add form and save the purl data to our
-// table. If it's not there, we'll add the field ourself and save the data to our table in the same manner. 
 // TODO remove thread subscriptions older than 3 months. If someone ressurrects a thread, then readd people to thread. Probably need a table to track which threads have been retired.
 /**
  * Implementation of hook_menu(). 
@@ -33,7 +31,7 @@ function og_mailinglist_menu() {
   );
   $items['og_mailinglist/subscriptions'] = array(
     'title' => t('Manage Group Subscriptions'),
-    'description' => t('Allows users to manage their space subscriptions'),
+    'description' => t('Allows users to manage their group subscriptions'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('og_mailinglist_subscriptions_settings_form'),
     'access arguments' => array('manage og_mailinglist subscriptions'),
@@ -96,7 +94,7 @@ function og_mailinglist_admin_settings() {
     '#title' => t('Send all emails to user account'),
     '#type' => 'textfield',
     '#default_value' => variable_get('og_mailinglist_test_email_address', ''),
-    '#description' => t('For testing / monitoring purposes, you can set one user account to receive all emails. Enter the User ID of the user who should receive all emails.'),
+    '#description' => t('For testing / monitoring purposes, you can set one user account to receive all emails sent by OG Mailinglist. Enter the User ID of the user who should receive all emails.'),
   );
 // TODO add form to choose default content type
   return system_settings_form($form);
@@ -105,11 +103,10 @@ function og_mailinglist_admin_settings() {
 function og_mailinglist_subscriptions_settings_form() {
   global $user;
   
-  $sql = 'SELECT m.sid as gid, m.subscription_type, n.title
+  $sql = 'SELECT m.nid as gid, m.subscription_type, n.title
           FROM {og_mailinglist_subscription} m, {node} n
-          WHERE m.sid = n.nid
+          WHERE m.nid = n.nid
           AND m.uid = %d
-          AND m.space_type = "og"
           ORDER BY n.title';
   
   $results = db_query($sql, $user->uid);
@@ -192,6 +189,70 @@ function og_mailinglist_subscribe_thread($node) {
 }
 
 /*
+ * Implementation of hook_form_alter().
+ */
+function og_mailinglist_form_alter(&$form, $form_state, $form_id) {
+  if ($form['#id'] == 'node-form' && (arg(0) .'/'. arg(1) != 'admin/content')) {
+    // Group nodes
+    if (og_is_group_type($form['#node']->type)) {
+      if (!module_exists('purl') && !module_exists('spaces_og')) {
+        // Add our form, compatible with purl's form.
+        $form['og_mailinglist'] = array(
+          '#title' => 'email',
+          '#type' => 'textfield',
+          '#description' => 'Choose an email address. May contain only lowercase letters, numbers, dashes and underscores. e.g. "my-group"',
+          '#size' => 20,
+          '#maxlength' => 255,
+          '#required' => TRUE,
+          '#tree' => TRUE,
+          '#element_validate' => array('og_mailinglist_group_form_validate'),
+        );
+        // Make sure our submit function is second after node_form_submit.
+        $first = array_shift($form['buttons']['submit']['#submit']);
+        array_unshift($form['buttons']['submit']['#submit'], $first, "og_mailinglist_group_form_submit");
+      }
+      // If Spaces OG is already using purl to get a shortcode, we'll use that
+      // shortcode instead of collecting another one.
+      else {
+        // Make sure our submit function is second after node_form_submit.
+        $first = array_shift($form['buttons']['submit']['#submit']);
+        array_unshift($form['buttons']['submit']['#submit'], $first, "og_mailinglist_group_form_submit");
+     }
+    }
+  }
+}
+// TODO remove code that depends on space object, test on new site w/o space -- on eduglu
+/**
+ * Validation handler for og_mailinglist_group_form. Check that submitted
+ * email username is valid.
+ */
+function og_mailinglist_group_form_validate($form) {
+  if (preg_match('!^[\.a-z0-9_-]+$!', $form['value']['#value'])) {
+    return true;
+  }
+  else {
+    return false;
+  }
+}
+
+/*
+ * Submit handler for og_mailinglist_group_form.
+ */
+function og_mailinglist_group_form_submit($form, &$form_state) {
+  if (isset($form_state['nid'])) {
+    // If the nid is set, this means we're updating the group node not
+    // creating it.
+    if (isset($form_state['node']->nid)) {
+      $new_node = 0;
+    }
+    else {
+      $new_node = 1;
+    }
+    og_mailinglist_save_group($form_state['nid'], $form_state['values']['purl']['value'], $new_node);
+  }
+}
+
+/*
  * Implementation of hook_nodeapi().
  */
 function og_mailinglist_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
@@ -204,6 +265,25 @@ function og_mailinglist_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
     }    
     // Send emails
     og_mailinglist_send_node_email($node);
+  }
+  // Node is a group
+  if (og_is_group_type($node->type)) {
+    switch ($op) {
+      case 'load':
+        // Load the group's email username.
+        if (isset($node->nid)) {
+          $ogm_email = db_result(db_query("SELECT group_email
+                                       FROM {og_mailinglist}
+                                       WHERE nid = %d", $node->nid));
+          $node->ogm_email = $ogm_email;
+        }
+        break;
+      case 'insert':
+      case 'update':
+      case 'delete':
+        og_mailinglist_delete_group($node->nid);
+        break;
+    }
   }
 }
 
@@ -235,11 +315,11 @@ function og_mailinglist_comment($comment, $op) {
 function og_mailinglist_og($op, $gid, $uid, $args) {
   switch ($op) {
     case 'user insert':
-      og_mailinglist_save_group_subscriptions($gid, 'og', array($uid));
+      og_mailinglist_save_group_subscriptions($gid, array($uid));
       break;
     
     case 'user delete':
-      og_mailinglist_delete_group_subscriptions($gid, 'og', array($uid));
+      og_mailinglist_delete_group_subscriptions($gid, array($uid));
       break;
   }
 }

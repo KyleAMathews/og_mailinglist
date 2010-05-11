@@ -1,12 +1,12 @@
 <?php
 // $Id$
 
-function _og_mailinglist_get_subscribers($space, $node = NULL, $new_node = FALSE) {
-  
+function _og_mailinglist_get_subscribers($node, $new_node = FALSE) {
+  $group_node = _og_mailinglist_load_group($node);
   // If new node, save subscriptions for new node to og_mailinglist_thread.
   // If new comment, just load subscriptions.
   if ($new_node) {
-    $subscribers = og_mailinglist_get_space_subscriptions($space->id, $space->type);
+    $subscribers = og_mailinglist_get_group_subscriptions($group_node->nid);
     // Clean bad emails from list.
     foreach ($subscribers as $uid => $email) {
       if (!valid_email_address($email)) {
@@ -20,7 +20,8 @@ function _og_mailinglist_get_subscribers($space, $node = NULL, $new_node = FALSE
     $subscribers = og_mailinglist_get_thread_subscriptions($node->nid);
   }
   
-  if ($uid = variable_get('og_mailinglist_test_email_address', '')) {
+  if (is_numeric(variable_get('og_mailinglist_test_email_address', ''))) {
+    $uid = variable_get('og_mailinglist_test_email_address', '');
     $email = db_result(db_query("SELECT mail FROM {users} WHERE uid = %d", $uid));
     $uids[$uid] = $email;
   }
@@ -36,7 +37,7 @@ function array_to_comma_delimited_string($array) {
   return $string;
 }
 
-function _og_mailinglist_build_footer($space, $node) {
+function _og_mailinglist_build_footer($node) {
     $footer = "______________________________________
 Full discussion: " .  url("node/" . $node->nid, array('absolute' => TRUE))   . "
 Manage my subscriptions: " . url("og_mailinglist/subscriptions", array('absolute' => TRUE)) . "
@@ -55,6 +56,7 @@ function _og_mailinglist_extract_emails($string) {
 }
 
 function og_mailinglist_prepare_web_content($text) {
+  // TODO replace this with check_markup.
   $text = filter_filter('process', 1, NULL, $text);
   $text = filter_filter('process', 2, NULL, $text);
   return filter_filter('process', 3, NULL, $text);
@@ -68,22 +70,23 @@ function og_mailinglist_prepare_web_content($text) {
 }
 
 
-function og_mailinglist_build_web_footer($space, $node, $body, $cid = 0) {
-  $footer = _og_mailinglist_build_footer($space, $node);
+function og_mailinglist_build_web_footer($node, $body, $cid = 0) {
+  $footer = _og_mailinglist_build_footer($node);
   $footer = og_mailinglist_prepare_web_content($footer);
   return $body . "\n" . $footer;
 }
   
 
-function og_mailinglist_add_web_headers($mailer, $space, $node) {
+function og_mailinglist_add_web_headers($mailer, $node) {
+  $group_node = _og_mailinglist_load_group($node);
   global $base_url;
   
-  $mailer->AddCustomHeader($mailer->HeaderLine("List-Id", "<" . $space->group->purl .
+  $mailer->AddCustomHeader($mailer->HeaderLine("List-Id", "<" . $group_node->ogm_email .
             "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">"));
-  $mailer->AddCustomHeader($mailer->HeaderLine("List-Post", "<mailto:" . $space->group->purl .
+  $mailer->AddCustomHeader($mailer->HeaderLine("List-Post", "<mailto:" . $group_node->ogm_email .
             "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">"));
   $mailer->AddCustomHeader($mailer->HeaderLine("List-Archive", url("node/" .
-            $space->id, array('absolute' => TRUE))));
+            $group_node->nid, array('absolute' => TRUE))));
   $mailer->AddCustomHeader($mailer->HeaderLine("X-Thread-Url", $base_url .
             "/node/" . $node->nid));
   
@@ -93,10 +96,10 @@ function og_mailinglist_add_web_headers($mailer, $space, $node) {
   return $mailer;
 }
 
-function _og_mailinglist_add_addresses($mailer, $space, $node, $new_node = FALSE,
+function _og_mailinglist_add_addresses($mailer, $node, $new_node = FALSE,
                                  $comment = NULL, $email = NULL) {
-  
-  $subscribers = _og_mailinglist_get_subscribers($space, $node, $new_node);
+  $group_node = _og_mailinglist_load_group($node);
+  $subscribers = _og_mailinglist_get_subscribers($node, $new_node);
     
   if (!empty($comment)) {
     $author = user_load(array('uid' => $comment->uid));
@@ -112,8 +115,8 @@ function _og_mailinglist_add_addresses($mailer, $space, $node, $new_node = FALSE
   
   $mailer->From = $author->mail;
   $mailer->FromName = $author_name;
-  $mailer->AddAddress($space->group->purl . "@" .
-          variable_get('og_mailinglist_server_string', 'example.com'), $space->title);
+  $mailer->AddAddress($group_node->ogm_email . "@" .
+          variable_get('og_mailinglist_server_string', 'example.com'), $group_node->title);
  
   // Add emails to BCC
   foreach ($subscribers as $subscriber) {
@@ -242,4 +245,30 @@ function _og_mailinglist_remove_subscribers($subscribers, $headers) {
   }
   
   return $subscribers;
+}
+
+/*
+ * Hide some ugly confusing code. Pass in a node and return its group node.
+ */
+function _og_mailinglist_load_group($node) {
+  if (!empty($node->og_groups_both)) {
+    return node_load(array('nid' => array_pop(array_keys($node->og_groups_both)))); 
+  }
+  elseif (!empty($node->og_groups)) {
+    return node_load(array('nid' => array_pop($node->og_groups))); 
+  }
+  elseif (!empty($node->og_initial_groups)) {
+    return node_load(array('nid' => array_pop($node->og_initial_groups))); 
+  }
+  else {
+    $group_node = node_load(array('nid' => db_result(db_query("SELECT group_nid
+                                              FROM {og_ancestry}
+                                              WHERE nid = %d", $node->nid))));
+    if (!empty($group_node)) {
+      return $group_node;
+    }
+    else {
+      return null;
+    }
+  }
 }
