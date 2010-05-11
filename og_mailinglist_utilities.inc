@@ -91,7 +91,7 @@ function og_mailinglist_add_web_headers($mailer, $node) {
             "/node/" . $node->nid));
   
   // Set Message-ID.
-  $mailer->MessageID = $base_url . "/node/" . $node->nid;
+  $mailer->MessageID = "<" . $base_url . "/node/" . $node->nid . ">";
   
   return $mailer;
 }
