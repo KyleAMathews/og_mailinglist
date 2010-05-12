@@ -194,13 +194,13 @@ function og_mailinglist_create_mailer() {
 /*
  * Save group information upon group creation and update.
  */
-function og_mailinglist_save_group($nid, $group_email, $new_node) {
+function og_mailinglist_save_group($nid, $group_email, $new_group) {
   $data = array(
       'nid' => $nid,
       'group_email' => $group_email,
   );
   
-  if ($new_node) {
+  if ($new_group) {
     drupal_write_record('og_mailinglist', $data);
   }
   // Add the primary key.

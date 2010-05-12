@@ -221,7 +221,7 @@ function og_mailinglist_form_alter(&$form, $form_state, $form_id) {
     }
   }
 }
-// TODO remove code that depends on space object, test on new site w/o space -- on eduglu
+
 /**
  * Validation handler for og_mailinglist_group_form. Check that submitted
  * email username is valid.
@@ -243,12 +243,18 @@ function og_mailinglist_group_form_submit($form, &$form_state) {
     // If the nid is set, this means we're updating the group node not
     // creating it.
     if (isset($form_state['node']->nid)) {
-      $new_node = 0;
+      $new_group = 0;
     }
     else {
-      $new_node = 1;
+      $new_group = 1;
     }
-    og_mailinglist_save_group($form_state['nid'], $form_state['values']['purl']['value'], $new_node);
+    if (isset($form_state['values']['purl']['value'])) {
+      $group_email = $form_state['values']['purl']['value'];
+    }
+    else {
+      $group_email = $form_state['values']['og_mailinglist']['value'];
+    }
+    og_mailinglist_save_group($form_state['nid'], $group_email, $new_group);
   }
 }
 
@@ -259,8 +265,10 @@ function og_mailinglist_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   if ($op == "insert" && $node->status && $node->type != "eduglu_group_reader_feed") { // TODO create hook so individual features can turn off
     // email notifications + on admin interface, let people turn off notifications there as well.
     
+    $group_name = _og_mailinglist_load_group($node);
+    
     // User might not be automatically subscribed to new threads. Subscribe now if they aren't signed up to get emails normally.
-    if (og_mailinglist_get_group_subscription_type($node->og_groups[0], $node->uid) != "email") {
+    if (og_mailinglist_get_group_subscription_type($group_node->nid, $node->uid) != "email") {
       og_mailinglist_save_thread_subscriptions($node->nid, array($node->uid));
     }    
     // Send emails
