@@ -198,10 +198,11 @@ function og_mailinglist_form_alter(&$form, $form_state, $form_id) {
       if (!module_exists('purl') && !module_exists('spaces_og')) {
         // Add our form, compatible with purl's form.
         $form['og_mailinglist'] = array(
-          '#title' => 'email',
+          '#title' => 'Group Email Address',
           '#type' => 'textfield',
-          '#description' => 'Choose an email address. May contain only lowercase letters, numbers, dashes and underscores. e.g. "my-group"',
+          '#description' => 'Choose an email address for your group. May contain only lowercase letters, numbers, dashes and underscores. e.g. "my-group"',
           '#size' => 20,
+          '#weight' => -1,
           '#maxlength' => 255,
           '#required' => TRUE,
           '#tree' => TRUE,
