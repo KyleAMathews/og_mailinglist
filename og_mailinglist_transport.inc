@@ -659,7 +659,7 @@ function _og_mailinglist_rewrite_headers($email, $node, $new_node = FALSE) {
   $new_headers['Message-ID'] = "<node-" . $node->nid . "-" . $rand . "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">";
   
   // Set References
-  $new_headers['References'] = $email['headers']['references'] . "\n" . $email['headers']['message-id'];
+  $new_headers['References'] = $email['headers']['references'] . $email['headers']['message-id'];
   
   $email['structure']->headers = $new_headers;
   
