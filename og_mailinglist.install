@@ -201,7 +201,8 @@ function add_groups_to_og_mailinglist() {
        'nid' => $nid,
        'group_email' => $title,
       );
-      
+      print_r($data);
+      echo "\n";
       drupal_write_record('og_mailinglist', $data);
       
       // Subscribe group members to active threads.
@@ -236,16 +237,29 @@ function add_groups_to_og_mailinglist() {
  * works out of the box for previously created threads.
  */
 function og_mailinglist_create_subscriptions_for_last_month($gid) {
+  module_load_include('inc', 'og_mailinglist', 'og_mailinglist_api');
+  
+  // Create email subscriptions to group for all group members.
+  $results = db_query("SELECT uid
+                        {og_uid}
+                        WHERE nid = %d", $gid);
+  $uids = array();
+  while ($data = db_fetch_array($results)) {
+    $uids[] = $data['uid'];
+  }
+  og_mailinglist_save_group_subscriptions($gid, $uids);
+  
   $sql = "SELECT n.nid
           FROM {og_ancestry} o
           JOIN {node} n
           ON o.nid = n.nid
-          WHERE o.group_nid = 251
+          WHERE o.group_nid = %d
           AND n.created > (unix_timestamp() - 2592000)";
           
   $results = db_query($sql, $gid);
   
   while ($data = db_fetch_array($results)) {
+     
     og_mailinglist_save_group_thread_subscriptions($gid, $data['nid']);
   }
 }
