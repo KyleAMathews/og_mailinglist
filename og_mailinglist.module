@@ -196,12 +196,19 @@ function og_mailinglist_form_alter(&$form, $form_state, $form_id) {
     // Group nodes
     if (og_is_group_type($form['#node']->type)) {
       if (!module_exists('purl') && !module_exists('spaces_og')) {
+        $group_email = "";
+        if (isset($form['nid']['#value'])) {
+          $group_email = db_result(db_query("SELECT group_email
+                                             FROM {og_mailinglist}
+                                             WHERE nid = %d", $form['nid']['#value']));
+        }
         // Add our form, compatible with purl's form.
         $form['og_mailinglist'] = array(
           '#title' => 'Group Email Address',
           '#type' => 'textfield',
           '#description' => 'Choose an email address for your group. May contain only lowercase letters, numbers, dashes and underscores. e.g. "my-group"',
           '#size' => 20,
+          '#default_value' => $group_email,
           '#weight' => -1,
           '#maxlength' => 255,
           '#required' => TRUE,
@@ -227,12 +234,16 @@ function og_mailinglist_form_alter(&$form, $form_state, $form_id) {
  * Validation handler for og_mailinglist_group_form. Check that submitted
  * email username is valid.
  */
-function og_mailinglist_group_form_validate($form) {
-  if (preg_match('!^[\.a-z0-9_-]+$!', $form['value']['#value'])) {
+function og_mailinglist_group_form_validate($element, &$form_state) {
+  $sql = "SELECT group_email FROM {og_mailinglist} WHERE group_email = '%s'";
+  if (db_result(db_query($sql, $element['#value']))) {
+    form_error($element, t('Someone has already choosen that group email address. Please choose another.'));
+  }
+  else if (preg_match('!^[\.a-z0-9_-]+$!', $element['#value'])) {
     return true;
   }
   else {
-    return false;
+    form_error($element, t('Your group email address may contain only lowercase letters, numbers, dashes and underscores. e.g. "my-group'));
   }
 }
 
@@ -240,23 +251,16 @@ function og_mailinglist_group_form_validate($form) {
  * Submit handler for og_mailinglist_group_form.
  */
 function og_mailinglist_group_form_submit($form, &$form_state) {
-  if (isset($form_state['nid'])) {
-    // If the nid is set, this means we're updating the group node not
-    // creating it.
-    if (isset($form_state['node']->nid)) {
-      $new_group = 0;
-    }
-    else {
-      $new_group = 1;
-    }
-    if (isset($form_state['values']['purl']['value'])) {
-      $group_email = $form_state['values']['purl']['value'];
-    }
-    else {
-      $group_email = $form_state['values']['og_mailinglist']['value'];
-    }
-    og_mailinglist_save_group($form_state['nid'], $group_email, $new_group);
+  $group_email = "";
+  if (isset($form_state['values']['purl']['value'])) {
+    $group_email = $form_state['values']['purl']['value'];
   }
+  else {
+    $group_email = $form_state['values']['og_mailinglist'];
+  }
+
+  og_mailinglist_save_group($form_state['nid'], $group_email);
+  
 }
 
 /*
@@ -266,7 +270,7 @@ function og_mailinglist_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   if ($op == "insert" && $node->status && $node->type != "eduglu_group_reader_feed") { // TODO create hook so individual features can turn off
     // email notifications + on admin interface, let people turn off notifications there as well.
     
-    $group_name = _og_mailinglist_load_group($node);
+    $group_node = _og_mailinglist_load_group($node);
     
     // User might not be automatically subscribed to new threads. Subscribe now if they aren't signed up to get emails normally.
     if (og_mailinglist_get_group_subscription_type($group_node->nid, $node->uid) != "email") {
