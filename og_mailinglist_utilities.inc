@@ -83,7 +83,10 @@ function og_mailinglist_add_web_headers($mailer, $node) {
             "/node/" . $node->nid));
   
   // Set Message-ID.
-  $mailer->MessageID = "<" . $base_url . "/node/" . $node->nid . ">";
+  $rand = rand(10, 10000);
+  $mailer->MessageID = "<node-" . $node->nid . "-" . $rand . "@" . $base_url . ">";
+  
+  // TODO Set references here. Need to store message ids of previous emails.
   
   return $mailer;
 }

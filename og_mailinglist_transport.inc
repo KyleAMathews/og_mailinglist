@@ -654,8 +654,12 @@ function _og_mailinglist_rewrite_headers($email, $node, $new_node = FALSE) {
   global $base_url;
   $new_headers['X-Thread-Url'] = $base_url . "/node/" . $node->nid;
   
-  // Message-Id We use this to match new comments to their node.
-  $new_headers['Message-ID'] = "<" . $base_url . "/node/" . $node->nid . ">";
+  // Set Message-Id
+  $rand = rand(10, 10000);
+  $new_headers['Message-ID'] = "<node-" . $node->nid . "-" . $rand . "@" . $base_url . ">";
+  
+  // Set References
+  $new_headers['References'] = $email['headers']['references'] . "\n" . $email['headers']['message-id'];
   
   $email['structure']->headers = $new_headers;
   
