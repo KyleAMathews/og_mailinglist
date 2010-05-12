@@ -7,6 +7,7 @@ function _og_mailinglist_get_subscribers($node, $new_node = FALSE) {
   // If new comment, just load subscriptions.
   if ($new_node) {
     og_mailinglist_save_group_thread_subscriptions($group_node->nid, $node->nid);
+    $subscribers = og_mailinglist_get_thread_subscriptions($node->nid);
   }
   else { // this is a new comment.
     $subscribers = og_mailinglist_get_thread_subscriptions($node->nid);
@@ -206,17 +207,19 @@ function _og_mailinglist_detect_email_char_set($email_text) {
 /*
  * Try to parse nid from the email.
  */
-function og_mailinglist_parse_nid($email, $subject) {
+function og_mailinglist_parse_nid($email, $headers) {
   $nid = "";
-  if (preg_match("/[mM]essage-?[iIdD]{2}:\s.*node\/([0-9]+)/s", $email, $matches)) {
-    $nid = $matches[1];
+  if (isset($headers['in-reply-to'])) {
+    if (preg_match("/node-(\d+?)-/s", $email, $matches)) {
+      $nid = $matches[1];
+    }
   }
   else if (preg_match("/og_mailinglist\/unsubscribe\/([0-9]+)/s", $email, $matches)) {
     $nid = $matches[1];
   }
   // Else, as last resort, pick the last node that matches the title in the subject line.
   else {
-    $nid = _og_mailinglist_nid_of_subject($subject);
+    $nid = _og_mailinglist_nid_of_subject($headers['subject']);
   }
   return $nid;
 }

@@ -114,7 +114,7 @@ function _og_mailinglist_process_email($raw_email, $mail_username) {
     
     // Try to get the Node ID. If the email is a comment to a node, we should be
     // able to get the Node ID of the original node.
-    $email['nid'] = og_mailinglist_parse_nid($email['text_plain'], $email['structure']->headers['subject']);
+    $email['nid'] = og_mailinglist_parse_nid($email['text_plain'], $email['structure']->headers);
   
     // create the new content in Drupal.
     if ($email['nid']) { // a new comment
