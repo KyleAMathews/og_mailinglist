@@ -1,7 +1,26 @@
 <?php
 // $Id$
 
-/*
+/**
+ * Saves new thread subscriptions for members of a group.
+ * 
+ * @param int $gid Group ID
+ * @param int $nid Node ID
+ */
+function og_mailinglist_save_group_thread_subscriptions($gid, $nid) {
+  $subscribers = og_mailinglist_get_group_subscriptions($gid);
+  // Clean bad emails from list.
+  foreach ($subscribers as $uid => $email) {
+    if (!valid_email_address($email)) {
+      unset($subscribers[$uid]);
+    }
+  }
+  // Save users to og_mailinglist_thread
+  og_mailinglist_save_thread_subscriptions($nid, array_keys($subscribers));
+}
+/**
+ * Returns users who are active email subscribers in a group.
+ *
  * @param int $gid Group id to query for subscriptions
  * 
  * @return array of UIDs and email addresses that are subscribed to this group.

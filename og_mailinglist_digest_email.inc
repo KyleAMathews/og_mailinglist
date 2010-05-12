@@ -7,7 +7,7 @@ define("DISCUSSION_HEADER", 'background-color: #D1DCFF; font-family: helvetica;
 define("MESSAGE_HEADER", 'background-color: #E6ECFF; font-family: helvetica;
        border-top: 1px solid #262c40; padding: 2px');
 define("DIGEST_TIME_PERIOD", 86400); // One day currently.
-// TODO -- make email from list address + add add list-ids so email client filters still work
+// TODO -- make email from list address + add add list-ids so email client filters still work + add subject prefix e.g. [isys]
 
 function _og_mailinglist_send_digest_emails() {
   // Get list of groups where at least one person has subscribed to a digest node

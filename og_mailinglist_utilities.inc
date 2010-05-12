@@ -6,15 +6,7 @@ function _og_mailinglist_get_subscribers($node, $new_node = FALSE) {
   // If new node, save subscriptions for new node to og_mailinglist_thread.
   // If new comment, just load subscriptions.
   if ($new_node) {
-    $subscribers = og_mailinglist_get_group_subscriptions($group_node->nid);
-    // Clean bad emails from list.
-    foreach ($subscribers as $uid => $email) {
-      if (!valid_email_address($email)) {
-        unset($subscribers[$uid]);
-      }
-    }
-    // Save users to og_mailinglist_thread
-    og_mailinglist_save_thread_subscriptions($node->nid, array_keys($subscribers));  
+    og_mailinglist_save_group_thread_subscriptions($group_node->nid, $node->nid);
   }
   else { // this is a new comment.
     $subscribers = og_mailinglist_get_thread_subscriptions($node->nid);

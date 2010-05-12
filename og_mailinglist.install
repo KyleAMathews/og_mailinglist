@@ -203,6 +203,9 @@ function add_groups_to_og_mailinglist() {
       );
       
       drupal_write_record('og_mailinglist', $data);
+      
+      // Subscribe group members to active threads.
+      og_mailinglist_create_subscriptions_for_last_month($nid);
     }
   }
   // Else, just use the purl entries
@@ -221,7 +224,29 @@ function add_groups_to_og_mailinglist() {
       );
       
       drupal_write_record('og_mailinglist', $data);
+      
+      // Subscribe group members to active threads.
+      og_mailinglist_create_subscriptions_for_last_month($nid);
     }
+  }
+}
+
+/**
+ * Creates group thread subscriptions for past 30 days so og_mailinglist
+ * works out of the box for previously created threads.
+ */
+function og_mailinglist_create_subscriptions_for_last_month($gid) {
+  $sql = "SELECT nid
+          FROM {og_ancestry} o
+          JOIN {node} n
+          ON o.nid = n.nid
+          WHERE o.group_nid = 251
+          AND n.created > (unix_timestamp() - 2592000)";
+          
+  $results = db_query($sql, $gid);
+  
+  while ($data = db_fetch_array($results)) {
+    og_mailinglist_save_group_thread_subscriptions($gid, $data['nid']);
   }
 }
 
