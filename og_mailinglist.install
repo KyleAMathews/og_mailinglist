@@ -236,7 +236,7 @@ function add_groups_to_og_mailinglist() {
  * works out of the box for previously created threads.
  */
 function og_mailinglist_create_subscriptions_for_last_month($gid) {
-  $sql = "SELECT nid
+  $sql = "SELECT n.nid
           FROM {og_ancestry} o
           JOIN {node} n
           ON o.nid = n.nid
