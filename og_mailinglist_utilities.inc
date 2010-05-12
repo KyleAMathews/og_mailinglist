@@ -99,11 +99,13 @@ function _og_mailinglist_add_addresses($mailer, $node, $new_node = FALSE,
   else {
     $author = user_load(array('uid' => $node->uid));
   }
-  $sql = "SELECT c.field_name_value
-          FROM content_type_uprofile c, node n
-          WHERE c.nid = n.nid
-          AND n.uid = %d";
-  $author_name = db_result(db_query($sql, $author->uid));
+  
+  if (isset($author->realname)) {
+    $author_name = $author->realname; 
+  }
+  else {
+    $author_name = $author->name; 
+  }
   
   $mailer->From = $author->mail;
   $mailer->FromName = $author_name;

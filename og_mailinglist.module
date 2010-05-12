@@ -91,7 +91,7 @@ function og_mailinglist_admin_settings() {
     '#description' => t('The maximum number of messages a user is able to post per hour by email.  Set to 0 for unlimited.'),
   );
   $form['og_mailinglist_test_email_address'] = array(
-    '#title' => t('DEBUGGING: Send all emails to user account'),
+    '#title' => t('DEBUGGING: Send an email for all events to a user account'),
     '#type' => 'textfield',
     '#default_value' => variable_get('og_mailinglist_test_email_address', ''),
     '#description' => t('For testing / monitoring purposes, you can set one user account to receive all emails sent by OG Mailinglist. Enter the User ID of the user who should receive all emails.'),
