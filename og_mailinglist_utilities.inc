@@ -210,7 +210,7 @@ function _og_mailinglist_detect_email_char_set($email_text) {
 function og_mailinglist_parse_nid($email, $headers) {
   $nid = "";
   if (isset($headers['in-reply-to'])) {
-    if (preg_match("/node-(\d+?)-/s", $email, $matches)) {
+    if (preg_match("/node-(\d+?)-/s", $headers['in-reply-to'], $matches)) {
       $nid = $matches[1];
     }
   }
