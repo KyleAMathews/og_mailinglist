@@ -288,7 +288,7 @@ function og_mailinglist_save_discussion($email) {
   $node->sticky = 0;
   $node->body = $mailbody;
   $node->teaser = node_teaser($mailbody);
-  $node->type = 'story';
+  $node->type = variable_get('og_mailinglist_default_content_type', 'story');
   $node->og_public = $is_public;
   $node->og_groups[$email['groupid']] = $email['groupid'];
   $node->comment = variable_get("comment_$node_type", COMMENT_NODE_READ_WRITE);

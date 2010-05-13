@@ -90,6 +90,18 @@ function og_mailinglist_admin_settings() {
     '#default_value' => variable_get('og_mailinglist_max_posts_per_hour', '20'),
     '#description' => t('The maximum number of messages a user is able to post per hour by email.  Set to 0 for unlimited.'),
   );
+  $node_types = node_get_types();
+  $n_types = array();
+  foreach ($node_types as $type) {
+    $n_types[$type->type] = $type->name;
+  }
+  $form['og_mailinglist_default_content_type'] = array(
+    '#title' => t('Default content type'),
+    '#type' => 'select',
+    '#default_value' => variable_get('og_mailinglist_default_content_type', 'story'),
+    '#options' => $n_types,
+    '#description' => t('Choose the default content type to be created from new emails.'),
+  );
   $form['og_mailinglist_test_email_address'] = array(
     '#title' => t('DEBUGGING: Send an email for all events to a user account'),
     '#type' => 'textfield',
