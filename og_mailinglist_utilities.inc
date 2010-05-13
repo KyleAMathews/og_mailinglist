@@ -209,10 +209,16 @@ function _og_mailinglist_detect_email_char_set($email_text) {
  */
 function og_mailinglist_parse_nid($email, $headers) {
   $nid = "";
-  if (isset($headers['in-reply-to'])) {
-    if (preg_match("/node-(\d+?)-/s", $headers['in-reply-to'], $matches)) {
-      $nid = $matches[1];
-    }
+  // Check the in-reply-to header.
+  if (isset($headers['in-reply-to']) && (preg_match("/node-(\d+?)-/s",
+                                          $headers['in-reply-to'], $matches))) {
+    $nid = $matches[1];
+  }
+  // If that fails (e.g. some got messaged directly and replied back to the
+  // list via that)., check the references header.
+  else if (isset($headers['references']) && (preg_match("/node-(\d+?)-/s",
+                                          $headers['references'], $matches))) {
+    $nid = $matches[1];
   }
   else if (preg_match("/og_mailinglist\/unsubscribe\/([0-9]+)/s", $email, $matches)) {
     $nid = $matches[1];
