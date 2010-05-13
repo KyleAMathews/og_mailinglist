@@ -22,7 +22,7 @@ require_once('og_mailinglist_api.inc');
  */
 function og_mailinglist_menu() {
   # Administration
-  $items['admin/messaging/og_mailinglist'] = array(
+  $items['admin/settings/og_mailinglist'] = array(
     'title' => 'OG Mailinglist',
     'description' => t('Configure discussions/comments generated from email'),
     'page callback' => 'drupal_get_form',
