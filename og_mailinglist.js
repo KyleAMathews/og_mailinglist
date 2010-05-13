@@ -6,7 +6,7 @@ if (Drupal.jsEnabled) {
         $(this).text('-Hide quoted text-');
       }
       else {
-        $(this).text('-Show quoted text-');
+        $(this).text('-Show quoted text-'); 
       }
     });
   });
