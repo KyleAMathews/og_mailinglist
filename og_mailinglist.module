@@ -79,7 +79,7 @@ function og_mailinglist_admin_settings() {
     '#description' => t('Domain name for outgoing/incoming emails, e.g. example.com.'),
   );
   $form['og_mailinglist_max_message_size'] = array(
-    '#title' => t('Maximum message size (in Kb)'),
+    '#title' => t('Maximum message body size (excluding attachments) (in Kb)'),
     '#type' => 'textfield',
     '#default_value' => variable_get('og_mailinglist_max_message_size', '100'),
     '#description' => t('Any messages over this size will be rejected.  Set to 0 for unlimited.'),
@@ -108,7 +108,7 @@ function og_mailinglist_admin_settings() {
     '#default_value' => variable_get('og_mailinglist_test_email_address', ''),
     '#description' => t('For testing / monitoring purposes, you can set one user account to receive all emails sent by OG Mailinglist. Enter the User ID of the user who should receive all emails.'),
   );
-// TODO add form to choose default content type
+  
   return system_settings_form($form);
 }
 
