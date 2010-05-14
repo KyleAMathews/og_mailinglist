@@ -214,8 +214,8 @@ function og_mailinglist_parse_nid($email, $headers) {
                                           $headers['in-reply-to'], $matches))) {
     $nid = $matches[1];
   }
-  // If that fails (e.g. some got messaged directly and replied back to the
-  // list via that)., check the references header.
+  // If that fails (e.g. someone was replied to directly and then replied back 
+  // to the list)., check the references header.
   else if (isset($headers['references']) && (preg_match("/node-(\d+?)-/s",
                                           $headers['references'], $matches))) {
     $nid = $matches[1];
@@ -223,6 +223,7 @@ function og_mailinglist_parse_nid($email, $headers) {
   else if (preg_match("/og_mailinglist\/unsubscribe\/([0-9]+)/s", $email, $matches)) {
     $nid = $matches[1];
   }
+  // TODO store message-id of first email in og_mailinglist_thread as in the case of where a person emails the list and then replies to their own message.
   // Else, as last resort, pick the last node that matches the title in the subject line.
   else {
     $nid = _og_mailinglist_nid_of_subject($headers['subject']);
