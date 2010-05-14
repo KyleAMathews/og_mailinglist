@@ -248,6 +248,9 @@ function og_mailinglist_form_alter(&$form, $form_state, $form_id) {
  */
 function og_mailinglist_group_form_validate($element, &$form_state) {
   $sql = "SELECT group_email FROM {og_mailinglist} WHERE group_email = '%s'";
+  if ($form_state['values']['nid']) {
+    $sql .= ' AND nid != ' . $form_state['values']['nid'];
+  }
   if (db_result(db_query($sql, $element['#value']))) {
     form_error($element, t('Someone has already choosen that group email address. Please choose another.'));
   }
