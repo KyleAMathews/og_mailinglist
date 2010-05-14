@@ -56,9 +56,9 @@ function _og_mailinglist_process_email($raw_email, $mail_username) {
     }
     
     // Check the size of the body and kick out if too large (for security).
-    if (strlen($email['mailbody']) >
-        variable_get('og_mailinglist_max_message_size', 200) * 1024) {  // 200 Kb
-      throw new Exception(t("Discussion items sent via email must be less than 200 Kb Mb. For security reasons, please post larger messages through the web interface."));
+    $max_size = variable_get('og_mailinglist_max_message_size', 200);  // 200kb
+    if (strlen($email['mailbody']) > $max_size * 1024) {
+      throw new Exception(t("Discussion items sent via email must be less than " . $max_size . " Kb. For security reasons, please post larger messages through the web interface."));
     }
   
     // This regex worries me... do *all* email clients place email addresses between <>?
