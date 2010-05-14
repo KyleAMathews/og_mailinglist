@@ -274,6 +274,9 @@ function og_mailinglist_save_discussion($email) {
   $is_private = db_result(db_query("SELECT og_private
                                    FROM {og}
                                    WHERE nid = %d", $email['groupid']));
+  
+  // The og_private table stores a 1 if the group is private and 0 if it's public.
+  // node_save() expects the opposite so we'll invert the value of $is_private.
   $is_public = TRUE;
   if ($is_private) {
     $is_public = FALSE;
