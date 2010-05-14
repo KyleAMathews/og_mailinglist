@@ -5,7 +5,7 @@
 ###############################################################################
 ###   This module allows users to email a Drupal installation running the
 ###   Exim email server to create discussions and respond to comments.
-###   Because it is tied directly to Exim, emails are processed immediately
+###   Because it is tied directly to Exim, email is processed immediately
 ###   upon receipt in the mail server.  Mails should be sent to group_prefix@server.com
 ###   rather than to a single email address.
 ###

@@ -738,8 +738,8 @@ function _og_mailinglist_add_footer($email, $footer) {
   return $email;
 }
 
-function _og_mailinglist_send_raw_email($email_text) {
-  $rand_str = rand(1000, 10000);
-  write_string_to_file($email_text, $rand_str);
-  system("/usr/sbin/sendmail -t < /tmp/" . $rand_str);
+function _og_mailinglist_send_raw_email($raw_email) {
+  $rand_filename = rand(1000, 10000);
+  file_put_contents("/tmp/" . $rand_filename, $raw_email . "\n");
+  system("/usr/sbin/sendmail -t < /tmp/" . $rand_filename);
 }

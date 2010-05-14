@@ -9,7 +9,7 @@
  */
 function og_mailinglist_save_group_thread_subscriptions($gid, $nid) {
   $subscribers = og_mailinglist_get_group_subscriptions($gid);
-  // Clean bad emails from list.
+  // Clean bad email addresses from the array.
   foreach ($subscribers as $uid => $email) {
     if (!valid_email_address($email)) {
       unset($subscribers[$uid]);
