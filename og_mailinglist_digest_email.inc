@@ -13,20 +13,20 @@ function _og_mailinglist_send_digest_emails() {
   // Get list of groups where at least one person has subscribed to a digest node
   // and which had a new post or comment in the last 24 hours.
 
-  $new_nodes_sql = 'SELECT DISTINCT s.sid
+  $new_nodes_sql = 'SELECT DISTINCT s.nid
             FROM {og_mailinglist_subscription} s
             JOIN {og_ancestry} o
             JOIN {node} n
-            WHERE s.sid = o.group_nid
+            WHERE s.nid = o.group_nid
             AND o.nid = n.nid
             AND n.created > (unix_timestamp() - %d)
             AND s.subscription_type = "digest email"';
 
-  $new_comments_sql = 'SELECT DISTINCT s.sid
+  $new_comments_sql = 'SELECT DISTINCT s.nid
             FROM {og_mailinglist_subscription} s
             JOIN {og_ancestry} o
             JOIN {comments} c
-            WHERE s.sid = o.group_nid
+            WHERE s.nid = o.group_nid
             AND o.nid = c.nid
             AND c.timestamp > (unix_timestamp() - %d)
             AND s.subscription_type = "digest email"';
@@ -36,10 +36,10 @@ function _og_mailinglist_send_digest_emails() {
 
   $digest_groups = array();
   while ($data = db_fetch_array($groups_with_new_comments)) {
-    $digest_groups[$data['sid']] = $data['sid'];
+    $digest_groups[$data['nid']] = $data['nid'];
   }
   while ($data = db_fetch_array($groups_with_new_nodes)) {
-    $digest_groups[$data['sid']] = $data['sid'];
+    $digest_groups[$data['nid']] = $data['nid'];
   }
 
   //print_r($digest_groups);
@@ -84,7 +84,7 @@ function _og_mailinglist_send_digest_emails() {
 
     $group_email = db_result(db_query("SELECT group_email
                                         FROM {og_mailinglist}
-                                        AND nid = %d", $gid));
+                                        WHERE nid = %d", $gid));
 
     $subject = "Digest for " . group_email . "@" . variable_get("og_mailinglist_server_string", "example.com")
           . " - " . $message_count . " Messages in " . count($nids) . " Discussions";
@@ -137,7 +137,7 @@ function _og_mailinglist_send_digest_emails() {
     // For each person, send out an email.
     $result = db_query("SELECT uid
                        FROM {og_mailinglist_subscription}
-                       WHERE sid = %d
+                       WHERE nid = %d
                        AND subscription_type = \"digest email\"", $gid);
     $uids = array();
     while ($data = db_fetch_array($result)) {
