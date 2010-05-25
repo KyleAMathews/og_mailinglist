@@ -476,7 +476,9 @@ function _og_mailinglist_filter_quotes($text) {
       || preg_match("/On\s\w{3,10},\s\w{3}\s\d{1,2},\s\d{4},\s.+?wrote:/s", #unknown as of yet "On Saturday, May 22, 2010, Joe Smith wrote:"
                             $line, $matches)
       || preg_match("/On.\d{1,2}\/\d{1,2}\/\d{1,2}.\d{1,2}:\d{1,2}\s(PM|AM),.+?wrote:/s", #unknown as of yet "On 5/21/10 8:43 PM, Joe Smith wrote:"
-                            $line, $matches)) {
+                            $line, $matches)
+      && !$in_quote) {
+
       
       $quotes[$count][] = $line;
       $in_quote = true;
