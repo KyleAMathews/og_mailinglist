@@ -86,7 +86,7 @@ function _og_mailinglist_send_digest_emails() {
                                         FROM {og_mailinglist}
                                         WHERE nid = %d", $gid));
 
-    $subject = "Digest for " . group_email . "@" . variable_get("og_mailinglist_server_string", "example.com")
+    $subject = "Digest for " . $group_email . "@" . variable_get("og_mailinglist_server_string", "example.com")
           . " - " . $message_count . " Messages in " . count($nids) . " Discussions";
 
     // Assemble message
