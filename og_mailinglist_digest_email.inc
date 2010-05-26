@@ -7,7 +7,7 @@ define("DISCUSSION_HEADER", 'background-color: #D1DCFF; font-family: helvetica;
 define("MESSAGE_HEADER", 'background-color: #E6ECFF; font-family: helvetica;
        border-top: 1px solid #262c40; padding: 2px');
 define("DIGEST_TIME_PERIOD", 86400); // One day currently.
-// TODO -- make email from list address + add add list-ids so email client filters still work + add subject prefix e.g. [isys]
+// TODO -- make email from list address
 
 function _og_mailinglist_send_digest_emails() {
   // Get list of groups where at least one person has subscribed to a digest node
@@ -155,7 +155,7 @@ function _og_mailinglist_send_digest_emails() {
 
     foreach ($uids as $email) {
       $mailer = og_mailinglist_create_mailer();
-      $mailer->From = "no_reply@" . variable_get("og_mailinglist_server_string", "example.com");
+      $mailer->From = $group->ogm_email . "+no-reply@" . variable_get("og_mailinglist_server_string", "example.com");
       $mailer->FromName = $group_email . "@" .
       variable_get("og_mailinglist_server_string", "example.com");
       $mailer->AddCustomHeader($mailer->HeaderLine("List-Id", "<" . $group->ogm_email .
