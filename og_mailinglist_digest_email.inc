@@ -86,7 +86,7 @@ function _og_mailinglist_send_digest_emails() {
                                         FROM {og_mailinglist}
                                         WHERE nid = %d", $gid));
 
-    $subject = "Digest for " . $group_email . "@" . variable_get("og_mailinglist_server_string", "example.com")
+    $subject = "[" . $group->ogm_email . "] Digest for " . $group_email . "@" . variable_get("og_mailinglist_server_string", "example.com")
           . " - " . $message_count . " Messages in " . count($nids) . " Discussions";
 
     // Assemble message
@@ -125,7 +125,7 @@ function _og_mailinglist_send_digest_emails() {
     }
 
     // Add footer.
-    $body .= "________________________________<br />";
+    $body .= "__<br />";
     $body .= "You received this message because you are a member of the \"" .
               $group->title . "\" group on " .
               variable_get("og_mailinglist_server_string", "example.com") . "<br />";
@@ -158,6 +158,12 @@ function _og_mailinglist_send_digest_emails() {
       $mailer->From = "no_reply@" . variable_get("og_mailinglist_server_string", "example.com");
       $mailer->FromName = $group_email . "@" .
       variable_get("og_mailinglist_server_string", "example.com");
+      $mailer->AddCustomHeader($mailer->HeaderLine("List-Id", "<" . $group->ogm_email .
+            "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">"));
+      $mailer->AddCustomHeader($mailer->HeaderLine("List-Post", "<mailto:" . $group->ogm_email .
+            "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">"));
+      $mailer->AddCustomHeader($mailer->HeaderLine("List-Archive", url("node/" .
+            $group->nid, array('absolute' => TRUE))));
       $mailer->AddAddress($email);
       $mailer->Subject = $subject;
       $mailer->Body = $body;
