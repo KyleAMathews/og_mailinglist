@@ -49,10 +49,7 @@ function _og_mailinglist_extract_emails($string) {
 }
 
 function og_mailinglist_prepare_web_content($text) {
-  // TODO replace this with check_markup.
-  $text = filter_filter('process', 1, NULL, $text);
-  $text = filter_filter('process', 2, NULL, $text);
-  return filter_filter('process', 3, NULL, $text);
+  return check_markup($text);
 }
 
  function _og_mailinglist_email_already_sent($nid, $cid = 0) {
@@ -307,3 +304,30 @@ function capitalize_headers($words, $charList = null) {
     return $words;
 }
 
+/**
+ * Loads PHPMailer library if it's not loaded already.
+ *
+ * @return
+ *  TRUE if the PHPMailer library is loaded, FALSE otherwise.
+ */
+function og_mailinglist_phpmailer_load_library() {
+  if (!class_exists('PHPMailer')) {
+    // First, try using libraries module.
+    if (module_exists('libraries')) {
+      // Let's see if PHPMailer is really available from libraries.
+      $phpmailer_library = './'. libraries_get_path('phpmailer') .'/class.phpmailer.php';
+      if (file_exists($phpmailer_library)) {
+        include_once $phpmailer_library;
+      }
+    }
+    // If PHPMailer is not already loaded, then try from module subdirectory.
+    if (!class_exists('PHPMailer')) {
+      $phpmailer_library = './'. drupal_get_path('module', 'og_mailinglist') .'/PHPMailer/class.phpmailer.php'; // is this the right sub-directory?
+      if (file_exists($phpmailer_library)) {
+        include_once $phpmailer_library;
+      }
+    }
+  }
+  // Tell the caller if PHPMailer class exists.
+  return class_exists('PHPMailer');
+}

@@ -13,9 +13,10 @@
 ###   Maintained since by Kyle Mathews
 ###
 
-require_once("phpmailer/class.phpmailer.php");
 require_once("og_mailinglist_phpmailer.inc");
 require_once('og_mailinglist_api.inc');
+og_mailinglist_phpmailer_load_library();
+
 // TODO remove thread subscriptions older than 3 months. If someone ressurrects a thread, then readd people to thread. Probably need a table to track which threads have been retired.
 /**
  * Implementation of hook_menu(). 

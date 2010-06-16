@@ -70,6 +70,9 @@ function og_mailinglist_send_node_email($node) {
   // Decorate subject.
   $mailer->Subject = "[" . $group_node->ogm_email . "] " . $node->title;
   
+  // Prepare node body for viewing.
+  $node = og_mailinglist_render_node_body($node);
+  
   // Decorate body.
   $body = og_mailinglist_prepare_web_content($node->body);
   $body = og_mailinglist_build_web_footer($node, $body, 0, TRUE);
@@ -104,3 +107,29 @@ function og_mailinglist_send_node_email($node) {
   return;
 }
 
+/*
+ * Render nodes according to the default input filter.
+ *
+ * Code taken and modified from the core node_view function.
+ *
+ * @param $nid
+ *  Node ID
+ *
+ * @return
+ *  Node with rendered teaser.
+ */
+function og_mailinglist_render_node_body($nid) {
+  $node = (object)$node;
+  $node = node_build_content($node, FALSE, TRUE);
+
+  // Set the proper node part, then unset unused $node part so that a bad
+  // theme can not open a security hole.
+  $content = drupal_render($node->content);
+  $node->body = $content; // TODO change this to only add teaser. Add a read more link to actual node / comment
+  unset($node->teaser);
+
+  // Allow modules to modify the fully-built node.
+  node_invoke_nodeapi($node, 'alter');
+  
+  return $node;
+}

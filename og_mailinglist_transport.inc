@@ -2,9 +2,9 @@
 // TODO move mimeDecode + phpmailer to libraries + add QueryPath as dependent module
 // TODO rewrite header info here.
 require_once("/usr/share/php/Mail/mimeDecode.php");
-require_once("phpmailer/class.phpmailer.php");
 require_once('og_mailinglist_utilities.inc');
 require_once('og_mailinglist_api.inc');
+og_mailinglist_phpmailer_load_library();
 
 ###############################################################################
 ###   This script is called from Exim4.  It is a "pipe" type of 

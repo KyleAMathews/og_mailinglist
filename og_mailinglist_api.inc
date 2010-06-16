@@ -184,7 +184,7 @@ function og_mailinglist_log_email_sent($source, $nid, $cid = 0) {
  * @return PHPMailer object.
  */
 function og_mailinglist_create_mailer() {
-  require_once("phpmailer/class.phpmailer.php");
+  og_mailinglist_phpmailer_load_library();
   $mailer = new PHPMailer();
   $mailer->CharSet = 'UTF-8';
 
