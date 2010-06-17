@@ -5,12 +5,12 @@ require_once('og_mailinglist_utilities.inc');
 require_once('og_mailinglist_api.inc');
 
 function og_mailinglist_send_comment_email($comment, $node) {
-  $group_node = _og_mailinglist_load_group($node);
-  
   // Check if comment arrived via email so already sent.
   if (_og_mailinglist_email_already_sent($comment->nid, $comment->cid)) {
     return;
   }
+  
+  $group_node = _og_mailinglist_load_group($node);
 
   $mailer = og_mailinglist_create_mailer();
   
@@ -50,12 +50,14 @@ function og_mailinglist_send_comment_email($comment, $node) {
 }
 
 function og_mailinglist_send_node_email($node) {
-  $group_node = _og_mailinglist_load_group($node);
-  
   // Check if node arrived via email so already sent.
   if (_og_mailinglist_email_already_sent($node->nid)) {
     return;
   }
+  
+  $group_node = _og_mailinglist_load_group($node);
+  
+
   
   // If not a group post, return. We only send out emails for group posts.
   if (empty($group_node)) {
