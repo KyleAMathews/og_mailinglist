@@ -176,18 +176,22 @@ function _og_mailinglist_send_digest_emails() {
 
 function og_mailinglist_style_node_message($node) {
   $user = user_load(array('uid' => $node->uid));
-  $body .= "<div style=\"" . MESSAGE_HEADER . "\"><strong>" . $user->realname . "</strong> " . $user->mail . " " .
-                date("d M Y — g:ia O", $node->created) . "</div>\n";
-  $body .= og_mailinglist_prepare_web_content($node->body); // TODO -- node_view and comment_view don't work -- they add too much junk. Just want body.
-  $body .= "<br />\n"; // Plus need realname + need to convert dates into something readable + add num new messages per discussion
+  $body .= "<div style=\"" . MESSAGE_HEADER . "\"><strong>" .
+    l((isset($user->realname) ? $user->realname : $user->name), "user/" . $user->uid, array('absolute' => TRUE))
+    . "</strong> " . $user->mail . " " .
+    date("d M Y — g:ia O", $node->created) . "</div>\n";
+  $body .= og_mailinglist_prepare_web_content($node->body); // TODO Test if names go out correctly + switch it to use watchdog.
+  $body .= "<br />\n";
   
   return $body;
 }
 
 function og_mailinglist_style_comment_message($comment) {
   $user = user_load(array('uid' => $comment->uid));
-  $body .= "<div style=\"" . MESSAGE_HEADER . "\"><strong>" . $user->realname . "</strong> " . $user->mail . " " .
-              date("d M Y — g:ia O", $comment->timestamp) . "</div>\n";
+  $body .= "<div style=\"" . MESSAGE_HEADER . "\"><strong>" .
+    l((isset($user->realname) ? $user->realname : $user->name), "user/" . $user->uid, array('absolute' => TRUE))
+    . "</strong> " . $user->mail . " " .
+    date("d M Y — g:ia O", $comment->timestamp) . "</div>\n";
 
   // Filter out quoted sections of emails.
   $comment->comment = _og_mailinglist_remove_quotes($comment->comment);

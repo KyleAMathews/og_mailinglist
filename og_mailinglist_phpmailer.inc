@@ -118,7 +118,7 @@ function og_mailinglist_send_node_email($node) {
  * @return
  *  Node with rendered teaser.
  */
-function og_mailinglist_render_node_body($nid) {
+function og_mailinglist_render_node_body($node) {
   $node = (object)$node;
   $node = node_build_content($node, FALSE, TRUE);
 
