@@ -308,7 +308,6 @@ function og_mailinglist_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
         }
         break;
       case 'insert':
-        // This is a hack. See http://drupal.org/node/812158.
         og_mailinglist_save_group_subscriptions($node->nid, array($node->uid));
         break;
       case 'update':
