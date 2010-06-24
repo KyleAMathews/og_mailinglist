@@ -256,13 +256,13 @@ function _og_mailinglist_remove_subscribers($subscribers, $headers) {
  */
 function _og_mailinglist_load_group($node) {
   if (!empty($node->og_groups_both)) {
-    return node_load(array('nid' => current(array_keys($node->og_groups_both)))); 
+    return node_load(array('nid' => current(array_keys($node->og_groups_both))));
   }
   elseif (!empty($node->og_groups)) {
-    return node_load(array('nid' => current($node->og_groups))); 
+    return node_load(array('nid' => current(array_keys($node->og_groups))));
   }
   elseif (!empty($node->og_initial_groups)) {
-    return node_load(array('nid' => current($node->og_initial_groups))); 
+    return node_load(array('nid' => current(array_keys($node->og_initial_groups))));
   }
   else {
     $group_node = node_load(array('nid' => db_result(db_query("SELECT group_nid
