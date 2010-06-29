@@ -169,7 +169,8 @@ function _og_mailinglist_send_digest_emails() {
       $mailer->Body = $body;
       $mailer->isHTML(TRUE);
       $mailer->Send();
-      echo "Sent digest email to " . $email . " for group " . $group->title . "\n";
+      watchdog('og_mailinglist', 'Sent digest email to @email for group @group', 
+                array('@email' => $email, '@group' => $group->title), WATCHDOG_INFO);
     }
   }
 }
