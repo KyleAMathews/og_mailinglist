@@ -26,7 +26,7 @@ INSTALLATION INSTRUCTIONS:
 
 * Go to the Modules page in Drupal and enable the module (like normal).  After saving, navigate to admin/og_mailinglist and configure per your server setup.
 
-* Follow the installation instructions for your MTA in the INSTALL.txt file found in its subdirectory. For now, OG Mailinglist only works with Exim.
+* Follow the installation instructions for your Mail Transfer Agent in the INSTALL.txt file found in its subdirectory (e.g. exim_og_mailinglist). For now, OG Mailinglist only works with Exim.
   
 * Open a terminal and go to the og_mailinglist/ directory.  Use the following commands to test your configuration:
 TODO: Add testing instructions. This has changed significantly recently.
