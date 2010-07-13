@@ -10,9 +10,8 @@ These files are for integrating OG Mailinglist with the EXIM MTA.
 7. Test setup by sending email to agroupname@yoursite.com
 
 
-sites_alias.php:
+sites_aliases.php:
 <?php
-
 // Note: You must include your system mail name as one of the names. This is how og_mailinglist knows to reject emails sent out from the server. If you don't include a system mail name, og_mailinglist will create recursively create 100s of comments until you shut down the mail server (yes, I've done this).
 // Also, each site has to be listed as a domain within Exim for which it will receive email. Exim blocks emails by default not sent to an approved domain.
 
