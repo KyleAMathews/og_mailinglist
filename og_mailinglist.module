@@ -103,6 +103,14 @@ function og_mailinglist_admin_settings() {
     '#options' => $n_types,
     '#description' => t('Choose the default content type to be created from new emails.'),
   );
+  $form['og_mailinglist_exclude_content_types'] = array(
+    '#title' => t('Exclude the following content types'),
+    '#type' => 'select',
+    '#multiple' => TRUE,
+    '#default_value' => variable_get('og_mailinglist_exclude_content_types', 'group'),
+    '#options' => $n_types,
+    '#description' => t('Do not send emails on creation of these content types.'),
+  );
   $form['og_mailinglist_test_email_address'] = array(
     '#title' => t('DEBUGGING: Send an email for all events to a user account'),
     '#type' => 'textfield',
@@ -283,11 +291,20 @@ function og_mailinglist_group_form_submit($form, &$form_state) {
  * Implementation of hook_nodeapi().
  */
 function og_mailinglist_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
-  if ($op == "insert" && $node->status && $node->type != "eduglu_group_reader_feed") { // TODO create hook so individual features can turn off
-    // email notifications + on admin interface, let people turn off notifications there as well.
-    
+  if ($op == "insert" && $node->status) {
     $group_node = _og_mailinglist_load_group($node);
-    
+
+    // If this node isn't part of a group, return.
+    if (empty($group_node)) {
+      return;
+    }
+
+    // If this content type doesn't use email notifications, then return.
+    $excluded_content_types = variable_get('og_mailinglist_exclude_content_types', array());
+    if (in_array($node->type, $excluded_content_types)) {
+      return;
+    }
+
     // User might not be automatically subscribed to new threads. Subscribe now if they aren't signed up to get emails normally.
     if (og_mailinglist_get_group_subscription_type($group_node->nid, $node->uid) != "email") {
       og_mailinglist_save_thread_subscriptions($node->nid, array($node->uid));
