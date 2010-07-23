@@ -91,6 +91,12 @@ function og_mailinglist_admin_settings() {
     '#default_value' => variable_get('og_mailinglist_max_posts_per_hour', '20'),
     '#description' => t('The maximum number of messages a user is able to post per hour by email.  Set to 0 for unlimited.'),
   );
+  $form['og_mailinglist_reply_to_group'] = array(
+    '#title' => t('Add a Reply-To header to outgoing group emails'),
+    '#type' => 'checkbox',
+    '#default_value' => variable_get('og_mailinglist_reply_to_group', '0'),
+    '#description' => t('Set an explicit reply-to header. See http://wiki.list.org/pages/viewpage.action?pageId=4030691 for pros and cons on this setting.'),
+  );
   $node_types = node_get_types();
   $n_types = array();
   foreach ($node_types as $type) {

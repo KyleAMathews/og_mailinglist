@@ -80,6 +80,12 @@ function og_mailinglist_add_web_headers($mailer, $node) {
   $mailer->AddCustomHeader($mailer->HeaderLine("X-Thread-Url", $base_url .
             "/node/" . $node->nid));
   
+  // Add a reply-to header directed to the group if enabled.
+  if (variable_get('og_mailinglist_reply_to_group', FALSE)) {
+    $mailer->AddCustomHeader($mailer->HeaderLine("reply-to", "<" . $group_node->ogm_email .
+            "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">"));
+  }
+
   // Set Message-ID.
   $rand = rand(10, 10000);
   $mailer->MessageID = "<node-" . $node->nid . "-" . $rand . "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">";

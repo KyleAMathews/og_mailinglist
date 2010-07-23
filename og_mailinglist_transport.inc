@@ -646,6 +646,11 @@ function _og_mailinglist_rewrite_headers($email, $node, $new_node = FALSE) {
   $new_headers['content-type'] = $headers['content-type'];
   $new_headers['content-transfer-encoding'] =  $headers['content-transfer-encoding'];
   
+  // Add a reply-to header directed to the group if enabled.
+  if (variable_get('og_mailinglist_reply_to_group', FALSE)) {
+    $new_headers['reply-to'] = $group_node->ogm_email . "@" . variable_get('og_mailinglist_server_string', 'example.com');
+  }
+
   // Add list headers.
   $new_headers['List-Id'] = "<" . $group_node->ogm_email . "@" .
                 variable_get('og_mailinglist_server_string', 'example.com') . ">";
