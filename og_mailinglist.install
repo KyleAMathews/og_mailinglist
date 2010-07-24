@@ -74,10 +74,39 @@ function og_mailinglist_schema() {
        'length' => '64',
        'not null' => TRUE,
        'default' => ''),
+     'message_id' => array(
+       'type' => 'varchar',
+       'description' => 'The message-id field of this post, either
+        from the email or auto-generated',
+       'non null' => TRUE,
+       'default' => 0,
+       'length' => 255),
+     'in_reply_to' => array(
+       'type' => 'varchar',
+       'description' => 'The in-reply-to header of this email, either
+        from the email or implied from the comment.',
+       'non null' => TRUE,
+       'default' => 0,
+       'length' => 255),
+     'references' => array(
+       'type' => 'varchar',
+       'description' => 'The reference header of this post.
+        If it originated from the web, this stores the references + message-id
+        of its parent.',
+       'non null' => TRUE,
+       'default' => 0,
+       'length' => 512),
+     'parent_message_id', array(
+       'type' => 'varchar',
+       'description' => 'The message-id of the parent of this post.',
+       'non null' => TRUE,
+       'default' => 0,
+       'length' => 255),
    ),
    'primary key' => array('nid', 'cid'),
    'indexes' => array(
      'source' => array('source'),
+     'message_id' => array('message_id'),
    ),
  );
 
@@ -95,11 +124,19 @@ function og_mailinglist_schema() {
        'unsigned' => TRUE,
        'not null' => TRUE,
        'default' => 0),
+     'parent_message_id' => array(
+       'type' => 'varchar',
+       'description' => 'The message-id of the parent of this thread.',
+       'non null' => TRUE,
+       'default' => 0,
+       'length' => 255),
    ),
+
    'primary key' => array('nid', 'uid'),
    'indexes' => array(
      'nid' => array('nid'),
      'uid' => array('uid'),
+     'parent_message_id' => array('parent_message_id'),
    ),
  );
 
@@ -182,6 +219,55 @@ function og_mailinglist_update_6002() {
                            'not null' => TRUE,
                            'default' => 0));
   
+  return $ret;
+}
+
+/**
+ * Add columns to og_mailinglist_source and og_mailinglist_thread to store
+ * more information about emails to improve threading on site.
+ */
+function og_mailinglist_update_6003() {
+  $ret = array();
+
+  db_add_field($ret, 'og_mailinglist_source', 'message_id', array(
+                'type' => 'varchar',
+                'description' => 'The message-id field of this post, either
+                from the email or auto-generated',
+                'non null' => TRUE,
+                'default' => 0,
+                'length' => 255));
+
+  db_add_field($ret, 'og_mailinglist_source', 'in_reply_to', array(
+                'type' => 'varchar',
+                'description' => 'The in-reply-to header of this email, either
+                from the email or implied from the comment.',
+                'non null' => TRUE,
+                'default' => 0,
+                'length' => 255));
+
+  db_add_field($ret, 'og_mailinglist_source', 'references', array(
+                'type' => 'varchar',
+                'description' => 'The reference header of this post.
+                If it originated from the web, this stores the references + message-id
+                of its parent.',
+                'non null' => TRUE,
+                'default' => 0,
+                'length' => 512));
+
+  db_add_field($ret, 'og_mailinglist_source', 'parent_message_id', array(
+                'type' => 'varchar',
+                'description' => 'The message-id of the parent of this post.',
+                'non null' => TRUE,
+                'default' => 0,
+                'length' => 255));
+
+  db_add_field($ret, 'og_mailinglist_thread', 'parent_message_id', array(
+                'type' => 'varchar',
+                'description' => 'The message-id of the parent of this thread.',
+                'non null' => TRUE,
+                'default' => 0,
+                'length' => 255));
+
   return $ret;
 }
 
