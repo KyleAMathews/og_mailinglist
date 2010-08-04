@@ -218,7 +218,7 @@ function og_mailinglist_update_6002() {
 
 /**
  * Add columns to og_mailinglist_source to store
- * more information about emails to improve threading on site.
+ * more information about emails to improve threading on site and email clients.
  */
 function og_mailinglist_update_6003() {
   $ret = array();

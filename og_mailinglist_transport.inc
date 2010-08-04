@@ -216,7 +216,7 @@ function og_mailinglist_save_comment($email) {
   $cid = 1 + db_result(db_query("SELECT cid FROM {comments} ORDER BY cid DESC LIMIT 1"));
   
   // Log that comment came from email so og_mailinglist_phpmailer doesn't send an email as well.
-  $parent_message_id = _og_mailinglist_get_thread_parent_messageid($email['headers']['in-reply-to']));
+  $parent_message_id = _og_mailinglist_get_thread_parent_messageid($email['headers']['in-reply-to']);
   og_mailinglist_log_email_sent('email', $nid, $cid, $email['headers']['message_id'], $email['headers']['in_reply_to'], $email['headers']['references'], $parent_message_id);
   
   // Save the new comment.
@@ -637,11 +637,14 @@ function _og_mailinglist_rewrite_headers($email, $node, $new_node = FALSE, $comm
   $new_headers['X-Thread-Url'] = $base_url . "/node/" . $node->nid;
   
   // Set Message-Id
-  $comment_id = (!empty($comment) ? $comment->cid : 0;
+  $comment_id = (!empty($comment)) ? $comment->cid : 0;
   $new_headers['Message-ID'] = "<node-" . $node->nid . "-comment-" . $comment_id . "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">";
   
   // Set References
-  $new_headers['References'] = $email['headers']['references'] . $email['headers']['message-id'];
+  $new_headers['References'] = $email['headers']['references'];
+
+  // Set In-Reply-To.
+  $new_headers['in-reply-to'] = $email['headers']['in-reply-to'];
   
   $email['structure']->headers = $new_headers;
   
