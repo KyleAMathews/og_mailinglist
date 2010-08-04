@@ -217,7 +217,7 @@ function og_mailinglist_save_comment($email) {
   
   // Log that comment came from email so og_mailinglist_phpmailer doesn't send an email as well.
   $parent_message_id = _og_mailinglist_get_thread_parent_messageid($email['headers']['in-reply-to']);
-  og_mailinglist_log_email_sent('email', $nid, $cid, $email['headers']['message_id'], $email['headers']['in_reply_to'], $email['headers']['references'], $parent_message_id);
+  og_mailinglist_log_email_sent('email', $nid, $cid, $email['headers']['message-id'], $email['headers']['in-reply-to'], $email['headers']['references'], $parent_message_id);
   
   // Save the new comment.
   $cid = comment_save($comment);  
@@ -243,7 +243,7 @@ function og_mailinglist_save_discussion($email) {
   $nid = 1 + db_result(db_query("SELECT nid FROM {node} ORDER BY nid DESC LIMIT 1"));
   
   // Log that comment came from email so og_mailinglist_phpmailer doesn't send an email as well.
-  og_mailinglist_log_email_sent('email', $nid, $cid, $email['headers']['message_id'], 0, 0, $email['headers']['message_id']);
+  og_mailinglist_log_email_sent('email', $nid, $cid, $email['headers']['message-id'], 0, 0, $email['headers']['message-id']);
   
   // Is the group public? If not, we need to set the node as private.
   $is_private = db_result(db_query("SELECT og_private
