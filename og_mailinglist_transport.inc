@@ -7,33 +7,7 @@ require_once('og_mailinglist_api.inc');
 og_mailinglist_phpmailer_load_library();
 
 ###############################################################################
-###   This script is called from Exim4.  It is a "pipe" type of 
-###   transport that takes an email and processes it.  It also requires
-###   a router file: og_mailinglist_exim4_router.php
-###
 ###   Original version written by Conan Albrecht   March 2009
-###
-###   Here's the code that needs to go into Exim4's configuration:
-###   (note you need to customize the path in the command line)
-###
-###   drupal_og_mailinglist:
-###     driver = pipe
-###     path = "/bin:/usr/bin:/usr/local/bin"
-###     command = /var/og_mailinglist/og_mailinglist_exim4_transport.php $local_part
-###     user = mail
-###     group = mail
-###     return_path_add
-###     delivery_date_add
-###     envelope_to_add
-###     log_output
-###     return_fail_output
-###
-###   To test this script from the command line, run the following:
-###
-###       ./og_mailinglist_exim4_transport.php groupname < email.txt
-###
-###       where email.txt is an email saved to a file.
-###
 
 function _og_mailinglist_process_email($raw_email, $mail_username) {
   try {
@@ -242,7 +216,8 @@ function og_mailinglist_save_comment($email) {
   $cid = 1 + db_result(db_query("SELECT cid FROM {comments} ORDER BY cid DESC LIMIT 1"));
   
   // Log that comment came from email so og_mailinglist_phpmailer doesn't send an email as well.
-  og_mailinglist_log_email_sent('email', $nid, $cid);
+  $parent_message_id = _og_mailinglist_get_thread_parent_messageid($email['headers']['in-reply-to']));
+  og_mailinglist_log_email_sent('email', $nid, $cid, $email['headers']['message_id'], $email['headers']['in_reply_to'], $email['headers']['references'], $parent_message_id);
   
   // Save the new comment.
   $cid = comment_save($comment);  
@@ -268,7 +243,7 @@ function og_mailinglist_save_discussion($email) {
   $nid = 1 + db_result(db_query("SELECT nid FROM {node} ORDER BY nid DESC LIMIT 1"));
   
   // Log that comment came from email so og_mailinglist_phpmailer doesn't send an email as well.
-  og_mailinglist_log_email_sent('email', $nid);
+  og_mailinglist_log_email_sent('email', $nid, $cid, $email['headers']['message_id'], 0, 0, $email['headers']['message_id']);
   
   // Is the group public? If not, we need to set the node as private.
   $is_private = db_result(db_query("SELECT og_private
@@ -314,14 +289,13 @@ function og_mailinglist_save_discussion($email) {
 
 function _og_mailinglist_email_node_email($email, $node) {
   // Build new email.
-  $email = _og_mailinglist_rewrite_headers($email, $node, true);
+  $email = _og_mailinglist_rewrite_headers($email, $node, TRUE);
   $footer = _og_mailinglist_build_footer($node);
   $email = _og_mailinglist_add_footer($email, $footer);
   $email['new_email_text'] = _og_mailinglist_encode_email(array($email['structure']));
   
   // Send it off.
   _og_mailinglist_send_raw_email($email['new_email_text']);
-  og_mailinglist_log_email_sent('email', $node->nid);
 
   // If the sender's subscription type isn't email, give him a thread subscription.
   if (og_mailinglist_get_group_subscription_type($node->og_groups[0], $node->uid) != "email") {
@@ -331,7 +305,7 @@ function _og_mailinglist_email_node_email($email, $node) {
 
 function _og_mailinglist_email_comment_email($email, $node, $comment) {
   // Build new email.
-  $email = _og_mailinglist_rewrite_headers($email, $node);
+  $email = _og_mailinglist_rewrite_headers($email, $node, FALSE, $comment);
   $footer = _og_mailinglist_build_footer($node);
   $email = _og_mailinglist_add_footer($email, $footer);
   $email['new_email_text'] = _og_mailinglist_encode_email(array($email['structure']));
@@ -623,7 +597,7 @@ function _og_mailinglist_encode_email_headers($array) {
 }
 
 // Keep mime-version, date, subject, from, to, and content-type
-function _og_mailinglist_rewrite_headers($email, $node, $new_node = FALSE) {
+function _og_mailinglist_rewrite_headers($email, $node, $new_node = FALSE, $comment = 0) {
   $group_node = _og_mailinglist_load_group($node);
   $headers = $email['structure']->headers;
   $new_headers = array();
@@ -663,8 +637,8 @@ function _og_mailinglist_rewrite_headers($email, $node, $new_node = FALSE) {
   $new_headers['X-Thread-Url'] = $base_url . "/node/" . $node->nid;
   
   // Set Message-Id
-  $rand = rand(10, 10000);
-  $new_headers['Message-ID'] = "<node-" . $node->nid . "-" . $rand . "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">";
+  $comment_id = (!empty($comment) ? $comment->cid : 0;
+  $new_headers['Message-ID'] = "<node-" . $node->nid . "-comment-" . $comment_id . "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">";
   
   // Set References
   $new_headers['References'] = $email['headers']['references'] . $email['headers']['message-id'];

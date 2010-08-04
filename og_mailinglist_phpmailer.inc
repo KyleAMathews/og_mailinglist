@@ -15,7 +15,24 @@ function og_mailinglist_send_comment_email($comment, $node) {
   $mailer = og_mailinglist_create_mailer();
   
   // Add custom headers.
-  $mailer = og_mailinglist_add_web_headers($mailer, $node);
+  $parent_message_id = _og_mailinglist_get_messageid_from_nid($node->nid);
+  // If the comment is in reply to another comment, set the in-reply-to header
+  // to that comment's message-id, else to the parent post's message-id.
+  $comment_pid = db_result(db_query("SELECT pid 
+                                      FROM {comments}
+                                      WHERE cid = %d", $comment->cid));
+  if ($comment_pid != 0) {
+    $in_reply_to = db_result(db_query("SELECT message_id
+                                        FROM {og_mailinglist_source}
+                                        WHERE cid = %d", $comment_pid));
+  }
+  else {
+    $in_reply_to = $parent_message_id;
+  }
+  // Create references header.
+  $references = ($in_reply_to != $parent_message_id) ? $parent_message_id . " " . $in_reply_to : $parent_message_id;
+  
+  $mailer = og_mailinglist_add_web_headers($mailer, $node, $comment, $in_reply_to, $references);
   
   // Decorate subject.
   $mailer->Subject = "Re: [" . $group_node->ogm_email . "] " . $node->title;
@@ -39,7 +56,7 @@ function og_mailinglist_send_comment_email($comment, $node) {
   $success = $mailer->Send();
   
   if ($success) {
-    og_mailinglist_log_email_sent('web', $node->nid, $comment->cid);
+    og_mailinglist_log_email_sent('web', $node->nid, $comment->cid, $mailer->MessageID, $in_reply_to, $references, $parent_message_id);
   }
   else {
     watchdog('og_mailinglist', "OG_Mailinglist couldn't send a new node email.", NULL,
@@ -99,7 +116,7 @@ function og_mailinglist_send_node_email($node) {
   $success = $mailer->Send();
   
   if ($success) {
-    og_mailinglist_log_email_sent('web', $node->nid);
+    og_mailinglist_log_email_sent('web', $node->nid, 0, $mailer->MessageID, 0, 0, $mailer->MessageID);
   }
   else {
     watchdog('og_mailinglist', "OG_Mailinglist couldn't send a new node email.", NULL,

@@ -176,9 +176,10 @@ function og_mailinglist_delete_thread_subscription($nid, $uid) {
 /*
  * Log successful sent email.
  */
-function og_mailinglist_log_email_sent($source, $nid, $cid = 0) {
+function og_mailinglist_log_email_sent($source, $nid, $cid = 0, $message_id = 0, $in_reply_to = 0, $references = 0, $parent_message_id = 0) {
   return db_query("INSERT INTO {og_mailinglist_source}
-           VALUES (%d, %d, '%s')", $nid, $cid, $source);
+           VALUES (%d, %d, '%s', '%s', '%s', '%s', '%s')", 
+           $nid, $cid, $source, $message_id, $in_reply_to, $references, $parent_message_id);
 }
 /*
  * @return PHPMailer object.
@@ -214,4 +215,16 @@ function og_mailinglist_delete_group($nid) {
   // Delete group subscriptions from og_mailinglist_subscriptions.
   db_query("DELETE FROM {og_mailinglist_subscription}
            WHERE nid = %d", $nid);
+}
+
+function _og_mailinglist_get_thread_parent_messageid($in_reply_to_message_id) {
+  return db_result(db_query("SELECT parent_message_id
+                              FROM {og_mailinglist_source}
+                              WHERE message_id = '%s'", $in_reply_to_message_id));
+}
+function _og_mailinglist_get_messageid_from_nid($nid) {
+  return db_result(db_query("SELECT parent_message_id
+                              FROM {og_mailinglist_source}
+                              WHERE cid = 0
+                              AND nid = %d", $nid));
 }

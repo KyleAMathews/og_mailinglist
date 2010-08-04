@@ -67,7 +67,7 @@ function og_mailinglist_build_web_footer($node, $body, $cid = 0) {
 }
   
 
-function og_mailinglist_add_web_headers($mailer, $node) {
+function og_mailinglist_add_web_headers($mailer, $node, $comment = 0, $in_reply_to = 0, $references = 0) {
   $group_node = _og_mailinglist_load_group($node);
   global $base_url;
   
@@ -79,6 +79,14 @@ function og_mailinglist_add_web_headers($mailer, $node) {
             $group_node->nid, array('absolute' => TRUE))));
   $mailer->AddCustomHeader($mailer->HeaderLine("X-Thread-Url", $base_url .
             "/node/" . $node->nid));
+            
+  // Add in-reply-to / references
+  if (!empty($in_reply_to)) {
+    $mailer->AddCustomHeader($mailer->HeaderLine("In-Reply-To", $in_reply_to));
+  }
+  if (!empty($references)) {
+    $mailer->AddCustomHeader($mailer->HeaderLine("References", $references));
+  }
   
   // Add a reply-to header directed to the group if enabled.
   if (variable_get('og_mailinglist_reply_to_group', FALSE)) {
@@ -87,8 +95,8 @@ function og_mailinglist_add_web_headers($mailer, $node) {
   }
 
   // Set Message-ID.
-  $rand = rand(10, 10000);
-  $mailer->MessageID = "<node-" . $node->nid . "-" . $rand . "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">";
+  $comment_id = (!empty($comment)) ? $comment->cid : 0;
+  $mailer->MessageID = "<node-" . $node->nid . "-comment-" . $comment_id . "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">";
   
   // TODO Set references here. Need to store message ids of previous emails.
   
