@@ -124,12 +124,6 @@ function og_mailinglist_schema() {
        'unsigned' => TRUE,
        'not null' => TRUE,
        'default' => 0),
-     'parent_message_id' => array(
-       'type' => 'varchar',
-       'description' => 'The message-id of the parent of this thread.',
-       'non null' => TRUE,
-       'default' => 0,
-       'length' => 255),
    ),
 
    'primary key' => array('nid', 'uid'),
@@ -223,7 +217,7 @@ function og_mailinglist_update_6002() {
 }
 
 /**
- * Add columns to og_mailinglist_source and og_mailinglist_thread to store
+ * Add columns to og_mailinglist_source to store
  * more information about emails to improve threading on site.
  */
 function og_mailinglist_update_6003() {
@@ -257,13 +251,6 @@ function og_mailinglist_update_6003() {
   db_add_field($ret, 'og_mailinglist_source', 'parent_message_id', array(
                 'type' => 'varchar',
                 'description' => 'The message-id of the parent of this post.',
-                'non null' => TRUE,
-                'default' => 0,
-                'length' => 255));
-
-  db_add_field($ret, 'og_mailinglist_thread', 'parent_message_id', array(
-                'type' => 'varchar',
-                'description' => 'The message-id of the parent of this thread.',
                 'non null' => TRUE,
                 'default' => 0,
                 'length' => 255));
