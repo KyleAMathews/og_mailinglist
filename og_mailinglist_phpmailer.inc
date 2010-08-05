@@ -25,12 +25,14 @@ function og_mailinglist_send_comment_email($comment, $node) {
     $in_reply_to = db_result(db_query("SELECT message_id
                                         FROM {og_mailinglist_source}
                                         WHERE cid = %d", $comment_pid));
+    $references = db_result(db_query("SELECT references
+                                      FROM {og_mailinglist_source}
+                                      WHERE cid = %d", $comment_pid)) . " " . $in_reply_to;
   }
   else {
     $in_reply_to = $parent_message_id;
+    $references = $parent_message_id;
   }
-  // Create references header.
-  $references = ($in_reply_to != $parent_message_id) ? $parent_message_id . " " . $in_reply_to : $parent_message_id;
   
   $mailer = og_mailinglist_add_web_headers($mailer, $node, $comment, $in_reply_to, $references);
   
