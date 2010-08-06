@@ -25,13 +25,14 @@ function og_mailinglist_send_comment_email($comment, $node) {
     $in_reply_to = db_result(db_query("SELECT message_id
                                         FROM {og_mailinglist_source}
                                         WHERE cid = %d", $comment_pid));
-    $references = db_result(db_query("SELECT references
+                                        // TODO this doesn't actually work, need to change references column name apperently as that's a reserved word in mysql? Anyways, errors out right now.
+    $references = db_result(db_query("SELECT references 
                                       FROM {og_mailinglist_source}
                                       WHERE cid = %d", $comment_pid)) . " " . $in_reply_to;
   }
   else {
     $in_reply_to = $parent_message_id;
-    $references = $parent_message_id;
+    $references = $parent_message_id; // TODO, this should really also reference each message-id that came before it in order. Easy enough to do w/ a query.
   }
   
   $mailer = og_mailinglist_add_web_headers($mailer, $node, $comment, $in_reply_to, $references);

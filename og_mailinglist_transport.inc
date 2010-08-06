@@ -637,8 +637,8 @@ function _og_mailinglist_rewrite_headers($email, $node, $new_node = FALSE, $comm
   $new_headers['X-Thread-Url'] = $base_url . "/node/" . $node->nid;
   
   // Set Message-Id
-  $comment_id = (!empty($comment)) ? $comment->cid : 0;
-  $new_headers['Message-ID'] = "<node-" . $node->nid . "-comment-" . $comment_id . "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">";
+  $rand = rand(0, 10000);
+  $new_headers['Message-ID'] = "<node-" . $node->nid . "-comment-" . $rand . "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">";
   
   // Set References
   $new_headers['References'] = $email['headers']['references'];
