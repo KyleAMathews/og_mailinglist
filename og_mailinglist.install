@@ -96,7 +96,7 @@ function og_mailinglist_schema() {
        'non null' => TRUE,
        'default' => 0,
        'length' => 512),
-     'parent_message_id', array(
+     'parent_message_id' => array(
        'type' => 'varchar',
        'description' => 'The message-id of the parent of this post.',
        'non null' => TRUE,
@@ -125,12 +125,10 @@ function og_mailinglist_schema() {
        'not null' => TRUE,
        'default' => 0),
    ),
-
    'primary key' => array('nid', 'uid'),
    'indexes' => array(
      'nid' => array('nid'),
      'uid' => array('uid'),
-     'parent_message_id' => array('parent_message_id'),
    ),
  );
 
