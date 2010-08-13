@@ -26,6 +26,7 @@ function og_mailinglist_send_comment_email($comment, $node) {
                                         FROM {og_mailinglist_source}
                                         WHERE cid = %d", $comment_pid));
                                         // TODO this doesn't actually work, need to change references column name apperently as that's a reserved word in mysql? Anyways, errors out right now.
+                                        // For now, we'll just use the parent_message_id.
     $references = db_result(db_query("SELECT parent_message_id
                                       FROM {og_mailinglist_source}
                                       WHERE cid = %d", $comment_pid)) . " " . $in_reply_to;

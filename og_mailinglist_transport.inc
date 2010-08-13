@@ -615,9 +615,7 @@ function _og_mailinglist_rewrite_headers($email, $node, $new_node = FALSE, $comm
   $new_headers['to'] = $group_node->ogm_email . "@" . variable_get('og_mailinglist_server_string', 'example.com');
   $new_headers['bcc'] =
     array_to_comma_delimited_string(
-      _og_mailinglist_remove_subscribers(
-        _og_mailinglist_get_subscribers($node, $new_node),
-          $headers['from'] . " " . $headers['to'] . " " . $headers['cc']));
+      _og_mailinglist_get_subscribers($node, $new_node));
   $new_headers['content-type'] = $headers['content-type'];
   $new_headers['content-transfer-encoding'] =  $headers['content-transfer-encoding'];
   

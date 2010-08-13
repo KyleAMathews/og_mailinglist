@@ -39,15 +39,6 @@ Stop emails for this discussion: " . url("og_mailinglist/unsubscribe/" . $node->
   return $footer;
 }
 
-function _og_mailinglist_extract_emails($string) {
-  // Parse email address. Regex borrowed from valid_email_adddress().
-  $regex = "([a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?\`\|\{\}~\']+@(?:(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.?)+)";
-  $search = preg_match_all("/" . $regex . "/s"
-                       , $string, $matches);
-  
-  return $matches[0];
-}
-
 function og_mailinglist_prepare_web_content($text) {
   return check_markup($text);
 }
@@ -215,17 +206,8 @@ function _og_mailinglist_detect_email_char_set($email_text) {
   return $info["content-charset"];
 }
 
-function _og_mailinglist_remove_subscribers($subscribers, $headers) {
-  $emails = _og_mailinglist_extract_emails($headers);
-  foreach ($emails as $email) {
-    unset($subscribers[array_search($email, $subscribers)]);
-  }
-  
-  return $subscribers;
-}
-
 /*
- * Hide some ugly confusing code. Pass in a node and return its group node.
+ * Use every possible method to figure out the group nid of a node.
  */
 function _og_mailinglist_load_group($node) {
   if (!empty($node->og_groups_both)) {
