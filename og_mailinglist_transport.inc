@@ -91,7 +91,7 @@ function _og_mailinglist_process_email($raw_email, $mail_username) {
     $email['nid'] = og_mailinglist_parse_nid($email['text_plain'], $email['structure']->headers);
   
     // create the new content in Drupal.
-    if ($email['nid']) { // a new comment
+    if (!empty($email['nid'])) { // a new comment
       
       // Two checks first before creating the comment.
       // There are at least two reasons why an email could have a nid but not be
@@ -126,7 +126,8 @@ function _og_mailinglist_process_email($raw_email, $mail_username) {
       // If we got this far, the email is definitely intended as a new comment.
       og_mailinglist_save_comment($email);
       
-    }else {  // A new discussion.
+    }
+    else {  // A new discussion.
       og_mailinglist_save_discussion($email);
     }
     
@@ -637,8 +638,7 @@ function _og_mailinglist_rewrite_headers($email, $node, $new_node = FALSE, $comm
   $new_headers['X-Thread-Url'] = $base_url . "/node/" . $node->nid;
   
   // Set Message-Id
-  $rand = rand(0, 10000);
-  $new_headers['Message-ID'] = "<node-" . $node->nid . "-comment-" . $rand . "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">";
+  $new_headers['Message-ID'] = $email['headers']['message-id'];
   
   // Set References
   $new_headers['References'] = $email['headers']['references'];
@@ -727,4 +727,40 @@ function _og_mailinglist_send_raw_email($raw_email) {
   $rand_filename = rand(1000, 10000);
   file_put_contents("/tmp/" . $rand_filename, $raw_email . "\n");
   system("/usr/sbin/sendmail -t < /tmp/" . $rand_filename);
+}
+
+/*
+ * Try to parse nid from the email.
+ */
+function og_mailinglist_parse_nid($email, $headers) {
+  $nid = "";
+  // Check the in-reply-to header.
+  $parent_message_id = _og_mailinglist_get_thread_parent_messageid($headers['in-reply-to']);
+  $nid = _og_mailinglist_get_nid_from_parent_messageid($parent_message_id);
+
+  if (!empty($nid)) {
+    return $nid;
+  }
+  else if (preg_match("/og_mailinglist\/unsubscribe\/([0-9]+)/s", $email, $matches)) {
+    $nid = $matches[1];
+  }
+  // Else, as last resort, pick the last node that matches the title in the subject line.
+  else {
+    $nid = _og_mailinglist_nid_of_subject($headers['subject']);
+  }
+  return $nid;
+}
+
+function _og_mailinglist_nid_of_subject($subject) {
+  $nid = "";
+  preg_match("/[Rr][Ee]:\s\[.*?\]\s(.+)/s", $subject, $matches);
+  $title = $matches[1];
+  if ($title) {
+      $nid = db_result(db_query("SELECT nid
+                               FROM {node}
+                               WHERE title like '%%s%'
+                               ORDER BY created desc
+                               LIMIT 1", $title));
+  }
+  return $nid;
 }

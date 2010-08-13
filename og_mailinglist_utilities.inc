@@ -215,47 +215,6 @@ function _og_mailinglist_detect_email_char_set($email_text) {
   return $info["content-charset"];
 }
 
-/*
- * Try to parse nid from the email.
- */
-function og_mailinglist_parse_nid($email, $headers) {
-  $nid = "";
-  // Check the in-reply-to header.
-  if (isset($headers['in-reply-to']) && (preg_match("/node-(\d+?)-/s",
-                                          $headers['in-reply-to'], $matches))) {
-    $nid = $matches[1];
-  }
-  // If that fails (e.g. someone was replied to directly and then replied back 
-  // to the list)., check the references header.
-  else if (isset($headers['references']) && (preg_match("/node-(\d+?)-/s",
-                                          $headers['references'], $matches))) {
-    $nid = $matches[1];
-  }
-  else if (preg_match("/og_mailinglist\/unsubscribe\/([0-9]+)/s", $email, $matches)) {
-    $nid = $matches[1];
-  }
-  // TODO store message-id of first email in og_mailinglist_thread as in the case of where a person emails the list and then replies to their own message.
-  // Else, as last resort, pick the last node that matches the title in the subject line.
-  else {
-    $nid = _og_mailinglist_nid_of_subject($headers['subject']);
-  }
-  return $nid;
-}
-
-function _og_mailinglist_nid_of_subject($subject) {
-  $nid = ""; 
-  preg_match("/[Rr][Ee]:\s\[.*?\]\s(.+)/s", $subject, $matches);
-  $title = $matches[1];
-  if ($title) {
-      $nid = db_result(db_query("SELECT nid
-                               FROM {node}
-                               WHERE title like '%%s%'
-                               ORDER BY created desc
-                               LIMIT 1", $title)); 
-  }
-  return $nid;
-}
-
 function _og_mailinglist_remove_subscribers($subscribers, $headers) {
   $emails = _og_mailinglist_extract_emails($headers);
   foreach ($emails as $email) {
