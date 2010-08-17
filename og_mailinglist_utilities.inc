@@ -54,6 +54,9 @@ function og_mailinglist_prepare_web_content($text) {
 function og_mailinglist_build_web_footer($node, $body, $cid = 0) {
   $footer = _og_mailinglist_build_footer($node);
   $footer = og_mailinglist_prepare_web_content($footer);
+  preg_match("/<p>(.+)<\/p>/s", $footer, $match);
+  $footer = $match[1] . "<br />";
+
   return $body . "\n" . $footer;
 }
   
