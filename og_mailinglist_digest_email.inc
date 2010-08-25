@@ -1,5 +1,7 @@
 <?php
 
+require_once('og_mailinglist_utilities.inc');
+
 define("EMAIL_HEADER", 'background-color: #D1DCFF; font-family: helvetica;
        font-size: 160%; border-top: 1px solid #262c40; padding: 2px');
 define("DISCUSSION_HEADER", 'background-color: #D1DCFF; font-family: helvetica;
@@ -181,6 +183,9 @@ function og_mailinglist_style_node_message($node) {
     l((isset($user->realname) ? $user->realname : $user->name), "user/" . $user->uid, array('absolute' => TRUE))
     . "</strong> " . $user->mail . " " .
     date("d M Y — g:ia O", $node->created) . "</div>\n";
+
+  // Prepare node body for viewing.
+  $node = og_mailinglist_render_node_body($node);
   $body .= og_mailinglist_prepare_web_content($node->body); // TODO Test if names go out correctly + switch it to use watchdog.
   $body .= "<br />\n";
   
