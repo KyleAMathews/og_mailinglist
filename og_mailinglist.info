@@ -2,7 +2,6 @@
 name = OG Mailinglist 
 description = "Allows email submissions of new discussions and comments for organic groups."
 dependencies[] = og
-dependencies[] = querypath
 core = "6.x"
 
 version = "6.x-1.0"

@@ -1,5 +1,5 @@
 <?php
-// TODO move mimeDecode + phpmailer to libraries + add QueryPath as dependent module
+// TODO move mimeDecode + phpmailer to libraries
 // TODO rewrite header info here.
 require_once("/usr/share/php/Mail/mimeDecode.php");
 require_once('og_mailinglist_utilities.inc');
@@ -11,9 +11,6 @@ og_mailinglist_phpmailer_load_library();
 
 function _og_mailinglist_process_email($raw_email, $mail_username) {
   try {
-    // Require the QueryPath core.
-    require_once(drupal_get_path('module', 'querypath') . "/" . 'QueryPath/QueryPath.php');
-  
     $email = array();
 
     $email['original_email_text'] = $raw_email;
@@ -324,58 +321,92 @@ function _og_mailinglist_parse_email($email) {
   // do the decode
   $email['structure'] = clone $structure = Mail_mimeDecode::decode($params);
 
-  // Pull out attachments (if any) first as querypath doesn't like binary bits
-  // it seems.
-  foreach ($structure->parts as &$part) { 
-    // Check if attachment then add to new email.
-    if (isset($part->disposition) and ($part->disposition==='attachment')) {
-      $info['data'] = $part->body;
-      $info['filemime'] = $part->ctype_primary . "/" . $part->ctype_secondary;
-      $info['filename'] = $part->ctype_parameters['name'];
-      $email['attachments'][] = $info;
-      $part = "";
-    }
-  }
-  
   // Copy headers to $email array.
   $email['headers'] = array_copy($structure->headers);
-  
-  $xml = Mail_mimeDecode::getXML($structure);
-  
-  // QueryPath requires text be utf-8.
-  $xml = @iconv($email['char_set'], 'utf-8//TRANSLIT', $xml);
-  
-  // Initialize the QueryPath object.
-  $qp = qp($xml);
-  
-  // Find the text/html body.
-  $email['text_html'] = $qp->top()
-    ->find("headervalue:contains(text/html)")
-    ->parent()
-    ->next("body")
-    ->text();
-  
-  // Find the text/plain body. We don't need to worry about plain text attachments
-  // as they also are "text/plain" as they were removed earlier.
-  $email['text_plain'] = $qp->top()
-  ->find("headervalue:contains(text/plain")
-  ->parent()
-  ->next("body")
-  ->text();
-  
-  $email['text_html'] = html_entity_decode($email['text_html'], ENT_QUOTES);
-  $email['text_plain'] = html_entity_decode($email['text_plain'], ENT_QUOTES);
-  $email['headers']['subject'] = html_entity_decode(
-                                      $email['headers']['subject'], ENT_QUOTES);
 
+  if (!empty($structure->parts)) {
+    foreach ($structure->parts as $i => $part) {
+      if (!empty($part->parts)) {
+        $subPart = $part->parts;
+
+        foreach ($subPart as $j => $subPartPart) {
+          if (isset($subPartPart->disposition) and ($subPartPart->disposition==='attachment')) {
+            $email['attachments'][] = _og_mailinglist_parse_attachment($subPartPart);
+          }
+          elseif ($subPartPart->ctype_secondary == 'plain') {
+            $email['text'] = _og_mailinglist_parse_content($subPartPart);
+          }
+          elseif ($subPartPart->ctype_secondary == 'html') {
+            $email['html'] = _og_mailinglist_parse_content($subPartPart);
+          }
+        }
+      }
+
+      if (isset($part->disposition) and ($part->disposition==='attachment')) {
+        $email['attachments'][] = _og_mailinglist_parse_attachment($part);
+      }
+      elseif (($part->ctype_secondary == 'plain') && empty($email['text'])) {
+        $email['text'] = _og_mailinglist_parse_content($part);
+      }
+      elseif (($part->ctype_secondary == 'html') && empty($email['html'])) {
+        $email['html'] = _og_mailinglist_parse_content($part);
+      }
+    }
+  }
+  // Make sure our text and html parts are accounted for
+  if (isset($email['html']) && !isset($email['text'])) {
+    $email['text'] = preg_replace('|<style.*</style>|mis', '', $email['html']);
+    $email['text'] = drupal_html_to_text($email['text']);
+  }
+  elseif (isset($email['text']) && !isset($email['html'])) {
+    $mail['html'] = check_markup($email['text']);
+  }
+
+  // Last ditch attempt - use the body as-is.
+  if (!isset($email['text'])) {
+    $email['text'] = $structure->body;
+    $email['html'] = check_markup($email['text']);
+  }
   // Move the html version (if available) text version to mailbody.
-  $email['mailbody'] = $email['text_plain'];
+  $email['mailbody'] = $email['text'];
   $email['isHTML'] = false;
  
   // Save copy of the original mailbody
   $email['orig_mailbody'] = $email['mailbody']; 
  
   return $email;  
+}
+// TODO fix attachments for filefield, setup endpoint + script posting following mimemail style w/ check + change exim script (restart exim!)
+/*
+Posting a string:
+
+curl -d “String to post” “http://www.domain.com/file.php”
+
+Posting the contents of a file
+
+curl -d @file_to_post.txt “http://www.domain.com/file.php”
+*/
+
+function _og_mailinglist_parse_attachment($part) {
+  echo "\nparsing attachment\n";
+  print_r($part);
+  $info['data'] = $part->body;
+  $info['filemime'] = $part->ctype_primary . "/" . $part->ctype_secondary;
+  $info['filename'] = $part->ctype_parameters['name'];
+
+  return $info;
+}
+function _og_mailinglist_parse_content($part) {
+  $content = $part->body;
+
+  // Try to convert character set to UTF-8.
+  if (!empty($part->ctype_parameters['charset'])) {
+    echo "\n--------------the charset yo------\n" . $part->ctype_parameters['charset'] . "\n";
+    $content = drupal_convert_to_utf8($content, $part->ctype_parameters['charset']);
+    //$content = iconv($part->ctype_parameters['charset'], 'utf-8', $content);
+  }
+
+  return $content;
 }
 
 function _og_mailinglist_save_files(&$node) {
