@@ -42,6 +42,12 @@ function _og_mailinglist_process_email($raw_email, $mail_username) {
     // Extract all the needed info from the email into a simple array.
     $email = _og_mailinglist_parse_email($email);
     
+    // If the x-beenthere header is set, this is an email that was sent out and 
+    // looped back to the server. Reject it.
+    if (!empty($email['headers']['x-beenthere'])) {
+      exit();
+    }
+    
     // Did we actually get email text back? If not, throw an exception.
     if ($email['mailbody'] == "") {
       throw new Exception(t("Could not parse message body from the text/plain portion of the email."));
@@ -688,6 +694,10 @@ function _og_mailinglist_rewrite_headers($email, $node, $new_node = FALSE, $comm
   global $base_url;
   $new_headers['X-Thread-Url'] = $base_url . "/node/" . $node->nid;
   
+  // Set x-BeenThere header
+  $new_headers['X-BeenThere'] = $group_node->ogm_email . "@" .
+                variable_get('og_mailinglist_server_string', 'example.com');
+
   // Set Message-Id
   $new_headers['Message-ID'] = $email['headers']['message-id'];
   
