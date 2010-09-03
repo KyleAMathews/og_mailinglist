@@ -14,13 +14,15 @@ $mail_username = $argv[1];
 $mail_domain = $argv[2];
 
 // Load sites
-require_once('site_post_urls.php');
-$sites = og_mailinglist_site_post_urls();
+require_once('site_info.php');
+$sites = og_mailinglist_site_info();
 
 $post_url = "";
-foreach ($sites as $domain => $url) {
+$validation_string = "";
+foreach ($sites as $domain => $info) {
   if (strtolower($mail_domain) === $domain) {
-    $post_url = $url;
+    $post_url = $info['post_url'];
+    $validation_string = $info['validation_string'];
   }
 }
 
@@ -29,7 +31,7 @@ if (empty($post_url)) {
   exit();
 }
 
-$token = md5('Set this at admin/settings/og_mailinglist then paste here.' . $raw_email . $mail_username);
+$token = md5($validation_string . $raw_email . $mail_username);
 
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, FALSE);

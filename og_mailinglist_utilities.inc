@@ -195,22 +195,6 @@ function array_copy ($aSource) {
     return $aRetAr;
 }
 
-function _og_mailinglist_detect_email_char_set($email_text) {
-  $mail = mailparse_msg_create();
-  mailparse_msg_parse($mail, $email_text);
-  $struct = mailparse_msg_get_structure($mail); 
-  $info = array();
-  foreach($struct as $st) { 
-    $section = mailparse_msg_get_part($mail, $st); 
-    $info = mailparse_msg_get_part_data($section); 
-    if ($info["content-type"] == "text/plain") {
-      break;
-    }
-  }
-  
-  return $info["content-charset"];
-}
-
 /*
  * Use every possible method to figure out the group nid of a node.
  */

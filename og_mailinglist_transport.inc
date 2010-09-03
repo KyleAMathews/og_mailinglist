@@ -21,10 +21,8 @@ function og_mailinglist_post() {
   $token   = $_POST['token'];
 
   $hash = md5(variable_get('og_mailinglist_incoming_key', '**') . $message . $mail_username);
-  watchdog('action', 'the token is @token', array('@token' => $token), WATCHDOG_WARNING);
-  watchdog('action', 'the hash is is @hash', array('@hash' => $hash), WATCHDOG_WARNING);
   if ($hash != $token) {
-    watchdog('access denied', 'Authentication error for POST e-mail', NULL, WATCHDOG_WARNING);
+    watchdog('access denied', 'Authentication error for POST e-mail. Check that you\'ve set the validation string in /admin/settings/og_mailinglist and in site_info.php', NULL, WATCHDOG_WARNING);
     return drupal_access_denied();
   }
   _og_mailinglist_process_email($message, $mail_username);
@@ -42,7 +40,7 @@ function _og_mailinglist_process_email($raw_email, $mail_username) {
     // Extract all the needed info from the email into a simple array.
     $email = _og_mailinglist_parse_email($email);
     
-    // If the x-beenthere header is set, this is an email that was sent out and 
+    // If the x-BeenThere header is set, this is an email that was sent out and
     // looped back to the server. Reject it.
     if (!empty($email['headers']['x-beenthere'])) {
       exit();

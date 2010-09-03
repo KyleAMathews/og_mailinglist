@@ -6,11 +6,12 @@ OG Mailinglist allows users to start new discussions by email and post comments 
 See the README.TXT file for more information on the module.
 
 
-PREREQUISITES:
+REQUIREMENTS
 
-* Exim 4 - This module plugs directly into Exim so emails can be handled immediately upon receipt.  Most modules use POP mailboxes, and while this adds portability, it adds a delay to the system.  With the method this modules uses, Exim triggers the module as part of its normal email delivery process.
+* A Mail Transfer Agent (MTA) - This module plugs directly into your MTA so emails can be handled immediately upon receipt.  Most modules use POP mailboxes, and while this adds portability, it adds a delay to the system.  With the method this modules uses, the MTA triggers the module as part of its normal email delivery process.
+Right now the only fully supported MTA is Exim. If you use another MTA, look in the issue queue for issues on other MTAs and offer help. Soon I'd like all MTAs to be supported.
 
-* Organic Groups - This module assumes you are using a group-oriented web site.  This essentially allows for a list-per-group.
+* Organic Groups - This module assumes you are using a group-oriented web site.  This module allows for a list-per-group.
 
 * PHPMailer 5
 
@@ -20,16 +21,13 @@ INSTALLATION INSTRUCTIONS:
 
 * Unpack the og_mailinglist files into a subdirectory in the Drupal modules/ directory.  This is the same as installing any other Drupal module (see the Drupal manual for more information on general module installation).
 
-* Download the latest PHPMailer 5.x to modules/og_mailinglist/phpmailer - http://sourceforge.net/projects/phpmailer/files/phpmailer%20for%20php5_6/
+* Download the latest PHPMailer 5.x to modules/og_mailinglist/phpmailer or to libraries/phpmailer if you use the libraries module - http://sourceforge.net/projects/phpmailer/files/phpmailer%20for%20php5_6/ 
 
-* Install two PHP libraries, Mailparser and mimeDecode. On Debian/Ubuntu run from the command line, "pecl install mailparse; echo "extension=mailparse.so" >> /etc/php5/cli/php.ini; /etc/init.d/apache2 restart" and "apt-get install php-mail-mimedecode"
+* Install the PHP library mimeDecode. On Debian/Ubuntu run from the command line, "apt-get install php-mail-mimedecode". You can also download the file directly from http://pear.php.net/package/Mail_mimeDecode and add the file either as a subdirectory to og_mailinglist or to the libraries folder. Note, mimeDecode depends on PHP PEAR, which sould be installed on any recent install of PHP but if you get weird errors, this might be something worth checking.
 
 * Go to the Modules page in Drupal and enable the module (like normal).  After saving, navigate to admin/og_mailinglist and configure per your server setup.
 
-* Follow the installation instructions for your Mail Transfer Agent in the INSTALL.txt file found in its subdirectory (e.g. exim_og_mailinglist). For now, OG Mailinglist only works with Exim.
+* To setup og_mailinglist for incoming email, follow the installation instructions for your Mail Transfer Agent in the INSTALL.txt file found in its subdirectory (e.g. exim_og_mailinglist). For now, OG Mailinglist only works with Exim.
   
-* Open a terminal and go to the og_mailinglist/ directory.  Use the following commands to test your configuration:
-TODO: Add testing instructions. This has changed significantly recently.
-  
-* Congratulations.  You're running.
+* Congratulations.  You're running og_mailinglist!
 
