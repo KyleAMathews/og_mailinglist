@@ -1,13 +1,34 @@
 <?php
-// TODO move mimeDecode + phpmailer to libraries
+
 // TODO rewrite header info here.
-require_once("/usr/share/php/Mail/mimeDecode.php");
 require_once('og_mailinglist_utilities.inc');
 require_once('og_mailinglist_api.inc');
+og_mailinglist_mimeDecode_load_library();
 og_mailinglist_phpmailer_load_library();
 
 ###############################################################################
 ###   Original version written by Conan Albrecht   March 2009
+/**
+ * Receive messages POSTed from an external source.
+ *
+ * This function enables messages to be sent via POST or some other RFC822
+ * source input (e.g. directly from a mail server).
+ *
+ */
+function og_mailinglist_post() {
+  $message = $_POST['message'];
+  $mail_username = $_POST['mail_username'];
+  $token   = $_POST['token'];
+
+  $hash = md5(variable_get('og_mailinglist_incoming_key', '**') . $message . $mail_username);
+  watchdog('action', 'the token is @token', array('@token' => $token), WATCHDOG_WARNING);
+  watchdog('action', 'the hash is is @hash', array('@hash' => $hash), WATCHDOG_WARNING);
+  if ($hash != $token) {
+    watchdog('access denied', 'Authentication error for POST e-mail', NULL, WATCHDOG_WARNING);
+    return drupal_access_denied();
+  }
+  _og_mailinglist_process_email($message, $mail_username);
+}
 
 function _og_mailinglist_process_email($raw_email, $mail_username) {
   try {
@@ -367,7 +388,8 @@ function _og_mailinglist_parse_email($email) {
     $email['text'] = $structure->body;
     $email['html'] = check_markup($email['text']);
   }
-  // Move the html version (if available) text version to mailbody.
+
+  // TODO figure out how to pull out sane HTML w/o funky css or other oddities.
   $email['mailbody'] = $email['text'];
   $email['isHTML'] = false;
  

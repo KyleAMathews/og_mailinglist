@@ -53,6 +53,13 @@ function og_mailinglist_menu() {
     'page arguments' => array(2),
     'access arguments' => array('manage og_mailinglist subscriptions'),
   );
+  $items['og_mailinglist'] = array(
+  'page callback' => 'og_mailinglist_post',
+  'access callback' => TRUE,
+  'type' => MENU_CALLBACK,
+  'file' => 'og_mailinglist_transport.inc',
+  );
+
   return $items;
 }
 
@@ -116,6 +123,13 @@ function og_mailinglist_admin_settings() {
     '#default_value' => variable_get('og_mailinglist_exclude_content_types', 'group'),
     '#options' => $n_types,
     '#description' => t('Do not send emails on creation of these content types.'),
+  );
+  $form['og_mailinglist_incoming_key'] = array(
+  '#type'          => 'textfield',
+  '#title'         => t('Message validation string'),
+  '#default_value' => variable_get('og_mailinglist_incoming_key', md5(rand())),
+  '#required' => TRUE,
+  '#description' => t('This string will be used to validate incoming messages.  It can be anything, but must be used on both sides of the transfer. For more see the INSTALL.txt'),
   );
   $form['og_mailinglist_test_email_address'] = array(
     '#title' => t('DEBUGGING: Send an email for all events to a user account'),
