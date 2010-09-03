@@ -280,7 +280,7 @@ function og_mailinglist_phpmailer_load_library() {
     }
     // If PHPMailer is not already loaded, then try from module subdirectory.
     if (!class_exists('PHPMailer')) {
-      $phpmailer_library = './'. drupal_get_path('module', 'og_mailinglist') .'/PHPMailer/class.phpmailer.php'; // is this the right sub-directory?
+      $phpmailer_library = './'. drupal_get_path('module', 'og_mailinglist') .'/PHPMailer/class.phpmailer.php';
       if (file_exists($phpmailer_library)) {
         include_once $phpmailer_library;
       }
@@ -288,4 +288,33 @@ function og_mailinglist_phpmailer_load_library() {
   }
   // Tell the caller if PHPMailer class exists.
   return class_exists('PHPMailer');
+}
+
+function og_mailinglist_mimeDecode_load_library() {
+  if (!class_exists('Mail_mimeDecode')) {
+    // First we'll try grabbing the file from the default pear install location.
+    if (file_exists('/usr/share/php/Mail/mimeDecode.php')) {
+      include_once('/usr/share/php/Mail/mimeDecode.php');
+    }
+    // If that didn't work, let's try using the libraries module.
+    if (!class_exists('Mail_mimeDecode')) {
+      if (module_exists('libraries')) {
+        // Let's see if PHPMailer is really available from libraries.
+        $Mail_mimeDecode_library = './'. libraries_get_path('mimeDecode') .'/mimeDecode.php';
+        if (file_exists($Mail_mimeDecode_library)) {
+          include_once $Mail_mimeDecode_library;
+        }
+      }
+    }
+    // If PHPMailer is not already loaded, then try from module subdirectory.
+    if (!class_exists('Mail_mimeDecode')) {
+      $Mail_mimeDecode_library = './'. drupal_get_path('module', 'og_mailinglist') .'/mimeDecode/mimeDecode.php';
+      if (file_exists($Mail_mimeDecode_library)) {
+        include_once $Mail_mimeDecode_library;
+      }
+    }
+
+  }
+  // Tell the caller if PHPMailer class exists.
+  return class_exists('Mail_mimeDecode');
 }
