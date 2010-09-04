@@ -21,7 +21,7 @@ INSTALLATION INSTRUCTIONS:
 
 * Unpack the og_mailinglist files into a subdirectory in the Drupal modules/ directory.  This is the same as installing any other Drupal module (see the Drupal manual for more information on general module installation).
 
-* Download the latest PHPMailer 5.x to modules/og_mailinglist/phpmailer or to libraries/phpmailer if you use the libraries module - http://sourceforge.net/projects/phpmailer/files/phpmailer%20for%20php5_6/ 
+* Download the latest PHPMailer 5.x to modules/og_mailinglist/PHPMailer or to libraries/PHPMailer if you use the libraries module - http://sourceforge.net/projects/phpmailer/files/phpmailer%20for%20php5_6/ 
 
 * Install the PHP library mimeDecode. On Debian/Ubuntu run from the command line, "apt-get install php-mail-mimedecode". You can also download the file directly from http://pear.php.net/package/Mail_mimeDecode and add the file either as a subdirectory to og_mailinglist or to the libraries folder. Note, mimeDecode depends on PHP PEAR, which sould be installed on any recent install of PHP but if you get weird errors, this might be something worth checking.
 

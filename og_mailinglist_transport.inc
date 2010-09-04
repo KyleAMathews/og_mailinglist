@@ -34,9 +34,6 @@ function _og_mailinglist_process_email($raw_email, $mail_username) {
 
     $email['original_email_text'] = $raw_email;
     
-    // Detect email character set.
-    $email['char_set'] = _og_mailinglist_detect_email_char_set($email['original_email_text']);
-    
     // Extract all the needed info from the email into a simple array.
     $email = _og_mailinglist_parse_email($email);
     

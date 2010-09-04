@@ -1,6 +1,6 @@
 # this is a custom transport for the Drupal module og_mailinglist
 
-drupal_og_mailinglist
+drupal_og_mailinglist:
   driver = pipe
   path = "/bin:/usr/bin:/usr/local/bin"
   command = /etc/exim4/exim_og_mailinglist/og_mailinglist_exim4_transport.php $local_part $domain
