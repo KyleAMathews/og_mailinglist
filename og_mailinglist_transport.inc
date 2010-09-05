@@ -780,7 +780,7 @@ function _og_mailinglist_add_footer($email, $footer) {
 }
 
 function _og_mailinglist_send_raw_email($raw_email) {
-  $rand_filename = rand(1000, 10000);
+  $rand_filename = rand(1000, 10000000000);
   file_put_contents("/tmp/" . $rand_filename, $raw_email . "\n");
   system("/usr/sbin/sendmail -t < /tmp/" . $rand_filename);
 }

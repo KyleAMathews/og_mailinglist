@@ -259,7 +259,7 @@ function og_mailinglist_phpmailer_load_library() {
     // First, try using libraries module.
     if (module_exists('libraries')) {
       // Let's see if PHPMailer is really available from libraries.
-      $phpmailer_library = './'. libraries_get_path('phpmailer') .'/class.phpmailer.php';
+      $phpmailer_library = './'. libraries_get_path('PHPMailer') .'/class.phpmailer.php';
       if (file_exists($phpmailer_library)) {
         include_once $phpmailer_library;
       }
