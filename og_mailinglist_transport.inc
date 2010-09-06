@@ -254,12 +254,17 @@ function og_mailinglist_save_comment($email) {
     throw new Exception(t("An unknown error occurred while saving your comment."));
   }  
   
-  // Save a message to the mail log.
-  echo t("Posted comment for $mailfrom to group $group_name for node=$nid with cid=$cid.");
   
   $node = node_load(array('nid' => $nid));
   $comment['cid'] = $cid; // Not sure why this isn't added automatically.
   _og_mailinglist_email_comment_email($email, $node, $comment);
+
+  $sender = user_load($email['userid']);
+  $group_node = node_load($email['groupid']);
+  // Report activity to watchdog.
+  watchdog('og_mailinglist', t("Posted comment for @mailfrom to group @group_name for nid=@nid with cid=@cid",
+      array('@mailfrom' => $sender->name, '@group_name' => $group_node->title,
+        '@nid' => $node->nid, '@cid' => $cid)));
 } 
  
 function og_mailinglist_save_discussion($email) {
@@ -310,9 +315,13 @@ function og_mailinglist_save_discussion($email) {
   
   // Send off email.
   _og_mailinglist_email_node_email($email, $node);
-  
-  // Save a message to the mail log.
-  echo t("Posted discussion for $mailfrom to group $group_name with nid=$node->nid.");
+
+  $sender = user_load($email['userid']);
+  $group_node = node_load($email['groupid']);
+  // Report activity to watchdog.
+  watchdog('og_mailinglist', t("Posted discussion for @mailfrom to group @group_name with nid=@nid.",
+      array('@mailfrom' => $sender->name, '@group_name' => $group_node->title,
+        '@nid' => $node->nid)));
 }
 
 function _og_mailinglist_email_node_email($email, $node) {
@@ -450,7 +459,7 @@ function _og_mailinglist_save_files(&$node) {
   // If user doesn't have upload permission then don't bother processing
   // TODO check comment upload permissions.
   if (!(user_access('upload files'))) {
-    echo "didn't have permissions?\n\n";
+    //echo "didn't have permissions?\n\n";
     return;
   }
   

@@ -282,11 +282,15 @@ function og_mailinglist_mimeDecode_load_library() {
     if (file_exists('Mail/mimeDecode.php')) {
       include_once('Mail/mimeDecode.php');
     }
-    if (file_exists('/usr/share/php/Mail/mimeDecode.php')) {
-      include_once('/usr/share/php/Mail/mimeDecode.php');
+    if (!class_exists('Mail_mimeDecode')) {
+      if (file_exists('/usr/share/php/Mail/mimeDecode.php')) {
+        include_once('/usr/share/php/Mail/mimeDecode.php');
+      }
     }
-    if (file_exists('/usr/share/pear/Mail/mimeDecode.php')) {
-      include_once('/usr/share/pear/Mail/mimeDecode.php');
+    if (!class_exists('Mail_mimeDecode')) {
+      if (file_exists('/usr/share/pear/Mail/mimeDecode.php')) {
+        include_once('/usr/share/pear/Mail/mimeDecode.php');
+      }
     }
     // If that didn't work, let's try using the libraries module.
     if (!class_exists('Mail_mimeDecode')) {
