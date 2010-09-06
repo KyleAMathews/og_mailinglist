@@ -124,6 +124,12 @@ function og_mailinglist_admin_settings() {
     '#options' => $n_types,
     '#description' => t('Do not send emails on creation of these content types.'),
   );
+  
+  // Save an incoming key by default.
+  if (empty(variable_get('og_mailinglist_incoming_key', ''))) {
+    variable_set('og_mailinglist_incoming_key',  md5(rand()));
+  }
+
   $form['og_mailinglist_incoming_key'] = array(
   '#type'          => 'textfield',
   '#title'         => t('Message validation string'),
