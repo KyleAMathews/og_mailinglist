@@ -126,7 +126,7 @@ function og_mailinglist_admin_settings() {
   );
   
   // Save an incoming key by default.
-  if (empty(variable_get('og_mailinglist_incoming_key', ''))) {
+  if ((variable_get('og_mailinglist_incoming_key', '')) == '') {
     variable_set('og_mailinglist_incoming_key',  md5(rand()));
   }
 
@@ -135,7 +135,7 @@ function og_mailinglist_admin_settings() {
   '#title'         => t('Message validation string'),
   '#default_value' => variable_get('og_mailinglist_incoming_key', md5(rand())),
   '#required' => TRUE,
-  '#description' => t('This string will be used to validate incoming messages.  It can be anything, but must be used on both sides of the transfer. For more see the INSTALL.txt'),
+  '#description' => t('This string will be used to validate incoming messages.  It can be anything, but must be used on both sides of the transfer. For more see the INSTALL.txt for your Mail Transfer Agent.'),
   );
   $form['og_mailinglist_test_email_address'] = array(
     '#title' => t('DEBUGGING: Send an email for all events to a user account'),

@@ -17,18 +17,17 @@ og_mailinglist_phpmailer_load_library();
  */
 function og_mailinglist_post() {
   $message = $_POST['message'];
-  $mail_username = $_POST['mail_username'];
   $token   = $_POST['token'];
 
-  $hash = md5(variable_get('og_mailinglist_incoming_key', '**') . $message . $mail_username);
+  $hash = md5(variable_get('og_mailinglist_incoming_key', '**') . $message);
   if ($hash != $token) {
     watchdog('access denied', 'Authentication error for POST e-mail. Check that you\'ve set the validation string in /admin/settings/og_mailinglist and in site_info.php', NULL, WATCHDOG_WARNING);
     return drupal_access_denied();
   }
-  _og_mailinglist_process_email($message, $mail_username);
+  _og_mailinglist_process_email($message);
 }
 
-function _og_mailinglist_process_email($raw_email, $mail_username) {
+function _og_mailinglist_process_email($raw_email) {
   try {
     $email = array();
 
@@ -37,6 +36,15 @@ function _og_mailinglist_process_email($raw_email, $mail_username) {
     // Extract all the needed info from the email into a simple array.
     $email = _og_mailinglist_parse_email($email);
     
+    // Parse the group name from the email. Regex borrowed from valid_email_address().
+    $server_string = variable_get("og_mailinglist_server_string", "");
+    if (preg_match("/([a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?\`\|\{\}~\']+)@" . $server_string . "/", $email['headers']['to'], $matches)) {
+      $group_name = $matches[1];
+    }
+    if (preg_match("/([a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?\`\|\{\}~\']+)@" . $server_string . "/", $email['headers']['cc'], $matches)) {
+      $group_name = $matches[1];
+    }
+
     // If the x-BeenThere header is set, this is an email that was sent out and
     // looped back to the server. Reject it.
     if (!empty($email['headers']['x-beenthere'])) {
@@ -88,9 +96,9 @@ function _og_mailinglist_process_email($raw_email, $mail_username) {
     // Get the group id.
     $email['groupid'] = db_result(db_query("SELECT nid
                                            FROM {og_mailinglist}
-                                           WHERE LOWER(group_email)='%s'", $mail_username));
+                                           WHERE LOWER(group_email)='%s'", $group_name));
     if (!$email['groupid']) { 
-      throw new Exception(t("Could not locate group named $mail_username"));
+      throw new Exception(t("Could not locate group named $group_name"));
     }
     
     // Check the this user is a member of this group (for security).
@@ -247,7 +255,7 @@ function og_mailinglist_save_comment($email) {
   }  
   
   // Save a message to the mail log.
-  echo t("Posted comment for $mailfrom to group $mail_username for node=$nid with cid=$cid.");
+  echo t("Posted comment for $mailfrom to group $group_name for node=$nid with cid=$cid.");
   
   $node = node_load(array('nid' => $nid));
   $comment['cid'] = $cid; // Not sure why this isn't added automatically.
@@ -304,7 +312,7 @@ function og_mailinglist_save_discussion($email) {
   _og_mailinglist_email_node_email($email, $node);
   
   // Save a message to the mail log.
-  echo t("Posted discussion for $mailfrom to group $mail_username with nid=$node->nid.");
+  echo t("Posted discussion for $mailfrom to group $group_name with nid=$node->nid.");
 }
 
 function _og_mailinglist_email_node_email($email, $node) {
@@ -411,20 +419,18 @@ curl -d @file_to_post.txt “http://www.domain.com/file.php”
 */
 
 function _og_mailinglist_parse_attachment($part) {
-  echo "\nparsing attachment\n";
-  print_r($part);
   $info['data'] = $part->body;
   $info['filemime'] = $part->ctype_primary . "/" . $part->ctype_secondary;
   $info['filename'] = $part->ctype_parameters['name'];
 
   return $info;
 }
+
 function _og_mailinglist_parse_content($part) {
   $content = $part->body;
 
   // Try to convert character set to UTF-8.
   if (!empty($part->ctype_parameters['charset'])) {
-    echo "\n--------------the charset yo------\n" . $part->ctype_parameters['charset'] . "\n";
     $content = drupal_convert_to_utf8($content, $part->ctype_parameters['charset']);
     //$content = iconv($part->ctype_parameters['charset'], 'utf-8', $content);
   }

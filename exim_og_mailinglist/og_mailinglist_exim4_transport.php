@@ -10,8 +10,7 @@ while (!feof($fd)) {
 }
 
 // Set command line arguments (sent by the exim4 transport) to variables.
-$mail_username = $argv[1];
-$mail_domain = $argv[2];
+$mail_domain = $argv[1];
 
 // Load sites
 require_once('site_info.php');
@@ -31,7 +30,7 @@ if (empty($post_url)) {
   exit();
 }
 
-$token = md5($validation_string . $raw_email . $mail_username);
+$token = md5($validation_string . $raw_email);
 
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, FALSE);
@@ -42,7 +41,6 @@ curl_setopt($ch, CURLOPT_URL, $post_url);
 //prepare the field values being posted to the service
 $data = array(
   'message' => $raw_email,
-  'mail_username' => $mail_username,
   'token' => $token,
 );
 
