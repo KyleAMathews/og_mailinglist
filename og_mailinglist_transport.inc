@@ -35,7 +35,13 @@ function _og_mailinglist_process_email($raw_email) {
     
     // Extract all the needed info from the email into a simple array.
     $email = _og_mailinglist_parse_email($email);
-    
+
+    // If the x-BeenThere header is set, this is an email that was sent out and
+    // looped back to the server. Reject it.
+    if (!empty($email['headers']['x-beenthere'])) {
+      exit();
+    }
+
     // Parse the group name from the email. Regex borrowed from valid_email_address().
     $server_string = variable_get("og_mailinglist_server_string", "");
     if (preg_match("/([a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?\`\|\{\}~\']+)@" . $server_string . "/", $email['headers']['to'], $matches)) {
@@ -43,12 +49,6 @@ function _og_mailinglist_process_email($raw_email) {
     }
     if (preg_match("/([a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?\`\|\{\}~\']+)@" . $server_string . "/", $email['headers']['cc'], $matches)) {
       $group_name = $matches[1];
-    }
-
-    // If the x-BeenThere header is set, this is an email that was sent out and
-    // looped back to the server. Reject it.
-    if (!empty($email['headers']['x-beenthere'])) {
-      exit();
     }
     
     // Did we actually get email text back? If not, throw an exception.
@@ -58,7 +58,7 @@ function _og_mailinglist_process_email($raw_email) {
     
     // Check the size of the body and kick out if too large (for security).
     $max_size = variable_get('og_mailinglist_max_message_size', 200);  // 200kb
-    if (strlen($email['mailbody']) > $max_size * 1024) {
+    if (strlen($email['mailbody']) > $max_size * 1024 && $max_size != 0) {
       throw new Exception(t("Discussion items sent via email must be less than " . $max_size . " Kb. For security reasons, please post larger messages through the web interface."));
     }
   
