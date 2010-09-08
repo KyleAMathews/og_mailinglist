@@ -94,8 +94,6 @@ function og_mailinglist_add_web_headers($mailer, $node, $comment = 0, $in_reply_
   $comment_id = (!empty($comment)) ? $comment->cid : 0;
   $mailer->MessageID = "<node-" . $node->nid . "-comment-" . $comment_id . "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">";
   
-  // TODO Set references here. Need to store message ids of previous emails.
-
   return $mailer;
 }
 

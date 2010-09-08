@@ -88,11 +88,12 @@ function og_mailinglist_schema() {
        'non null' => TRUE,
        'default' => 0,
        'length' => 255),
-     'references' => array(
+     'references_header' => array(
        'type' => 'varchar',
        'description' => 'The reference header of this post.
         If it originated from the web, this stores the references + message-id
-        of its parent.',
+        of its parent. We use the ungainly title of references_header as references appears
+        to be a reserved word for MySQL',
        'non null' => TRUE,
        'default' => 0,
        'length' => 512),
@@ -252,6 +253,22 @@ function og_mailinglist_update_6003() {
                 'non null' => TRUE,
                 'default' => 0,
                 'length' => 255));
+
+  return $ret;
+}
+
+/**
+ * Change name of field to references_header from references.
+ */
+function og_mailinglist_update_6004() {
+  $ret = array();
+
+  db_change_field($ret, 'og_mailinglist_source', 'references', 'references_header', array(
+                     'type' => 'varchar',
+                     'non null' => TRUE,
+                     'default' => 0,
+                     'length' => 512)
+  );
 
   return $ret;
 }
