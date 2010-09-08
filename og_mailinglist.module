@@ -13,6 +13,15 @@
 ###   Maintained since by Kyle Mathews
 ###
 
+/**
+ * @name OG Mailinglist build modes.
+ * @{
+ */
+define('OG_MAILINGLIST_BUILD_FULL', 'og_mailinglist full');
+/**
+ * @} End of "Node as block build modes".
+*/
+
 require_once("og_mailinglist_phpmailer.inc");
 require_once('og_mailinglist_api.inc');
 og_mailinglist_phpmailer_load_library();

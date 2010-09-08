@@ -137,10 +137,11 @@ function og_mailinglist_send_node_email($node) {
  *  Node ID
  *
  * @return
- *  Node with rendered teaser.
+ *  Node with rendered body.
  */
 function og_mailinglist_render_node_body($node) {
   $node = (object)$node;
+  $node->build_mode = OG_MAILINGLIST_BUILD_FULL;
   $node = node_build_content($node, FALSE, TRUE);
 
   // Set the proper node part, then unset unused $node part so that a bad
