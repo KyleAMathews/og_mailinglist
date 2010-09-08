@@ -105,7 +105,7 @@ function _og_mailinglist_send_digest_emails() {
     $body .= "</ul>\n";
     $body .= "<hr />\n";
 
-    // Add individual discussions
+    // Add individual posts. 
     foreach ($nids as $nid) {
       $body .= '<a name="digest-' . $nid['node_obj']->nid . '"></a>';
       $body .= '<div style="' . DISCUSSION_HEADER . '">';

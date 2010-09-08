@@ -124,7 +124,7 @@ function _og_mailinglist_process_email($raw_email) {
       // There are at least two reasons why an email could have a nid but not be
       // intended as a new comment.
       // First, someone could be forwarding an email to a different group.
-      // Second, it's common on mailinglists to fork discussions by changing
+      // Second, it's common on mailinglists to fork threads by changing
       // the subject line. We need to check for both.
       
       // Does the detected nid belong to the same group as the email was forwarded to?
@@ -133,7 +133,7 @@ function _og_mailinglist_process_email($raw_email) {
                                         WHERE nid = %d", $email['nid']));
       
       if ($nid_groupid != $email['groupid']) {
-        og_mailinglist_save_discussion($email);
+        og_mailinglist_save_node($email);
         exit(0); // So we don't save a comment as well
       }
       
@@ -141,12 +141,12 @@ function _og_mailinglist_process_email($raw_email) {
       // this bit of code decides a comment is actually a new node. Turned off for now.
       
       // Is the subject line different than the expected node title?
-      // If the subject_nid is empty, that means the subject is new so email is new discussion.
-      // If the subject_nid is different, that also means the email is a new discussion but
-      // that it coincidentally matched an earlier discussion.
+      // If the subject_nid is empty, that means the subject is new so email is new post.
+      // If the subject_nid is different, that also means the email is a new post but
+      // that it coincidentally matched an earlier post.
       //$subject_nid = _og_mailinglist_nid_of_subject($email['structure']->headers['subject']);
       //if (!empty($subect_nid) || $subject_nid != $email['nid']) {
-      //  og_mailinglist_save_discussion($email);
+      //  og_mailinglist_save_node($email);
       //  exit(0); // So we don't save a comment as well.
       //}
       
@@ -154,8 +154,8 @@ function _og_mailinglist_process_email($raw_email) {
       og_mailinglist_save_comment($email);
       
     }
-    else {  // A new discussion.
-      og_mailinglist_save_discussion($email);
+    else {  // A new node.
+      og_mailinglist_save_node($email);
     }
     
     // Tell Exim4 we had success!
@@ -210,9 +210,9 @@ function og_mailinglist_save_comment($email) {
     throw new Exception(t("You do not have rights to post comments in the system."));
   }
   
-  // check that this discussion has comments enabled
+  // check that this post has comments enabled
   if (node_comment_mode($nid) != COMMENT_NODE_READ_WRITE) {
-    throw new Exception(t("Comments have been disabled for this discussion."));
+    throw new Exception(t("Comments have been disabled for this post."));
   }
 
   $mailbody = $email['mailbody'];
@@ -267,7 +267,7 @@ function og_mailinglist_save_comment($email) {
         '@nid' => $node->nid, '@cid' => $cid)));
 } 
  
-function og_mailinglist_save_discussion($email) {
+function og_mailinglist_save_node($email) {
   $mailbody = $email['mailbody'];
 
   // Get the nid that'll be used. Yes, this isn't a very pretty way to do this.
@@ -290,7 +290,7 @@ function og_mailinglist_save_discussion($email) {
     $is_public = FALSE;
   }
   
-  // create the new discussion node
+  // Create the new node
   $node->title = $email['headers']['subject'];
   $node->uid = $email['userid'];
   $node->created = time();
@@ -319,7 +319,7 @@ function og_mailinglist_save_discussion($email) {
   $sender = user_load($email['userid']);
   $group_node = node_load($email['groupid']);
   // Report activity to watchdog.
-  watchdog('og_mailinglist', t("Posted discussion for @mailfrom to group @group_name with nid=@nid.",
+  watchdog('og_mailinglist', t("Posted node for @mailfrom to group @group_name with nid=@nid.",
       array('@mailfrom' => $sender->name, '@group_name' => $group_node->title,
         '@nid' => $node->nid)));
 }

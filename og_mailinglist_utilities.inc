@@ -32,9 +32,9 @@ function array_to_comma_delimited_string($array) {
 
 function _og_mailinglist_build_footer($node) {
     $footer = "--
-Full discussion: " .  url("node/" . $node->nid, array('absolute' => TRUE))   . "
+Full post: " .  url("node/" . $node->nid, array('absolute' => TRUE))   . "
 Manage my subscriptions: " . url("og_mailinglist/subscriptions", array('absolute' => TRUE)) . "
-Stop emails for this discussion: " . url("og_mailinglist/unsubscribe/" . $node->nid, array("absolute" => TRUE));
+Stop emails for this post: " . url("og_mailinglist/unsubscribe/" . $node->nid, array("absolute" => TRUE));
   
   return $footer;
 }

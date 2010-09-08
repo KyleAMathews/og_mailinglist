@@ -25,7 +25,7 @@ function og_mailinglist_menu() {
   # Administration
   $items['admin/og/og_mailinglist'] = array(
     'title' => 'OG Mailinglist',
-    'description' => t('Configure discussions/comments generated from email'),
+    'description' => t('Configure posts/comments generated from email'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('og_mailinglist_admin_settings'),
     'access arguments' => array('access administration pages'),
@@ -38,7 +38,7 @@ function og_mailinglist_menu() {
     'access arguments' => array('manage og_mailinglist subscriptions'),
   );
   $items['og_mailinglist/unsubscribe/%node'] = array(
-    'title' => t('Unsubscribe from discussion'),
+    'title' => t('Unsubscribe from post'),
     'description' => t('Users who hit this page will not get more emails for
                        comments on the node.'),
     'page callback' => 'og_mailinglist_unsubscribe_thread',
@@ -46,7 +46,7 @@ function og_mailinglist_menu() {
     'access arguments' => array('manage og_mailinglist subscriptions'),
   );
   $items['og_mailinglist/subscribe/%node'] = array(
-    'title' => t('Subscribe to discussion'),
+    'title' => t('Subscribe to post'),
     'description' => t('Users who hit this page will not get more emails for
                        comments on the node.'),
     'page callback' => 'og_mailinglist_subscribe_thread',
@@ -219,7 +219,7 @@ function og_mailinglist_unsubscribe_thread($node) {
   
   if ($success) {
     return "<div class='messages success'>You were successfully unsubscribed from
-    the discussion <em>" . l($node->title, "node/" . $node->nid) . " </em>&nbsp;&nbsp; 
+    the post <em>" . l($node->title, "node/" . $node->nid) . " </em>&nbsp;&nbsp; 
      " . l("Undo", "og_mailinglist/subscribe/" . $node->nid, array("attributes" => array("id" => "og_mailinglist_undo")))
            . "</div>";
   }
@@ -230,7 +230,7 @@ function og_mailinglist_subscribe_thread($node) {
   og_mailinglist_save_thread_subscriptions($node->nid, array($user->uid));
   
   return "<div class='messages success'>You were successfully subscribed to
-    the discussion <em>" . l($node->title, "node/" . $node->nid) . " </em>&nbsp;&nbsp; 
+    the post <em>" . l($node->title, "node/" . $node->nid) . " </em>&nbsp;&nbsp; 
      " . l("Undo", "og_mailinglist/unsubscribe/" . $node->nid, array("attributes" => array("id" => "og_mailinglist_undo")))
            . "</div>";
 }
