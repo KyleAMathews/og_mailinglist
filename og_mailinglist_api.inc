@@ -89,8 +89,10 @@ function og_mailinglist_check_user_subscribed_to_thread($nid, $uid) {
  */
 function og_mailinglist_save_thread_subscriptions($nid, $uids) {
   foreach ($uids as $uid) {
+    if ($uid != 0) { // Ignore anonymous users.
     db_query("INSERT INTO {og_mailinglist_thread}
              VALUES (%d, %d)", $nid, $uid);
+    }
   }
 }
 
@@ -186,7 +188,7 @@ function og_mailinglist_log_email_sent($source, $nid, $cid = 0, $message_id = 0,
  */
 function og_mailinglist_create_mailer() {
   og_mailinglist_phpmailer_load_library();
-  $mailer = new PHPMailer();
+  $mailer = new PHPMailer(TRUE); // The TRUE param means it will throw exceptions on errors, which we need to catch.
   $mailer->CharSet = 'UTF-8';
 
   return $mailer;

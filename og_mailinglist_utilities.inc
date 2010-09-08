@@ -116,16 +116,26 @@ function _og_mailinglist_add_addresses($mailer, $node, $new_node = FALSE,
     $author_name = $author->name; 
   }
   
-  $mailer->From = $author->mail;
-  $mailer->FromName = $author_name;
-  $mailer->AddAddress($group_node->ogm_email . "@" .
-          variable_get('og_mailinglist_server_string', 'example.com'), $group_node->title);
- 
-  // Add emails to BCC
-  foreach ($subscribers as $subscriber) {
-    $mailer->AddBCC($subscriber);
+  if ($author->uid == 0) {
+    $author->mail = "anonymous@" . variable_get('og_mailinglist_server_string', 'example.com');
+    $author_name = "anonymous";
   }
-  
+  try {
+    $mailer->From = $author->mail;
+    $mailer->FromName = $author_name;
+    $mailer->AddAddress($group_node->ogm_email . "@" .
+            variable_get('og_mailinglist_server_string', 'example.com'), $group_node->title);
+
+    // Add emails to BCC
+    foreach ($subscribers as $subscriber) {
+      $mailer->AddBCC($subscriber);
+    }
+  } catch (phpmailerException $e) {
+       watchdog('og_mailinglist', t('PHPMailer error: !error', array('!error' => $e->errorMessage())), NULL, WATCHDOG_ERROR);
+  } catch (Exception $e) {
+       watchdog('og_mailinglist', $e->getMessage(), NULL, WATCHDOG_ERROR);
+  }
+
   return $mailer;  
 }
 
