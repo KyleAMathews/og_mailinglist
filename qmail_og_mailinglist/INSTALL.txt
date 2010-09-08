@@ -2,7 +2,7 @@ These files are for integrating OG Mailinglist with the QMAIL MTA.
 
 # Installation Instructions (Only tested on Plesk 8.6.0 system, documentation for other systems is welcome). These instructions assume root access. 
 
-1. Create a domain for the email side of OGM with a "catchall mailbox" for all mail to the domain (eg groups@group.yoursite.com). For Plesk 8.6.0 tutorial see http://www.webhostingresourcekit.com/flash/plesk-8-linux/plesk8linux_cat... - if you are not using Plesk you can also refer to http://www.lifewithqmail.org/lwq.html 
+1. Create a domain for the email side of OGM with a "catchall mailbox" for all mail to the domain (eg groups@group.yoursite.com). For Plesk 8.6.0 tutorial see http://www.webhostingresourcekit.com/flash/plesk-8-linux/plesk8linux_catchall.html - if you are not using Plesk you can also refer to http://www.lifewithqmail.org/lwq.html 
 
 2. Copy the og_mailinglist_exim4_transport.php file from the exim_og_mailinglist folder into the home dir for the mailbox and set the ownership to be popuser:popuser using the chown command.
 
