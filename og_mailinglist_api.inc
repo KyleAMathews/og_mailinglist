@@ -198,12 +198,20 @@ function og_mailinglist_create_mailer() {
  * Save group information upon group creation and update.
  */
 function og_mailinglist_save_group($nid, $group_email) {
+  $update = db_result(db_query("SELECT nid
+                                FROM {og_mailinglist}
+                                WHERE nid = %d", $nid));
   $data = array(
       'nid' => $nid,
       'group_email' => $group_email,
   );
 
-  drupal_write_record('og_mailinglist', $data);
+  if ($update) {
+    drupal_write_record('og_mailinglist', $data, 'nid');
+  }
+  else {
+    drupal_write_record('og_mailinglist', $data);
+  }
 }
 
 /*
