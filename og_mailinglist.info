@@ -2,7 +2,7 @@
 name = OG Mailinglist 
 description = "Allows email submissions of new posts and comments for organic groups."
 dependencies[] = og
-project = "og"
+package = "Organic groups"
 core = "6.x"
 
 version = "6.x-1.0"
