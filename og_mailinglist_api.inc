@@ -123,7 +123,7 @@ function og_mailinglist_update_group_subcription_type($gid, $uid, $subscription_
 function og_mailinglist_save_group_subscriptions($gid, $uids) {
   foreach ($uids as $uid) {
     db_query("INSERT INTO {og_mailinglist_subscription}
-             VALUES (%d, %d, 'email')", $gid, $uid);
+             VALUES (%d, %d, '%s')", $gid, $uid, variable_get('og_mailinglist_default_group_subscription_type', 'email'));
   }
 }
 

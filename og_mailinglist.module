@@ -133,6 +133,13 @@ function og_mailinglist_admin_settings() {
     '#options' => $n_types,
     '#description' => t('Do not send emails on creation of these content types.'),
   );
+  $form['og_mailinglist_default_group_subscription_type'] = array(
+    '#title' => t('Default group email subscription type.'),
+    '#type' => 'select',
+    '#default_value' => variable_get('og_mailinglist_default_group_subscription_type', 'email'),
+    '#options' => array('email' => 'email', 'no email' => 'no email', 'digest email' => 'digest email'),
+    '#description' => t('Choose the default group email subscription for users joining a group. "Email" means the user will receive an email for each new post. "No email" means the user will recieve no emails except for threads they participate in. "Digest" is the same as "no email" except the user will also receive digest emails.'),
+  );
   
   // Save an incoming key by default.
   if ((variable_get('og_mailinglist_incoming_key', '')) == '') {
