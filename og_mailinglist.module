@@ -341,6 +341,7 @@ function og_mailinglist_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
     }
 
     // User might not be automatically subscribed to new threads. Subscribe now if they aren't signed up to get emails normally.
+    // TODO change this + other similar check in _transport to check if the person is subscribed as if they post multiple times, this will throw duplicate insert error.
     if (og_mailinglist_get_group_subscription_type($group_node->nid, $node->uid) != "email") {
       og_mailinglist_save_thread_subscriptions($node->nid, array($node->uid));
     }    
