@@ -1,0 +1,6 @@
+name = OG Mailinglist OG Forum
+description = "Integrates Og Mailinglist with OG Forum so that incoming emails will be placed in the default group forum."
+dependencies[] = og_mailinglist
+dependencies[] = og_forum
+package = "Organic groups"
+core = "6.x"
