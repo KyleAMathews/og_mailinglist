@@ -311,6 +311,9 @@ function og_mailinglist_save_node($email) {
   //  _og_mailinglist_save_files($node);
   //}
 
+  // Let other modules alter the node object before saving.
+  drupal_alter('og_mailinglist_save_node', $node);
+
   node_save($node);
   
   // Send off email.
