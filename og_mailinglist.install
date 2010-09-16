@@ -45,7 +45,7 @@ function og_mailinglist_requirements($phase) {
       // Required library wasn't found.
       $requirements['og_mailinglist_phpmailer']['value'] = t('Not found');
       // Provide a download link to the PHPMailer library.
-      $requirements['og_mailinglist_phpmailer']['description'] = t('The <a href="@phpmailer">PHPMailer</a> library is missing. <a href="@download">Download</a> and extract it to your <em>og_mailinglist</em> module directory. See the INSTALL.txt file for more information at path/to/drupal@install.', array('@phpmailer' => 'http://phpmailer.worxware.com/index.php?pg=phpmailer', '@download' => 'http://sourceforge.net/projects/phpmailer/files/phpmailer%20for%20php5_6/', '@install' => url(drupal_get_path('module', 'og_mailinglist') . '/INSTALL.txt')));
+      $requirements['og_mailinglist_phpmailer']['description'] = t('The <a href="@phpmailer">PHPMailer</a> library is missing or not installed correctly. <a href="@download">Download</a> and extract it to your <em>og_mailinglist</em> module directory. See the INSTALL.txt file for more information at path/to/drupal@install.', array('@phpmailer' => 'http://phpmailer.worxware.com/index.php?pg=phpmailer', '@download' => 'http://sourceforge.net/projects/phpmailer/files/phpmailer%20for%20php5_6/', '@install' => url(drupal_get_path('module', 'og_mailinglist') . '/INSTALL.txt')));
       $requirements['og_mailinglist_phpmailer']['severity'] = REQUIREMENT_ERROR;
     }
   }

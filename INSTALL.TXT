@@ -29,7 +29,7 @@ INSTALLATION INSTRUCTIONS:
 
 * To setup og_mailinglist for incoming email, follow the installation instructions for your Mail Transfer Agent in the INSTALL.txt file found in its subdirectory (e.g. exim_og_mailinglist). For now, OG Mailinglist only works with Exim.
 
-* To hide quoted parts of email messages, enable the provided input filter "Hide quoted text from comments created via email" at admin/settings/filter and rearrange the filters to set this one first.
+* To hide quoted parts of email messages, enable the provided input filter "Hide quoted text from comments created via email" at admin/settings/filter and rearrange the filters to set this one first. Note, that for this to work, your input filter(s) will need to allow both the <span> and <div> HTML tags.
   
 * Congratulations.  You're running og_mailinglist!
 

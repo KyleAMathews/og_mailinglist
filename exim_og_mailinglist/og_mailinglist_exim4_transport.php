@@ -26,7 +26,7 @@ foreach ($sites as $domain => $info) {
 }
 
 if (empty($post_url)) {
-  echo "Could not match the email domain with a Drupal site";
+  echo "Could not match the email domain with a Drupal site. Check that you've setup site_info.php correctly.";
   exit();
 }
 
