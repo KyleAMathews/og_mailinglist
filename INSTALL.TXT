@@ -33,3 +33,6 @@ INSTALLATION INSTRUCTIONS:
   
 * Congratulations.  You're running og_mailinglist!
 
+FAQ
+Q: I have an existing OG site that I want to install OG Mailinglist on but I don't want people to be subscribed to the mailinglist right away when I install the module. How do I do this?
+A: Once the OG Mailinglist is installed, you can set the default subscription setting for people joining a group on the OG Mailinglist admin page. But as OG Mailinglist automatically generates subscriptions for existing users on install, to change the default subscription to "no email" you'll need to change a bit of code. Open the og_mailinglist_api.inc file and find the og_mailinglist_save_group_subscriptions() function. Then for the insert function, change 'email' to 'no email'. See http://drupal.org/node/916934 for more on this.
