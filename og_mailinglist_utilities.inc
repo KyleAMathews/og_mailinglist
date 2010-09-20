@@ -204,30 +204,20 @@ function array_copy ($aSource) {
 }
 
 /*
- * Use every possible method to figure out the group nid of a node.
+ * Load the parent group node of a node.
  */
 function _og_mailinglist_load_group($node) {
-  if (!empty($node->og_groups_both)) {
-    return node_load(array('nid' => current(array_values($node->og_groups_both))));
-  }
-  elseif (!empty($node->og_groups)) {
-    return node_load(array('nid' => current(array_values($node->og_groups))));
-  }
-  elseif (!empty($node->og_initial_groups)) {
-    return node_load(array('nid' => current(array_values($node->og_initial_groups))));
+  $group_node = node_load(array('nid' => db_result(db_query("SELECT group_nid
+                                            FROM {og_ancestry}
+                                            WHERE nid = %d", $node->nid))));
+  if (!empty($group_node)) {
+    return $group_node;
   }
   else {
-    $group_node = node_load(array('nid' => db_result(db_query("SELECT group_nid
-                                              FROM {og_ancestry}
-                                              WHERE nid = %d", $node->nid))));
-    if (!empty($group_node)) {
-      return $group_node;
-    }
-    else {
-      return null;
-    }
+    return null;
   }
 }
+
 /**
  * Capitalize all words
  * @param string Data to capitalize
