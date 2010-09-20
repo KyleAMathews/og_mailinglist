@@ -717,3 +717,14 @@ function og_mailinglist_cron() {
     variable_set('og_mailinglist_digest_runtime', mktime(17, date("I"), date("s"), date("n"), date("j") + 1));
   }
 }
+
+/**
+ * Implementation of hook_help().
+ */
+function og_mailinglist_help($path, $args) {
+  switch ($path) {
+    case 'admin/help#og_mailinglist':
+      // Return a line-break version of the module README
+      return filter_filter('process', 1, NULL, file_get_contents( dirname(__FILE__) . "/README.txt"));
+  }
+}
