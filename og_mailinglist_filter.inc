@@ -114,7 +114,7 @@ function _og_mailinglist_filter_quotes($text) {
  * or a consientious bottom poster, this should be fine.
  */
 function _og_mailinglist_filter_email_signature($text) {
-  $regex = "/^(--|---)$.*/s";
+  $regex = "/^-{2,3}$[\s\S]*/m";
   preg_match($regex, $text, $matches);
   if (!empty($matches)) {
     return $matches;
