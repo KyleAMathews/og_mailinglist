@@ -16,6 +16,7 @@ function _og_mailinglist_find_quoted_sections($text) {
   // Some email clients are "special". They don't like to place ">" in front of
   // quotes. We need to give them their own special functions.
   $quotes[] = array();
+  $quotes[] = _og_mailinglist_filter_email_signature($text);
   $quotes[] = _og_mailinglist_filter_hotmail_quotes($text);
   $quotes[] = _og_mailinglist_filter_outlook_quotes($text);
   $quotes[] = _og_mailinglist_filter_android_gmail_quotes($text);
@@ -25,6 +26,7 @@ function _og_mailinglist_find_quoted_sections($text) {
   $quotes[] = _og_mailinglist_filter_unknown_client3a_quotes($text);
   $quotes[] = _og_mailinglist_filter_unknown_client4_quotes($text);
   $quotes[] = _og_mailinglist_filter_unknown_client4a_quotes($text);
+  $quotes[] = _og_mailinglist_filter_unknown_client4b_quotes($text);
   $quotes[] = _og_mailinglist_filter_unknown_client5_quotes($text);
   $quotes[] = _og_mailinglist_filter_quotes($text);
   
@@ -269,6 +271,27 @@ function _og_mailinglist_filter_unknown_client4_quotes($text) {
  */
 function _og_mailinglist_filter_unknown_client4a_quotes($text) {
   $regex = "/-----Original\sMessage-----.*?From:\s.*?@.*?Sent:\s\w{3,9},\s\d{1,2}\s.*?:.*?:.*?To:.*?@.*?Subject:.*/s";
+  preg_match($regex, $text, $matches);
+  if (!empty($matches)) {
+    return $matches;
+  }
+  else {
+    return array();
+  }
+}
+
+/**
+ * Filter quotes out of emails from yet another microsoftie looking email client.
+ *
+ * ----- Original Message -----
+ * From: "John someone" <someone@gmail.com>
+ * To: test-one@lists.somewhere.com
+ * Subject: [test-one] Test to Group 1 From Email
+ * Date: Fri, 24 Sep 2010 09:36:57 +1000
+ * 
+ */
+function _og_mailinglist_filter_unknown_client4b_quotes($text) {
+  $regex = "/-----\sOriginal\sMessage\s-----.*?From:\s.*?\<.*?@.*?\>.*?To:\s.*?Subject:\s.*?Date:\s\w*?,\s\d{1,2}\s\w*?\s\d{4}\s\d{1,2}:\d{2}:\d{2}\s.*/s";
   preg_match($regex, $text, $matches);
   if (!empty($matches)) {
     return $matches;
