@@ -111,7 +111,7 @@ function _og_mailinglist_filter_quotes($text) {
  * well would be cut off. But as almost everyone is either a top-poster
  * or a consientious bottom poster, this should be fine.
  */
-function _og_mailinglist_filter_hotmail_quotes($text) {
+function _og_mailinglist_filter_email_signature($text) {
   $regex = "/^(--|---)$.*/s";
   preg_match($regex, $text, $matches);
   if (!empty($matches)) {
