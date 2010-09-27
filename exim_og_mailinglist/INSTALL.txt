@@ -24,11 +24,11 @@ function og_mailinglist_site_info() {
   return array (
     'eduglu.com' => array(
             'post_url' => 'http://eduglu.com/og_mailinglist',
-            'validation_string' => 'get this from /admin/settings/og_mailinglist and paste here',
+            'validation_string' => 'get this from /admin/og/og_mailinglist and paste here',
            ),
     'anothersite.com' => array(
             'post_url' => 'http://anothersite.com/og_mailinglist',
-            'validation_string' => 'get this from /admin/settings/og_mailinglist and paste here',
+            'validation_string' => 'get this from /admin/og/og_mailinglist and paste here',
            ),
   );
 }
