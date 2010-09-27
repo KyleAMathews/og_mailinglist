@@ -1,7 +1,7 @@
 #!/usr/bin/php
 <?php
 
-// Reads in raw email off the STDIN and posts the email using our drush command on the appropriate site.
+// Reads in raw email off the STDIN and posts the email using our curl command for the appropriate site.
 
 // Grab the raw email message from stdin.
 $fd = fopen("php://stdin", "r");
@@ -12,7 +12,7 @@ while (!feof($fd)) {
 // Set command line arguments (sent by the exim4 transport) to variables.
 $mail_domain = $argv[1];
 
-// Load sites
+// Load site info
 require_once('site_info.php');
 $sites = og_mailinglist_site_info();
 
