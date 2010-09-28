@@ -10,7 +10,13 @@ function og_mailinglist_og_forum_og_mailinglist_save_node_alter(&$node) {
     $forum_id = db_result(db_query("SELECT tid
                                     FROM {og_term}
                                     WHERE nid = %d", current($node->og_groups)));
-    $node->tid = $forum_id;
+    $term = taxonomy_get_term($forum_id);
+    if(!empty($node->tid)) {
+      $node->tid = $term->tid;
+    }
+    if(!empty($node->vid)) {
+      $node->vid = $term->vid;
+    }
   }
 }
 
