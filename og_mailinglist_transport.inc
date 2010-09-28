@@ -11,7 +11,7 @@ og_mailinglist_phpmailer_load_library();
 /**
  * Receive messages POSTed from an external source.
  *
- * This function enables messages to be sent via POST or some other RFC822
+ * This function enables messages to be sent to a Drupal site via POST or some other RFC822
  * source input (e.g. directly from a mail server).
  *
  */
@@ -40,6 +40,10 @@ function _og_mailinglist_process_email($raw_email) {
     // looped back to the server. Reject it.
     if (!empty($email['headers']['x-beenthere'])) {
       exit();
+    }
+
+    if (empty($email['headers']['subject'])) {
+      throw new Exception(t("It seems your email was sent without a subject. Please try resending your message with a subject. If this problem continues, please contact a site administrator."));
     }
 
     // Parse the group name from the email. Regex borrowed from valid_email_address().
