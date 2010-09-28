@@ -334,6 +334,7 @@ function og_mailinglist_group_form_submit($form, &$form_state) {
  */
 function og_mailinglist_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   if ($op == "insert" && $node->status) {
+dpm($node);
     $group_node = _og_mailinglist_load_group($node);
 
     // If this node isn't part of a group, return.
