@@ -16,7 +16,6 @@ function _og_mailinglist_find_quoted_sections($text) {
   // Some email clients are "special". They don't like to place ">" in front of
   // quotes. We need to give them their own special functions.
   $quotes[] = array();
-  $quotes[] = _og_mailinglist_filter_email_signature($text);
   $quotes[] = _og_mailinglist_filter_hotmail_quotes($text);
   $quotes[] = _og_mailinglist_filter_outlook_quotes($text);
   $quotes[] = _og_mailinglist_filter_android_gmail_quotes($text);
@@ -104,24 +103,6 @@ function _og_mailinglist_filter_quotes($text) {
   }
   
   return $quotes_imploded;
-}
-
-/**
- * Filter out email signitures and everything below.
- *
- * This is somewhat risky as a post from bottom-poster who doesn't trim 
- * well would be cut off. But as almost everyone is either a top-poster
- * or a consientious bottom poster, this should be fine.
- */
-function _og_mailinglist_filter_email_signature($text) {
-  $regex = "/^-{2,3}$[\s\S]*/m";
-  preg_match($regex, $text, $matches);
-  if (!empty($matches)) {
-    return $matches;
-  }
-  else {
-    return array();
-  }
 }
 
 /**
