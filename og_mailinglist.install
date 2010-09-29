@@ -10,10 +10,10 @@ function og_mailinglist_install() {
   add_groups_to_og_mailinglist();
   
   if ($success) {
-    drupal_set_message(st('OG_Mailinglist module installed tables successfully.'));
+    drupal_set_message(st('OG Mailinglist module installed tables successfully.'));
   }
   else {
-    drupal_set_message(st('The installation of OG_Mailinglist module failed.'), 'error');
+    drupal_set_message(st('The installation of the OG Mailinglist tables failed.'), 'error');
   }
 }
 
