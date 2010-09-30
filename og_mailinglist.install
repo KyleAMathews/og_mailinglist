@@ -27,7 +27,7 @@ function og_mailinglist_uninstall() {
     variable_del($row->name);
   }
 
-  drupal_set_message(t('OG_Mailinglist has been uninstalled.'));
+  drupal_set_message(t('OG Mailinglist has been uninstalled.'));
 }
 
 /**

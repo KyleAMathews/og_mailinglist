@@ -43,7 +43,7 @@ function _og_mailinglist_process_email($raw_email) {
     }
 
     if (empty($email['headers']['subject'])) {
-      throw new Exception(t("It seems your email was sent without a subject. Please try resending your message with a subject. If this problem continues, please contact a site administrator."));
+      $email['headers']['subject'] = t('(no subject)');
     }
 
     // Parse the group name from the email. Regex borrowed from valid_email_address().
