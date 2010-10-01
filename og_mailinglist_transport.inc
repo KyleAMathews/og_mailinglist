@@ -339,7 +339,6 @@ function _og_mailinglist_email_node_email($email, $node) {
   $headers = $email['structure']->headers;
   unset($email['structure']->headers);
   $email['new_email_text'] = _og_mailinglist_encode_email(array($email['structure']));
-  
   // Send it off.
   _og_mailinglist_send_raw_email($headers, $email['new_email_text'], $node);
 
@@ -665,12 +664,14 @@ function _og_mailinglist_encode_email($structure, $boundary = "", $email = "") {
 
 function _og_mailinglist_encode_email_headers($array) {
   $header = "";
-  foreach ($array as $key => $value) {
-    // We remove quoted-printable as content-transfer-encoding
-    // because mime_decode decodes that and PHP doesn't have a function
-    // AFAIK to reencode the text as quoted-printable.
-    if ($value && $value !== "quoted-printable") { 
-      $header .= capitalize_headers($key, " -") . ": " . $value . "\n";  
+  if (!empty($array)) {
+    foreach ($array as $key => $value) {
+      // We remove quoted-printable as content-transfer-encoding
+      // because mime_decode decodes that and PHP doesn't have a function
+      // AFAIK to reencode the text as quoted-printable.
+      if ($value && $value !== "quoted-printable") { 
+        $header .= capitalize_headers($key, " -") . ": " . $value . "\n";  
+      }
     }
   }
   
@@ -805,14 +806,14 @@ function _og_mailinglist_add_footer($email, $footer) {
 
 function _og_mailinglist_send_raw_email($headers, $body, $node) {
   $mailer = og_mailinglist_create_mailer();
-  $mailer->IsSMTP();
-  $mailer->Host= "127.0.0.1";
-  $mailer->ClearAddresses();
+//  $mailer->IsSMTP();
+//  $mailer->Host= "127.0.0.1";
+//  $mailer->ClearAddresses();
 
   foreach($headers as $key => $value) {
     switch ($key) {
       case 'date':
-	$mailer->Date = $value;
+        $mailer->AddCustomHeader($mailer->HeaderLine("Date", $value));
         break;
       case 'subject':
 	$mailer->Subject = $value;
@@ -842,8 +843,16 @@ function _og_mailinglist_send_raw_email($headers, $body, $node) {
         } else
           $mailer->From = $value;
         break;
+      case 'Message-ID':
+        $mailer->MessageID = $value;
+        break;
+      case 'mime-version':
+        // Do nothing as PHPMailer will add this.
+        break;
       default:
-        $mailer->AddCustomHeader($key . ':' . $value);
+        if (!empty($value)) {
+          $mailer->AddCustomHeader($key . ':' . $value);
+        }
     }
   }
 
