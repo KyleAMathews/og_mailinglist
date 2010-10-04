@@ -805,14 +805,16 @@ function _og_mailinglist_add_footer($email, $footer) {
 
 function _og_mailinglist_send_raw_email($headers, $body, $node) {
   $mailer = og_mailinglist_create_mailer();
-  $mailer->IsSMTP();
-  $mailer->Host= "127.0.0.1";
+  //$mailer->SMTPDebug  = 2;
   $mailer->ClearAddresses();
 
   foreach($headers as $key => $value) {
     switch ($key) {
       case 'date':
 	$mailer->Date = $value;
+        break;
+      case 'Message-ID':
+        $mailer->MessageID = $value;
         break;
       case 'subject':
 	$mailer->Subject = $value;
@@ -836,7 +838,7 @@ function _og_mailinglist_send_raw_email($headers, $body, $node) {
 	  }
         break;
       case 'from':
-        if (preg_match("/(^<)*<(.*?)>/", $value, $matches)) { 
+        if (preg_match("/([^<]*)<(.*?)>/", $value, $matches)) { 
           $mailer->From = $matches[2];
           $mailer->FromName = $matches[1];
         } else
