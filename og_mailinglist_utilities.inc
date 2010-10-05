@@ -264,7 +264,7 @@ function og_mailinglist_phpmailer_load_library() {
     }
     // If PHPMailer is not already loaded, then try from module subdirectory.
     if (!class_exists('PHPMailer')) {
-      $phpmailer_library = './'. drupal_get_path('module', 'og_mailinglist') .'/PHPMailer/class.phpmailer.php';
+      $phpmailer_library = './'. drupal_get_path('module', 'og_mailinglist') .'/phpmailer/class.phpmailer.php';
       if (file_exists($phpmailer_library)) {
         include_once $phpmailer_library;
       }
