@@ -410,8 +410,18 @@ function _og_mailinglist_parse_email($email) {
 
   // Last ditch attempt - use the body as-is.
   if (!isset($email['text'])) {
-    $email['text'] = $structure->body;
+    // Try to convert character set to UTF-8.
+    if (!empty($structure->ctype_parameters['charset'])) {
+      $email['text'] = drupal_convert_to_utf8($structure->body, $structure->ctype_parameters['charset']);
+    } else {
+      $email['text'] = $structure->body;
+    }
     $email['html'] = check_markup($email['text']);
+  }
+
+  // Convert the subject to UTF-8.
+  if (!empty($structure->ctype_parameters['charset'])) {
+    $email['headers']['subject'] = drupal_convert_to_utf8($email['headers']['subject'], $structure->ctype_parameters['charset']);
   }
 
   // TODO figure out how to pull out sane HTML w/o funky css or other oddities.
