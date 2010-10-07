@@ -423,16 +423,7 @@ function _og_mailinglist_parse_email($email) {
  
   return $email;  
 }
-// TODO fix attachments for filefield, setup endpoint + script posting following mimemail style w/ check + change exim script (restart exim!)
-/*
-Posting a string:
-
-curl -d “String to post” “http://www.domain.com/file.php”
-
-Posting the contents of a file
-
-curl -d @file_to_post.txt “http://www.domain.com/file.php”
-*/
+// TODO fix attachments for filefield
 
 function _og_mailinglist_parse_attachment($part) {
   $info['data'] = $part->body;
