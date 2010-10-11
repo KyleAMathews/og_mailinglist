@@ -3,15 +3,13 @@ OG Mailinglist - Turns Drupal into a multi-group email list.
 
 OG Mailinglist allows users to start new posts by email and post comments on existing discussions by simply replying to emails.  You get the best of both worlds: a browser-based discussion site and an email-based list.
 
-See the README.TXT file for more information on the module.
-
 
 REQUIREMENTS
 
 * A Mail Transfer Agent (MTA) - This module plugs directly into your MTA so emails can be handled immediately upon receipt.  Most modules use POP mailboxes, and while this adds portability, it adds a delay to the system.  With the method this modules uses, the MTA triggers the module as part of its normal email delivery process.
-Right now the only fully supported MTA is Exim. If you use another MTA, look in the issue queue for issues on other MTAs and offer help. Soon I'd like all MTAs to be supported.
+Right now the only fully supported MTAs are Exim and QMail. Postfix support is close to being committed. See http://drupal.org/node/771704 If you use another MTA, look in the issue queue for issues on other MTAs and offer help or start a new one.
 
-* Organic Groups - This module assumes you are using a group-oriented web site.  This module allows for a list-per-group.
+* Organic Groups - This module assumes you are using a group-oriented web site.  This module allows for one list per group.
 
 * PHPMailer 5
 
@@ -25,9 +23,9 @@ INSTALLATION INSTRUCTIONS:
 
 * Install the PHP library mimeDecode. On Debian/Ubuntu run from the command line, "apt-get install php-mail-mimedecode". You can also download the file directly from http://pear.php.net/package/Mail_mimeDecode and add the file either as a subdirectory to og_mailinglist or to the libraries folder. Note, mimeDecode depends on PHP PEAR, which sould be installed on any recent install of PHP but if you get weird errors, this might be something worth checking.
 
-* Go to the Modules page in Drupal and enable the module (like normal).  After saving, navigate to admin/og_mailinglist and configure per your server setup.
+* Go to the Modules page in Drupal and enable the module (like normal).  After saving, navigate to admin/og/og_mailinglist and configure per your server setup.
 
-* To setup og_mailinglist for incoming email, follow the installation instructions for your Mail Transfer Agent in the INSTALL.txt file found in its subdirectory (e.g. exim_og_mailinglist). For now, OG Mailinglist only works with Exim.
+* To setup og_mailinglist for incoming email, follow the installation instructions for your Mail Transfer Agent in the INSTALL.txt file found in its subdirectory (e.g. exim_og_mailinglist).
 
 * To hide quoted parts of email messages, enable the provided input filter "Hide quoted text from comments created via email" at admin/settings/filter and rearrange the filters to set this one first. Note, that for this to work, your input filter(s) will need to allow both the <span> and <div> HTML tags.
   
@@ -36,3 +34,4 @@ INSTALLATION INSTRUCTIONS:
 FAQ
 Q: I have an existing OG site that I want to install OG Mailinglist on but I don't want people to be subscribed to the mailinglist right away when I install the module. How do I do this?
 A: Once the OG Mailinglist is installed, you can set the default subscription setting for people joining a group on the OG Mailinglist admin page. But as OG Mailinglist automatically generates subscriptions for existing users on install, to change the default subscription to "no email" you'll need to change a bit of code. Open the og_mailinglist_api.inc file and find the og_mailinglist_save_group_subscriptions() function. Then for the insert function, change 'email' to 'no email'. See http://drupal.org/node/916934 for more on this.
+

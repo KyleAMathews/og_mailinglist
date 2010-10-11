@@ -449,7 +449,6 @@ function _og_mailinglist_parse_content($part) {
   // Try to convert character set to UTF-8.
   if (!empty($part->ctype_parameters['charset'])) {
     $content = drupal_convert_to_utf8($content, $part->ctype_parameters['charset']);
-    //$content = iconv($part->ctype_parameters['charset'], 'utf-8', $content);
   }
 
   return $content;
