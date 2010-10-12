@@ -227,7 +227,7 @@ function og_mailinglist_delete_group($nid) {
            WHERE nid = %d", $nid);
 }
 
-function _og_mailinglist_get_thread_parent_messageid($in_reply_to_message_id) {
+function _og_mailinglist_get_thread_parent_messageid($in_reply_to_message_id, $references) {
   if (empty($in_reply_to_message_id)) {
     return;
   }
@@ -238,11 +238,24 @@ function _og_mailinglist_get_thread_parent_messageid($in_reply_to_message_id) {
   if (!empty($parent_message_id)) {
     return $parent_message_id;
   }
-  else {
-    return db_result(db_query("SELECT parent_message_id
-                                FROM {og_mailinglist_source}
-                                WHERE references_header LIKE '%%%s%'", $in_reply_to_message_id));
+
+  // Try to get the parent message-id from one of the message-ids in the references header.
+  $references = str_replace("\r\n", "", $references);
+  $refs = str_replace("\n", "", $references);
+  $refs_array = explode(" ", $refs);
+
+  foreach ($refs_array as $reference) {
+    if(!empty($reference)) {
+        $parent_message_id = db_result(db_query("SELECT parent_message_id
+                              FROM {og_mailinglist_source}
+                              WHERE message_id = '%s'", $reference));
+
+        if (!empty($parent_message_id)) {
+          return $parent_message_id;
+        }
+    }
   }
+ 
 }
 
 function _og_mailinglist_get_nid_from_parent_messageid($message_id) {

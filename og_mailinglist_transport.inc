@@ -248,7 +248,7 @@ function og_mailinglist_save_comment($email) {
   $cid = 1 + db_result(db_query("SELECT cid FROM {comments} ORDER BY cid DESC LIMIT 1"));
   
   // Log that comment came from email so og_mailinglist_phpmailer doesn't send an email as well.
-  $parent_message_id = _og_mailinglist_get_thread_parent_messageid($email['headers']['in-reply-to']);
+  $parent_message_id = _og_mailinglist_get_thread_parent_messageid($email['headers']['in-reply-to'], $email['headers']['references']);
   og_mailinglist_log_email_sent('email', $nid, $cid, $email['headers']['message-id'], $email['headers']['in-reply-to'], $email['headers']['references'], $parent_message_id);
   
   // Save the new comment.
@@ -813,7 +813,7 @@ function _og_mailinglist_send_raw_email($raw_email) {
 function og_mailinglist_parse_nid($email, $headers) {
   $nid = "";
   // Check the in-reply-to header.
-  $parent_message_id = _og_mailinglist_get_thread_parent_messageid($headers['in-reply-to']);
+  $parent_message_id = _og_mailinglist_get_thread_parent_messageid($headers['in-reply-to'], $headers['references']);
   $nid = _og_mailinglist_get_nid_from_parent_messageid($parent_message_id);
 
   if (!empty($nid)) {
