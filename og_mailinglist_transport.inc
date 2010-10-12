@@ -140,19 +140,26 @@ function _og_mailinglist_process_email($raw_email) {
         og_mailinglist_save_node($email);
         exit(0); // So we don't save a comment as well
       }
-      
-      // TODO -- this is incredibly buggy right now. Every so often, seemingly random,
-      // this bit of code decides a comment is actually a new node. Turned off for now.
-      
-      // Is the subject line different than the expected node title?
-      // If the subject_nid is empty, that means the subject is new so email is new post.
-      // If the subject_nid is different, that also means the email is a new post but
-      // that it coincidentally matched an earlier post.
-      //$subject_nid = _og_mailinglist_nid_of_subject($email['structure']->headers['subject']);
-      //if (!empty($subect_nid) || $subject_nid != $email['nid']) {
-      //  og_mailinglist_save_node($email);
-      //  exit(0); // So we don't save a comment as well.
-      //}
+
+      // Check if the thread was forked by comparing the email subject to the node's title.
+      // The levenshtein distance between a reply and node title should be 4 (e.g. "a subject" and "Re: a subject").
+      // I added a few more to the distance to account for oddness in foreign languages but
+      // is still small enough to catch any substantive subject change.
+      $node = node_load($email['nid']);
+
+      // Remove the group identifier (e.g. [a-group]) from the subject as it's not in the node title.
+      $treated_subject =  preg_replace("/^[RrEe:]{3}\s\[[\w-]*\]/", "", $email['headers']['subject']);
+
+      if (levenshtein($node->title, $treated_subject) > 7) {
+        // The subject was changed so we'll create a new node now intead of a comment.
+        // Unset the in-reply-to and references headers so this new thread doesn't get merged with the old thread.
+        unset($email['headers']['in-reply-to']);
+        unset($email['structure']->headers['in-reply-to']);
+        unset($email['headers']['references']);
+        unset($email['structure']->headers['references']);
+        og_mailinglist_save_node($email);
+        exit(0); // So we don't save a comment as well.
+      }
       
       // If we got this far, the email is definitely intended as a new comment.
       og_mailinglist_save_comment($email);
