@@ -17,17 +17,18 @@ og_mailinglist_phpmailer_load_library();
  */
 function og_mailinglist_post() {
   $message = $_POST['message'];
-  $token   = $_POST['token'];
+  $token = $_POST['token'];
+  $group_name = $_POST['group_name'];
 
   $hash = md5(variable_get('og_mailinglist_incoming_key', '**') . $message);
   if ($hash != $token) {
     watchdog('access denied', 'Authentication error for POST e-mail. Check that you\'ve set the validation string in /admin/settings/og_mailinglist and in site_info.php', NULL, WATCHDOG_WARNING);
     return drupal_access_denied();
   }
-  _og_mailinglist_process_email($message);
+  _og_mailinglist_process_email($message, $group_name);
 }
 
-function _og_mailinglist_process_email($raw_email) {
+function _og_mailinglist_process_email($raw_email, $group_name) {
   try {
     $email = array();
 
@@ -48,11 +49,13 @@ function _og_mailinglist_process_email($raw_email) {
 
     // Parse the group name from the email. Regex borrowed from valid_email_address().
     $server_string = variable_get("og_mailinglist_server_string", "");
-    if (preg_match("/([a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?\`\|\{\}~\']+)@" . $server_string . "/", $email['headers']['to'], $matches)) {
-      $group_name = $matches[1];
-    }
-    if (preg_match("/([a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?\`\|\{\}~\']+)@" . $server_string . "/", $email['headers']['cc'], $matches)) {
-      $group_name = $matches[1];
+    if (empty($group_name)) {
+      if (preg_match("/([a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?\`\|\{\}~\']+)@" . $server_string . "/", $email['headers']['to'], $matches)) {
+        $group_name = $matches[1];
+      }
+      if (preg_match("/([a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?\`\|\{\}~\']+)@" . $server_string . "/", $email['headers']['cc'], $matches)) {
+        $group_name = $matches[1];
+      }
     }
     
     // Did we actually get email text back? If not, throw an exception.
