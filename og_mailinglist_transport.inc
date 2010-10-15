@@ -17,17 +17,18 @@ og_mailinglist_phpmailer_load_library();
  */
 function og_mailinglist_post() {
   $message = $_POST['message'];
-  $token   = $_POST['token'];
+  $token = $_POST['token'];
+  $group_name = $_POST['group_name'];
 
   $hash = md5(variable_get('og_mailinglist_incoming_key', '**') . $message);
   if ($hash != $token) {
     watchdog('access denied', 'Authentication error for POST e-mail. Check that you\'ve set the validation string in /admin/settings/og_mailinglist and in site_info.php', NULL, WATCHDOG_WARNING);
     return drupal_access_denied();
   }
-  _og_mailinglist_process_email($message);
+  _og_mailinglist_process_email($message, $group_name);
 }
 
-function _og_mailinglist_process_email($raw_email) {
+function _og_mailinglist_process_email($raw_email, $group_name) {
   try {
     $email = array();
 
@@ -48,11 +49,13 @@ function _og_mailinglist_process_email($raw_email) {
 
     // Parse the group name from the email. Regex borrowed from valid_email_address().
     $server_string = variable_get("og_mailinglist_server_string", "");
-    if (preg_match("/([a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?\`\|\{\}~\']+)@" . $server_string . "/", $email['headers']['to'], $matches)) {
-      $group_name = $matches[1];
-    }
-    if (preg_match("/([a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?\`\|\{\}~\']+)@" . $server_string . "/", $email['headers']['cc'], $matches)) {
-      $group_name = $matches[1];
+    if (empty($group_name)) {
+      if (preg_match("/([a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?\`\|\{\}~\']+)@" . $server_string . "/", $email['headers']['to'], $matches)) {
+        $group_name = $matches[1];
+      }
+      if (preg_match("/([a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?\`\|\{\}~\']+)@" . $server_string . "/", $email['headers']['cc'], $matches)) {
+        $group_name = $matches[1];
+      }
     }
     
     // Did we actually get email text back? If not, throw an exception.
@@ -140,19 +143,26 @@ function _og_mailinglist_process_email($raw_email) {
         og_mailinglist_save_node($email);
         exit(0); // So we don't save a comment as well
       }
-      
-      // TODO -- this is incredibly buggy right now. Every so often, seemingly random,
-      // this bit of code decides a comment is actually a new node. Turned off for now.
-      
-      // Is the subject line different than the expected node title?
-      // If the subject_nid is empty, that means the subject is new so email is new post.
-      // If the subject_nid is different, that also means the email is a new post but
-      // that it coincidentally matched an earlier post.
-      //$subject_nid = _og_mailinglist_nid_of_subject($email['structure']->headers['subject']);
-      //if (!empty($subect_nid) || $subject_nid != $email['nid']) {
-      //  og_mailinglist_save_node($email);
-      //  exit(0); // So we don't save a comment as well.
-      //}
+
+      // Check if the thread was forked by comparing the email subject to the node's title.
+      // The levenshtein distance between a reply and node title should be 4 (e.g. "a subject" and "Re: a subject").
+      // I added a few more to the distance to account for oddness in foreign languages but
+      // is still small enough to catch any substantive subject change.
+      $node = node_load($email['nid']);
+
+      // Remove the group identifier (e.g. [a-group]) from the subject as it's not in the node title.
+      $treated_subject =  preg_replace("/^[RrEe:]{3}\s\[[\w-]*\]/", "", $email['headers']['subject']);
+
+      if (levenshtein($node->title, $treated_subject) > 7) {
+        // The subject was changed so we'll create a new node now intead of a comment.
+        // Unset the in-reply-to and references headers so this new thread doesn't get merged with the old thread.
+        unset($email['headers']['in-reply-to']);
+        unset($email['structure']->headers['in-reply-to']);
+        unset($email['headers']['references']);
+        unset($email['structure']->headers['references']);
+        og_mailinglist_save_node($email);
+        exit(0); // So we don't save a comment as well.
+      }
       
       // If we got this far, the email is definitely intended as a new comment.
       og_mailinglist_save_comment($email);
@@ -248,7 +258,7 @@ function og_mailinglist_save_comment($email) {
   $cid = 1 + db_result(db_query("SELECT cid FROM {comments} ORDER BY cid DESC LIMIT 1"));
   
   // Log that comment came from email so og_mailinglist_phpmailer doesn't send an email as well.
-  $parent_message_id = _og_mailinglist_get_thread_parent_messageid($email['headers']['in-reply-to']);
+  $parent_message_id = _og_mailinglist_get_thread_parent_messageid($email['headers']['in-reply-to'], $email['headers']['references']);
   og_mailinglist_log_email_sent('email', $nid, $cid, $email['headers']['message-id'], $email['headers']['in-reply-to'], $email['headers']['references'], $parent_message_id);
   
   // Save the new comment.
@@ -414,8 +424,18 @@ function _og_mailinglist_parse_email($email) {
 
   // Last ditch attempt - use the body as-is.
   if (!isset($email['text'])) {
-    $email['text'] = $structure->body;
+    // Try to convert character set to UTF-8.
+    if (!empty($structure->ctype_parameters['charset'])) {
+      $email['text'] = drupal_convert_to_utf8($structure->body, $structure->ctype_parameters['charset']);
+    } else {
+      $email['text'] = $structure->body;
+    }
     $email['html'] = check_markup($email['text']);
+  }
+
+  // Convert the subject to UTF-8.
+  if (!empty($structure->ctype_parameters['charset'])) {
+    $email['headers']['subject'] = drupal_convert_to_utf8($email['headers']['subject'], $structure->ctype_parameters['charset']);
   }
 
   // TODO figure out how to pull out sane HTML w/o funky css or other oddities.
@@ -427,16 +447,7 @@ function _og_mailinglist_parse_email($email) {
  
   return $email;  
 }
-// TODO fix attachments for filefield, setup endpoint + script posting following mimemail style w/ check + change exim script (restart exim!)
-/*
-Posting a string:
-
-curl -d “String to post” “http://www.domain.com/file.php”
-
-Posting the contents of a file
-
-curl -d @file_to_post.txt “http://www.domain.com/file.php”
-*/
+// TODO fix attachments for filefield
 
 function _og_mailinglist_parse_attachment($part) {
   $info['data'] = $part->body;
@@ -452,7 +463,6 @@ function _og_mailinglist_parse_content($part) {
   // Try to convert character set to UTF-8.
   if (!empty($part->ctype_parameters['charset'])) {
     $content = drupal_convert_to_utf8($content, $part->ctype_parameters['charset']);
-    //$content = iconv($part->ctype_parameters['charset'], 'utf-8', $content);
   }
 
   return $content;
@@ -870,7 +880,7 @@ function _og_mailinglist_send_raw_email($headers, $body, $node) {
 function og_mailinglist_parse_nid($email, $headers) {
   $nid = "";
   // Check the in-reply-to header.
-  $parent_message_id = _og_mailinglist_get_thread_parent_messageid($headers['in-reply-to']);
+  $parent_message_id = _og_mailinglist_get_thread_parent_messageid($headers['in-reply-to'], $headers['references']);
   $nid = _og_mailinglist_get_nid_from_parent_messageid($parent_message_id);
 
   if (!empty($nid)) {
