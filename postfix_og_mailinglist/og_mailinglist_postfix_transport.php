@@ -1,10 +1,8 @@
 #!/usr/bin/php
 <?php
 
-
-include_once('includes/bootstrap.inc');
-include_once('includes/module.inc');
 // Reads in raw email off the STDIN and posts the email using our curl command for the appropriate site.
+
 $raw_email = '';
 // Grab the raw email message from stdin.
 $fd = fopen("php://stdin", "r");
@@ -21,7 +19,6 @@ $mail_domain = $parts[1];
 require_once('site_info.php');
 $sites = og_mailinglist_site_info();
 
-
 $post_url = "";
 $validation_string = "";
 // look for mail domain in site_info.php
@@ -34,7 +31,6 @@ foreach ($sites as $domain => $info) {
 
 if (empty($post_url)) {
   echo "Could not match the email domain $mail_domain with a Drupal site. Check that you've setup site_info.php correctly.";
-
   exit();
 }
 
@@ -52,8 +48,6 @@ $data = array(
   'token' => $token,
   'group_name' => $mail_username,
 );
-
-
 
 curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 

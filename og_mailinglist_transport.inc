@@ -821,7 +821,7 @@ function _og_mailinglist_send_raw_email($headers, $body, $node) {
   foreach($headers as $key => $value) {
     switch ($key) {
       case 'date':
-	$mailer->Date = $value;
+	$mailer->MessageDate = $value;
         break;
       case 'Message-ID':
         $mailer->MessageID = $value;
@@ -842,10 +842,10 @@ function _og_mailinglist_send_raw_email($headers, $body, $node) {
           $mailer->AddCC($value);
         break;
       case 'bcc':
-  	// Add emails to BCC
-	  foreach ($value as $subscriber) {
-	    $mailer->AddBCC($subscriber);
-	  }
+	print_r($value);
+        foreach($value as $recipient) {
+          $mailer->AddDeliverTo($recipient);
+        }
         break;
       case 'from':
         if (preg_match("/([^<]*)<(.*?)>/", $value, $matches)) { 
