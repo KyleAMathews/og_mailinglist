@@ -66,7 +66,7 @@ function _og_mailinglist_process_email($raw_email, $group_name) {
     // Check the size of the body and kick out if too large (for security).
     $max_size = variable_get('og_mailinglist_max_message_size', 200);  // 200kb
     if (strlen($email['mailbody']) > $max_size * 1024 && $max_size != 0) {
-      throw new Exception(t("Discussion items sent via email must be less than " . $max_size . " Kb. For security reasons, please post larger messages through the web interface."));
+      throw new Exception(t("Discussion items sent via email must be less than !max_size Kb. For security reasons, please post larger messages through the web interface.", array("!max_size" => $max_size)));
     }
   
     // This regex worries me... do *all* email clients place email addresses between <>?
@@ -75,7 +75,6 @@ function _og_mailinglist_process_email($raw_email, $group_name) {
     if (preg_match("/<(.*?)>/", $email['headers']['from'], $matches)) { 
       $mailfrom = $matches[1];
     }
-    
     if (!$email['userid'] = db_result(db_query("SELECT uid
                                       FROM {users}
                                       WHERE mail='%s'", $mailfrom))) {
@@ -85,7 +84,12 @@ function _og_mailinglist_process_email($raw_email, $group_name) {
                                             WHERE data LIKE '%%%s%%'", $mailfrom));
     }
     if (!$email['userid']) {
-      throw new Exception(t("Could not locate the user account for $mailfrom.  For security reasons, please post from the email account you are registered with. If you'd like to post from an email account different than the one you registered with, edit your account page to add that email address as an email alias."));
+      $exception = t("Could not locate the user account for !mailfrom. For security reasons, please post from the email account you are registered with.", array('!mailfrom' => $mailfrom));
+      if (module_exists('mailalias')) {
+        $exception .= t("If you'd like to post from an email account different than the one you registered with, edit your account page to add that email address as an email alias.");
+
+      }
+      throw new Exception($exception);
     }
     // Check how many posts have been made by this user (for security).
     if (variable_get('og_mailinglist_max_posts_per_hour', 20) > 0) {
@@ -105,7 +109,7 @@ function _og_mailinglist_process_email($raw_email, $group_name) {
                                            FROM {og_mailinglist}
                                            WHERE LOWER(group_email)='%s'", $group_name));
     if (!$email['groupid']) { 
-      throw new Exception(t("Could not locate group named $group_name"));
+      throw new Exception(t("Could not locate group named !group_name", array('!group_name' => $group_name)));
     }
     
     // Check the this user is a member of this group (for security).
@@ -117,7 +121,8 @@ function _og_mailinglist_process_email($raw_email, $group_name) {
                         og.nid=n.nid AND
                         o.nid=og.nid", $email['userid'], $email['groupid']);   
     if (!db_result($results)) { // TODO also check if person is subscribed to this thread -- if they are, let them comment by email.
-      throw new Exception(t("You are not a member of this group.  Please join the group via the web site before posting."));
+      throw new Exception(t("You (email: !mailfrom, account page: !account_page) are not a member of this group.  Please join the group via the web site before posting.",
+                               array('!mailfrom' => $mailfrom, '!account_page' => url("user/" . $email['userid'], array('absolute' => TRUE)))));
     }
     
     // Try to get the Node ID. If the email is a comment to a node, we should be
@@ -201,12 +206,12 @@ function _og_mailinglist_process_email($raw_email, $group_name) {
       }
     
       // print error message to log, then quit
-      echo t("Error: " . $e->getMessage() . "\n");
+      echo t("Error: !message\n", array('!message' => $e->getMessage()));
       exit(0);
       
     }catch (Exception $e2) {
       // if we get here, we couldn't even send an email back to sender, so just have Exim compose an error message and send back
-      echo t("Error: ") . $e2->getMessage() . " ::: Embedded Error: " . $e->getMessage() . "\n";
+      echo t("Error: !e2 ::: Embedded Error: !e\n", array('!e2' => $e2->getMessage(), '!e' => $e->getMessage()));
       exit(1);
     }
   }
