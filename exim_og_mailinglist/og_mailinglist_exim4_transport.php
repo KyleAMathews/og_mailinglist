@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/php -q
 <?php
 
 // Reads in raw email off the STDIN and posts the email using our curl command for the appropriate site.
@@ -35,7 +35,7 @@ $token = md5($validation_string . $raw_email);
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, FALSE);
 curl_setopt($ch, CURLOPT_POST, 1);
-curl_setopt($ch, CURLOPT_HEADER, 1);
+curl_setopt($ch, CURLOPT_HEADER, 0);
 curl_setopt($ch, CURLOPT_URL, $post_url);
 
 //prepare the field values being posted to the service

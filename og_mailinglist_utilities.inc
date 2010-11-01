@@ -274,13 +274,28 @@ function og_mailinglist_phpmailer_load_library() {
   return class_exists('PHPMailer');
 }
 
+/**
+ * Gets the directory in which PHPMailer is stored (for plugins)
+ *
+ * @return
+ *  TRUE if the PHPMailer library is loaded, FALSE otherwise.
+ */
+function og_mailinglist_get_phpmailer_plugin_dir() {
+  // First, try using libraries module.
+  if (module_exists('libraries')) {
+    // Let's see if PHPMailer is really available from libraries.
+    return './'. libraries_get_path('phpmailer') . '/';
+  }
+  return './'. drupal_get_path('module', 'og_mailinglist') .'/phpmailer/';
+}
+
 function og_mailinglist_mimeDecode_load_library() {
   if (!class_exists('Mail_mimeDecode')) {
   //check the standard include path for the file first
     include_once('Mail/mimeDecode.php');
  
     if (!class_exists('Mail_mimeDecode')) {
-    //next we'll try grabbing the file from a few default pear install locations.
+     //next we'll try grabbing the file from a few default pear install locations.
      if (file_exists('Mail/mimeDecode.php')) {
        include_once('Mail/mimeDecode.php');
      }

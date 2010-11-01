@@ -1,5 +1,6 @@
 <?php
 // $Id$
+include_once 'og_mailinglist_utilities.inc'; //needed to the hook_requirements to work right
 /**
  * Implementation of hook_install().
  */
