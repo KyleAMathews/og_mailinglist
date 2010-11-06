@@ -280,7 +280,7 @@ function og_mailinglist_phpmailer_load_library() {
  * @return
  *  TRUE if the PHPMailer library is loaded, FALSE otherwise.
  */
-function og_mailinglist_get_phpmailer_plugin_dir() {
+function _og_mailinglist_get_phpmailer_plugin_dir() {
   // First, try using libraries module.
   if (module_exists('libraries')) {
     // Let's see if PHPMailer is really available from libraries.
@@ -291,15 +291,9 @@ function og_mailinglist_get_phpmailer_plugin_dir() {
 
 function og_mailinglist_mimeDecode_load_library() {
   if (!class_exists('Mail_mimeDecode')) {
-  //check the standard include path for the file first
-    include_once('Mail/mimeDecode.php');
- 
-    if (!class_exists('Mail_mimeDecode')) {
-     //next we'll try grabbing the file from a few default pear install locations.
-     if (file_exists('Mail/mimeDecode.php')) {
-       include_once('Mail/mimeDecode.php');
-     }
-    }
+  //check the standard include path for the file first - note warning for file not found is suppressed by '@'
+    @include_once('Mail/mimeDecode.php');
+  //if the above failed - check some standard locations for this extension
     if (!class_exists('Mail_mimeDecode')) {
       if (file_exists('/usr/share/php/Mail/mimeDecode.php')) {
         include_once('/usr/share/php/Mail/mimeDecode.php');

@@ -190,7 +190,7 @@ function og_mailinglist_create_mailer() {
   og_mailinglist_phpmailer_load_library();
   module_load_include('inc', 'og_mailinglist', 'og_mailinglist_phpmailer_class');
   $mailer = new OGMailinglistPHPMailer(TRUE); // The TRUE param means it will throw exceptions on errors, which we need to catch.
-  $mailer->PluginDir = og_mailinglist_get_phpmailer_plugin_dir();
+  $mailer->PluginDir = _og_mailinglist_get_phpmailer_plugin_dir();
   $mailer->CharSet = 'UTF-8';
 
   return $mailer;

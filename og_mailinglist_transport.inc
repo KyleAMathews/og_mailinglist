@@ -820,7 +820,7 @@ function _og_mailinglist_add_footer($email, $footer) {
 
 function _og_mailinglist_send_raw_email($headers, $body, $node) {
   $mailer = og_mailinglist_create_mailer();
-  //$mailer->SMTPDebug  = 2;
+
   $mailer->ClearAddresses();
 
   foreach($headers as $key => $value) {
@@ -847,7 +847,6 @@ function _og_mailinglist_send_raw_email($headers, $body, $node) {
           $mailer->AddCC($value);
         break;
       case 'bcc':
-	//print_r($value);
         foreach($value as $recipient) {
           $mailer->AddDeliverTo($recipient);
         }
