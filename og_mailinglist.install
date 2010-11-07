@@ -1,6 +1,7 @@
 <?php
 // $Id$
 include_once 'og_mailinglist_utilities.inc'; //needed to the hook_requirements to work right
+
 /**
  * Implementation of hook_install().
  */
@@ -48,6 +49,18 @@ function og_mailinglist_requirements($phase) {
       // Provide a download link to the PHPMailer library.
       $requirements['og_mailinglist_phpmailer']['description'] = t('The <a href="@phpmailer">PHPMailer</a> library is missing or not installed correctly. <a href="@download">Download</a> and extract it to your <em>og_mailinglist</em> module directory. See the INSTALL.txt file for more information at path/to/drupal@install.', array('@phpmailer' => 'http://phpmailer.worxware.com/index.php?pg=phpmailer', '@download' => 'http://sourceforge.net/projects/phpmailer/files/phpmailer%20for%20php5_6/', '@install' => url(drupal_get_path('module', 'og_mailinglist') . '/INSTALL.txt')));
       $requirements['og_mailinglist_phpmailer']['severity'] = REQUIREMENT_ERROR;
+    }
+     og_mailinglist_mimeDecode_load_library();
+    $requirements['og_mailinglist_mimeDecode']['title'] = t('Mail_mimeDecode PEAR extension');
+    if (class_exists('Mail_mimeDecode')) {
+      $requirements['og_mailinglist_mimeDecode']['value'] = 'Mail_mimeDecode PEAR Extension found';
+      $requirements['og_mailinglist_mimeDecode']['severity'] = REQUIREMENT_OK;
+    }
+    else {
+      // Required library wasn't found.
+      $requirements['og_mailinglist_mimeDecode']['value'] = t('Not found');
+      $requirements['og_mailinglist_mimeDecode']['description'] = t('The Mail_mimeDecode PEAR extension is missing or not installed correctly. Check that the extension is installed and that your PHP include_path is correct. See the INSTALL.txt file for more information at path/to/drupal@install.', array('@install' => url(drupal_get_path('module', 'og_mailinglist') . '/INSTALL.txt')));
+      $requirements['og_mailinglist_mimeDecode']['severity'] = REQUIREMENT_ERROR;
     }
   }
 
