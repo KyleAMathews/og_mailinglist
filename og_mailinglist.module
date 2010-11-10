@@ -303,7 +303,7 @@ function og_mailinglist_group_form_validate($element, &$form_state) {
     $sql .= ' AND nid != ' . $form_state['values']['nid'];
   }
   if (db_result(db_query($sql, $element['#value']))) {
-    form_error($element, t('Someone has already choosen that group email address. Please choose another.'));
+    form_error($element, t('Someone has already chosen that group email address. Please choose another.'));
   }
   else if (preg_match('!^[\.a-z0-9_-]+$!', $element['#value'])) {
     return true;
@@ -369,8 +369,7 @@ function og_mailinglist_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       case 'insert':
       case 'update':
       case 'delete':
-// Disabling this for now. Spaces deletes and recreates a group when you switch presets.
-//        og_mailinglist_delete_group($node->nid);
+        og_mailinglist_delete_group($node->nid);
         break;
     }
   }
