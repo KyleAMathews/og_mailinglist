@@ -7,13 +7,15 @@ OG Mailinglist allows users to start new posts by email and post comments on exi
 REQUIREMENTS
 
 * A Mail Transfer Agent (MTA) - This module plugs directly into your MTA so emails can be handled immediately upon receipt.  Most modules use POP mailboxes, and while this adds portability, it adds a delay to the system.  With the method this modules uses, the MTA triggers the module as part of its normal email delivery process.
-Right now the only fully supported MTAs are Exim and QMail. Postfix support is close to being committed. See http://drupal.org/node/771704 If you use another MTA, look in the issue queue for issues on other MTAs and offer help or start a new one.
+Right now the only fully supported MTAs are Exim, QMail and Postfix. If you use another MTA, look in the issue queue for issues on other MTAs and offer help or start a new one.
 
 * Organic Groups - This module assumes you are using a group-oriented web site.  This module allows for one list per group.
 
 * PHPMailer 5
 
 * PHP libraries Mailparse and mimeDecode
+
+* Sendmail binary - At the moment, og_mailinglist directly executes the sendmail binary to send some (but not all) messages. You will therefore need to have a sendmail binary in your path, and not have PHP set up to disable the system function. Work is underway to remove this requirement.
 
 INSTALLATION INSTRUCTIONS:
 
