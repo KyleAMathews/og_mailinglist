@@ -87,7 +87,9 @@ function og_mailinglist_init() {
   drupal_add_js(drupal_get_path('module', 'og_mailinglist') . "/og_mailinglist.js");
 }
 
-/** Admin settings form */
+/**
+ * Admin settings form
+ */
 function og_mailinglist_admin_settings() {
   $form['og_mailinglist_server_string'] = array(
     '#title' => t('Domain name'),
