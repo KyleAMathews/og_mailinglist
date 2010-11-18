@@ -316,7 +316,7 @@ function og_mailinglist_update_6004() {
 
 function add_groups_to_og_mailinglist() {
   if (!module_exists('purl') && !module_exists('spaces_og')) {
-    $results = db_query("SELECT nid, title FROM node WHERE type = 'group'");
+    $results = db_query("SELECT nid, title FROM {node} WHERE type = 'group'");
    
     $groups = array();
    
