@@ -7,7 +7,7 @@ OG Mailinglist allows users to start new posts by email and post comments on exi
 REQUIREMENTS
 
 * A Mail Transfer Agent (MTA) - This module plugs directly into your MTA so emails can be handled immediately upon receipt.  Most modules use POP mailboxes, and while this adds portability, it adds a delay to the system.  With the method this modules uses, the MTA triggers the module as part of its normal email delivery process.
-Right now the only fully supported MTAs are Exim and QMail. Postfix support is close to being committed. See http://drupal.org/node/771704 If you use another MTA, look in the issue queue for issues on other MTAs and offer help or start a new one.
+Right now the only fully supported MTAs are Exim, QMail and Postfix. If you use another MTA, look in the issue queue for issues on other MTAs and offer help or start a new one.
 
 * Organic Groups - This module assumes you are using a group-oriented web site.  This module allows for one list per group.
 
@@ -15,9 +15,12 @@ Right now the only fully supported MTAs are Exim and QMail. Postfix support is c
 
 * PHP libraries Mailparse and mimeDecode
 
+* Sendmail-compatible MTA - At the moment, og_mailinglist directly executes the sendmail or sendmail-compatible binary to send emails. You will therefore need to have a sendmail-compatible binary in your path, and not have PHP set up to disable the system function. Work is underway to remove this requirement. See http://drupal.org/node/951018 for more information on this issue.
+
+
 INSTALLATION INSTRUCTIONS:
 
-* Unpack the og_mailinglist files into a subdirectory in the Drupal modules/ directory.  This is the same as installing any other Drupal module (see the Drupal manual for more information on general module installation).
+* The module should (generally) be uploaded to the sites/all/modules/ directory. See http://drupal.org/getting-started/install-contrib/modules for more help in installing Drupal contrib modules.
 
 * Download the latest PHPMailer 5.x to og_mailinglist/phpmailer or to libraries/phpmailer if you use the libraries module - http://kent.dl.sourceforge.net/project/phpmailer/phpmailer%20for%20php5_6/PHPMailer%20v5.1/PHPMailer_v5.1.tar.gz 
 

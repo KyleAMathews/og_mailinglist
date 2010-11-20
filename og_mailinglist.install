@@ -18,7 +18,8 @@ function og_mailinglist_install() {
     drupal_set_message(st('The installation of the OG Mailinglist tables failed.'), 'error');
   }
   
-  //set OGM's module_weight to be AFTER pathauto so our email footers always use the correct path
+  //set OGM's module_weight to be after pathauto so our email footers always use the correct path
+
   $weight = db_result(db_query("SELECT weight FROM {system} WHERE type = 'module' AND name = 'pathauto'"));
   db_query("UPDATE {system} SET weight = %d WHERE type = 'module' AND name = 'og_mailinglist'", $weight + 1);
 }
@@ -310,6 +311,18 @@ function og_mailinglist_update_6004() {
                      'default' => 0,
                      'length' => 512)
   );
+
+  return $ret;
+}
+
+/**
+* Change module weight to ensure we fire after pathauto if its present.
+*/
+function og_mailinglist_update_6005() {
+  $ret = array();
+  
+  $weight = db_result(db_query("SELECT weight FROM {system} WHERE type = 'module' AND name = 'pathauto'"));
+  db_query("UPDATE {system} SET weight = %d WHERE type = 'module' AND name = 'og_mailinglist'", $weight + 1);
 
   return $ret;
 }

@@ -87,7 +87,9 @@ function og_mailinglist_init() {
   drupal_add_js(drupal_get_path('module', 'og_mailinglist') . "/og_mailinglist.js");
 }
 
-/** Admin settings form */
+/**
+ * Admin settings form
+ */
 function og_mailinglist_admin_settings() {
   $form['og_mailinglist_server_string'] = array(
     '#title' => t('Domain name'),
@@ -375,6 +377,9 @@ function og_mailinglist_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   }
 }
 
+/**
+ * Implmentation of hook_comment().
+ */
 function og_mailinglist_comment($comment, $op) {
   // $comment can be an object or an array.
   $comment = (object)$comment;
