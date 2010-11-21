@@ -186,7 +186,7 @@ function og_mailinglist_style_node_message($node) {
 
   // Prepare node body for viewing.
   $node = og_mailinglist_render_node_body($node);
-  $body .= og_mailinglist_prepare_web_content($node->body); // TODO Test if names go out correctly + switch it to use watchdog.
+  $body .= og_mailinglist_prepare_web_content($node->body);
   $body .= "<br />\n";
   
   return $body;
@@ -194,7 +194,7 @@ function og_mailinglist_style_node_message($node) {
 
 function og_mailinglist_style_comment_message($comment) {
   $user = user_load(array('uid' => $comment->uid));
-  $body .= "<div style=\"" . MESSAGE_HEADER . "\"><strong>" .
+  $body = "<div style=\"" . MESSAGE_HEADER . "\"><strong>" .
     l((isset($user->realname) ? $user->realname : $user->name), "user/" . $user->uid, array('absolute' => TRUE))
     . "</strong> " . $user->mail . " " .
     date("d M Y — g:ia O", $comment->timestamp) . "</div>\n";

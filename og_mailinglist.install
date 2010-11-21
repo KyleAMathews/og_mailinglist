@@ -1,7 +1,6 @@
 <?php
 // $Id$
-include_once 'og_mailinglist_utilities.inc'; //needed to the hook_requirements to work right
-
+include_once 'og_mailinglist_utilities.inc'; //Load our utilities so the hook_requirements can call those functions.
 /**
  * Implementation of hook_install().
  */
@@ -17,11 +16,6 @@ function og_mailinglist_install() {
   else {
     drupal_set_message(st('The installation of the OG Mailinglist tables failed.'), 'error');
   }
-  
-  //set OGM's module_weight to be after pathauto so our email footers always use the correct path
-
-  $weight = db_result(db_query("SELECT weight FROM {system} WHERE type = 'module' AND name = 'pathauto'"));
-  db_query("UPDATE {system} SET weight = %d WHERE type = 'module' AND name = 'og_mailinglist'", $weight + 1);
 }
 
 /**
@@ -55,7 +49,9 @@ function og_mailinglist_requirements($phase) {
       $requirements['og_mailinglist_phpmailer']['description'] = t('The <a href="@phpmailer">PHPMailer</a> library is missing or not installed correctly. <a href="@download">Download</a> and extract it to your <em>og_mailinglist</em> module directory. See the INSTALL.txt file for more information at path/to/drupal@install.', array('@phpmailer' => 'http://phpmailer.worxware.com/index.php?pg=phpmailer', '@download' => 'http://sourceforge.net/projects/phpmailer/files/phpmailer%20for%20php5_6/', '@install' => url(drupal_get_path('module', 'og_mailinglist') . '/INSTALL.txt')));
       $requirements['og_mailinglist_phpmailer']['severity'] = REQUIREMENT_ERROR;
     }
-     og_mailinglist_mimeDecode_load_library();
+    
+    //Check for the Mail_mimeDecode library.
+    og_mailinglist_mimeDecode_load_library();
     $requirements['og_mailinglist_mimeDecode']['title'] = t('Mail_mimeDecode PEAR extension');
     if (class_exists('Mail_mimeDecode')) {
       $requirements['og_mailinglist_mimeDecode']['value'] = 'Mail_mimeDecode PEAR Extension found';
@@ -311,18 +307,6 @@ function og_mailinglist_update_6004() {
                      'default' => 0,
                      'length' => 512)
   );
-
-  return $ret;
-}
-
-/**
-* Change module weight to ensure we fire after pathauto if its present.
-*/
-function og_mailinglist_update_6005() {
-  $ret = array();
-  
-  $weight = db_result(db_query("SELECT weight FROM {system} WHERE type = 'module' AND name = 'pathauto'"));
-  db_query("UPDATE {system} SET weight = %d WHERE type = 'module' AND name = 'og_mailinglist'", $weight + 1);
 
   return $ret;
 }
