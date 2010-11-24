@@ -1,0 +1,118 @@
+og_mailing list: Installation in a Postfix environment.
+
+The integration between og_mailinglist and Postfix requires:
+
+1) Postfix having access to the og_mailinglist_postfix_transport.php script.
+2) A properly configured site_info.php
+
+Either:
+3) An alias address in a virtual domain, using a pipe command
+
+OR
+
+4) Definition of the email addresses
+5) The transport map
+6) The transport command
+
+Each of these elements are described below:
+
+==========================================================================
+
+1) Postfix having access to the og_mailinglist_postfix_transport.php script.
+
+The posting of messages into Drupal is accomplished by using Curl to
+post to a special url (in the format http://example.com/og_mailinglist).
+We suggest copying this script from your og_mailinglist folder to a location
+such as /etc/postfix/og_mailinglist. You will then want to set it up with
+the appropriate directory and file permissions such that Postfix can execute
+the script (perhaps as user nobody, group nogroup).
+
+2) A properly configured site_info.php
+--------------------------------------
+
+The script which does this work also needs to be supplied with configuration
+info - the URL to which it should post and the unique validation string
+that authenticates the script, in order to stop this URL from being abused.
+This validation string can be set on your website, via the path
+http://example.com/admin/og/og_mailinglist. site_info.php should be
+placed in the same directory in which the script was located (above). It
+may also need to have ownership and permissions modified to ensure the
+script can use it.
+
+It should look like this:
+
+<?php
+
+/*
+ * @return array of sites w/ associated POST urls.
+ */
+function og_mailinglist_site_info() {
+  return array (
+    'groups.example.com' => array(
+            'post_url' => 'http://www.example.com/og_mailinglist',
+            'validation_string' => 'my unguessable validation string',
+           ),
+  );
+}
+
+In the above example, the website is 'www.example.com', and email will
+be sent to groups.example.com.
+
+In addition to the above, to actually deliver an email, it expects the
+first argument to be the domain to which it should deliver (groups.example.com
+in the above configuration) and (on stdin) the message itself.
+
+3) An alias address in a virtual domain, using a pipe command
+-------------------------------------------------------------
+
+The simplest way of linking an address to the transport script is by using a
+pipe command in your Postfix alias file (as is often done for Mailman
+addresses):
+
+test:              "|/etc/postfix/og_mailinglist_script.sh ${DOMAIN}"
+
+Your script will need to invoke og_mailinglist_postfix_transport.php,
+sending the text of the message (which it received on stdin)
+to stdin of the script, and putting the domain (groups.example.com in our
+site_info.php above) into argv[1]. You may want to pipe stdout and stderr
+to a /tmp file while debugging.
+
+Sample test script:
+
+#!/bin/bash
+
+cat >/tmp/message.$$
+(cd /etc/postfix/og_mailinglist; cat /tmp/message.$$ | \
+  ./og_mailinglist_postfix_transport.php $1 >/tmp/message.$$.log 2>&1 )
+
+As mentioned above, if you follow step 2, you can stop here. The following steps
+provide an alternative to step 2 that may be preferable in some circumstances.
+
+==========================================================================
+
+4) Definition of the email addresses
+------------------------------------
+
+Instead of using a simple Mailman type pipe to a command, it is also possible to
+define email addresses in the normal way, then use a special transport (steps 4
+& 5) to handle delivery. You might want to do this if, like me, you define a
+good portion of your addresses via MySQL.
+
+A line in your virtual map might thus look like this:
+
+test@example.com @groups.example.com
+
+5) The transport map
+--------------------
+
+The transport map tells Postfix how to deliver email (/etc/postfix/transport):
+
+test@groups.example.com organic_groups:
+
+6) The transport command
+------------------------
+
+Finally, in /etc/postfix/master.cf, you want to define the 'organic_groups' transport...
+
+  flags=FR user=nobody directory=/etc/postfix/og_mailinglist \
+    argv=debug.sh ${domain}
