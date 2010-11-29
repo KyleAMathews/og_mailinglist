@@ -22,9 +22,9 @@ INSTALLATION INSTRUCTIONS:
 
 * The module should (generally) be uploaded to the sites/all/modules/ directory. See http://drupal.org/getting-started/install-contrib/modules for more help in installing Drupal contrib modules.
 
-* Download the latest PHPMailer 5.x to og_mailinglist/phpmailer or to libraries/phpmailer if you use the libraries module - http://kent.dl.sourceforge.net/project/phpmailer/phpmailer%20for%20php5_6/PHPMailer%20v5.1/PHPMailer_v5.1.tar.gz 
+* Download and unpack the latest PHPMailer 5.x then move the library to og_mailinglist/phpmailer or to libraries/phpmailer if you use the libraries module - http://kent.dl.sourceforge.net/project/phpmailer/phpmailer%20for%20php5_6/PHPMailer%20v5.1/PHPMailer_v5.1.tar.gz 
 
-* Install the PHP library mimeDecode. On Debian/Ubuntu run from the command line, "apt-get install php-mail-mimedecode". You can also download the file directly from http://pear.php.net/package/Mail_mimeDecode and add the file either as a subdirectory to og_mailinglist or to the libraries folder. Note, mimeDecode depends on PHP PEAR, which sould be installed on any recent install of PHP but if you get weird errors, this might be something worth checking.
+* Install the PHP library mimeDecode. On Debian/Ubuntu run from the command line, "apt-get install php-mail-mimedecode". You can also download the file directly from http://pear.php.net/package/Mail_mimeDecode and add the file either as a subdirectory to og_mailinglist or to the libraries folder. Note, mimeDecode depends on PHP PEAR, which sould be installed on any recent install of PHP but if you get weird errors, this might be something worth checking. (Note, this installation step is only necessary if you want members of your site to be able to send email to the site to start or respond to posts. If all posting will happen directly on the site, this step is unnecessary)
 
 * Go to the Modules page in Drupal and enable the module (like normal).  After saving, navigate to admin/og/og_mailinglist and configure per your server setup.
 
