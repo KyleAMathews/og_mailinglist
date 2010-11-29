@@ -10,7 +10,7 @@
  * Base PHPMailer for Drupal implementation with support for SMTP keep-alive
  * and setting a custom Return-Path.
  */
-class OGMailinglistPHPMailer extends PHPMailer {
+class OGMailinglistPHPMailer extends DrupalPHPMailer {
   /**
    * Stores the addresses we want to deliver the message to.
    */
@@ -28,6 +28,13 @@ class OGMailinglistPHPMailer extends PHPMailer {
     // Throw exceptions instead of dying (since 5.0.0).
     if (method_exists(get_parent_class($this), '__construct')) {
       parent::__construct(TRUE);
+    }
+  }
+
+  public function __destruct() {
+    // Throw exceptions instead of dying (since 5.0.0).
+    if (method_exists(get_parent_class($this), '__destruct')) {
+      parent::__destruct(TRUE);
     }
   }
 
@@ -81,39 +88,58 @@ class OGMailinglistPHPMailer extends PHPMailer {
     require_once $this->PluginDir . 'class.smtp.php';
     $bad_rcpt = array();
 
-    if(!$this->SmtpConnect()) {
-      throw new phpmailerException($this->Lang('smtp_connect_failed'), self::STOP_CRITICAL);
-    }
-    $smtp_from = ($this->Sender == '') ? $this->From : $this->Sender;
-    if(!$this->smtp->Mail($smtp_from)) {
-      throw new phpmailerException($this->Lang('from_failed') . $smtp_from, self::STOP_CRITICAL);
+    if ($this->SMTPDebug) {
+      ob_start();
     }
 
-    // Attempt to send attach all recipients
-    foreach($this->DeliverTo as $to) {
-      if (!$this->smtp->Recipient($to)) {
-        $bad_rcpt[] = $to[0];
-        // implement call back function if it exists
-        $isSent = 0;
-        $this->doCallback($isSent,$to,'','',$this->Subject,$body);
-      } else {
-        // implement call back function if it exists
-        $isSent = 1;
-        $this->doCallback($isSent,$to,'','',$this->Subject,$body);
+    try {
+      if(!$this->SmtpConnect()) {
+        throw new phpmailerException($this->Lang('smtp_connect_failed'), self::STOP_CRITICAL);
+      }
+      $smtp_from = ($this->Sender == '') ? $this->From : $this->Sender;
+      if(!$this->smtp->Mail($smtp_from)) {
+        throw new phpmailerException($this->Lang('from_failed') . $smtp_from, self::STOP_CRITICAL);
+      }
+
+      // Attempt to send attach all recipients
+      foreach($this->DeliverTo as $to) {
+        if (!$this->smtp->Recipient($to)) {
+          $bad_rcpt[] = $to[0];
+          // implement call back function if it exists
+          $isSent = 0;
+          $this->doCallback($isSent,$to,'','',$this->Subject,$body);
+        } else {
+          // implement call back function if it exists
+          $isSent = 1;
+          $this->doCallback($isSent,$to,'','',$this->Subject,$body);
+        }
+      }
+
+      if (count($bad_rcpt) > 0 ) { //Create error message for any bad addresses
+        $badaddresses = implode(', ', $bad_rcpt);
+        throw new phpmailerException($this->Lang('recipients_failed') . $badaddresses);
+      }
+      if(!$this->smtp->Data($header . $body)) {
+        throw new phpmailerException($this->Lang('data_not_accepted'), self::STOP_CRITICAL);
       }
     }
+    catch (phpmailerException $exception) {}
 
-    if (count($bad_rcpt) > 0 ) { //Create error message for any bad addresses
-      $badaddresses = implode(', ', $bad_rcpt);
-      throw new phpmailerException($this->Lang('recipients_failed') . $badaddresses);
+    if ($this->SMTPDebug) {
+      if ($debug = ob_get_contents()) {
+        drupal_set_message($debug);
+      }
+      ob_end_clean();
     }
-    if(!$this->smtp->Data($header . $body)) {
-      throw new phpmailerException($this->Lang('data_not_accepted'), self::STOP_CRITICAL);
+
+    // Reinitialize properties.
+    $this->Reset();
+
+    if (isset($exception)) {
+      // Pass exception to caller.
+      throw $exception;
     }
-    if($this->SMTPKeepAlive == true) {
-      $this->smtp->Reset();
-    }
-    return true;
+    return $result;
   }
 
   /**
