@@ -129,17 +129,18 @@ function _og_mailinglist_process_email($raw_email, $group_name) {
     // able to get the Node ID of the original node.
     $email['nid'] = og_mailinglist_parse_nid($email['text_plain'], $email['structure']->headers);
   
-    // create the new content in Drupal.
+    // Create the new content in Drupal.
     if (!empty($email['nid'])) { // a new comment
       
-      // Two checks first before creating the comment.
-      // There are at least two reasons why an email could have a nid but not be
-      // intended as a new comment.
-      // First, someone could be forwarding an email to a different group.
-      // Second, it's common on mailinglists to fork threads by changing
-      // the subject line. We need to check for both.
-      
-      // Does the detected nid belong to the same group as the email was forwarded to?
+      /* Two checks first before creating the comment.
+       * There are at least two reasons why an email could have a nid but not be
+       * intended as a new comment.
+       * First, someone could be forwarding an email to a different group.
+       * Second, it's common on mailinglists to fork threads by changing
+       * the subject line. We need to check for both.
+       */
+
+      //  Does the detected nid belong to the same group as the email was forwarded to?
       $nid_groupid = db_result(db_query("SELECT group_nid
                                         FROM {og_ancestry}
                                         WHERE nid = %d", $email['nid']));
@@ -220,6 +221,9 @@ function _og_mailinglist_process_email($raw_email, $group_name) {
 function og_mailinglist_save_comment($email) {
   $nid = $email['nid'];
   
+  // Let other modules alter the new comment or delay posting for another time (e.g. a moderation module might want to delay posting for a time).
+  drupal_alter('og_mailinglist_new_email_comment', $email);
+
   // set the user account to this poster (comment_save checks the global user rights)
   global $user;
   $user = user_load($email['userid']);
@@ -265,7 +269,10 @@ function og_mailinglist_save_comment($email) {
   // Log that comment came from email so og_mailinglist_phpmailer doesn't send an email as well.
   $parent_message_id = _og_mailinglist_get_thread_parent_messageid($email['headers']['in-reply-to'], $email['headers']['references']);
   og_mailinglist_log_email_sent('email', $nid, $cid, $email['headers']['message-id'], $email['headers']['in-reply-to'], $email['headers']['references'], $parent_message_id);
-  
+
+  // Let other modules alter the comment array before saving.
+  drupal_alter('og_mailinglist_save_commment', $comment);
+
   // Save the new comment.
   $cid = comment_save($comment);  
   
@@ -287,6 +294,10 @@ function og_mailinglist_save_comment($email) {
 } 
  
 function og_mailinglist_save_node($email) {
+
+  // Let other modules alter the new node or delay posting for another time (e.g. a moderation module might want to delay posting for a time).
+  drupal_alter('og_mailinglist_new_email_node', $email);
+
   $mailbody = $email['mailbody'];
 
   // Get the nid that'll be used. Yes, this isn't a very pretty way to do this.
