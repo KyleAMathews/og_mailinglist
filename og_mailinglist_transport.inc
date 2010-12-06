@@ -221,8 +221,15 @@ function _og_mailinglist_process_email($raw_email, $group_name) {
 function og_mailinglist_save_comment($email) {
   $nid = $email['nid'];
   
-  // Let other modules alter the new comment or delay posting for another time (e.g. a moderation module might want to delay posting for a time).
+  // Let other modules alter the new comment or delay posting for another time
+  // (e.g. a moderation module might want to delay posting for a time).
   drupal_alter('og_mailinglist_new_email_comment', $email);
+
+  // Other modules can unset certain emails to stop them from being saved and sent.
+  // If they do, we'll just exit out.
+  if (empty($email)) {
+    exit(0);
+  }
 
   // set the user account to this poster (comment_save checks the global user rights)
   global $user;
@@ -297,6 +304,12 @@ function og_mailinglist_save_node($email) {
 
   // Let other modules alter the new node or delay posting for another time (e.g. a moderation module might want to delay posting for a time).
   drupal_alter('og_mailinglist_new_email_node', $email);
+
+  // Other modules can unset certain emails to stop them from being saved and sent.
+  // If they do, we'll just exit out.
+  if (empty($email)) {
+    exit(0);
+  }
 
   $mailbody = $email['mailbody'];
 
