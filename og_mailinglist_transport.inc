@@ -48,7 +48,7 @@ function _og_mailinglist_process_email($raw_email, $group_name) {
     }
 
     // Parse the group name from the email. Regex borrowed from valid_email_address().
-    $server_string = variable_get("og_mailinglist_server_string", "");
+    $server_string = variable_get("og_mailinglist_server_string", $_SERVER['SERVER_NAME']);
     if (empty($group_name)) {
       if (preg_match("/([a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?\`\|\{\}~\']+)@" . $server_string . "/", $email['headers']['to'], $matches)) {
         $group_name = $matches[1];
@@ -185,7 +185,7 @@ function _og_mailinglist_process_email($raw_email, $group_name) {
     try {
       // Compose an email back to the sender informing them of the problem.
       $head = Array();
-      $head[] = 'From: ' . variable_get("og_mailinglist_noreply_email", t("no-reply@" . variable_get("og_mailinglist_server_string", "example.com")));
+      $head[] = 'From: ' . variable_get("og_mailinglist_noreply_email", t("no-reply@" . variable_get("og_mailinglist_server_string", $_SERVER['SERVER_NAME'])));
       $head[] = 'References: ' . $email['headers']['message-id'];
       $head[] = 'In-Reply-To: ' . $email['headers']['message-id'];
       $errormsg = $e->getMessage();
@@ -727,7 +727,7 @@ function _og_mailinglist_rewrite_headers($email, $node, $new_node = FALSE, $comm
   }
   
   $new_headers['from'] = $headers['from'];
-  $new_headers['to'] = $group_node->ogm_email . "@" . variable_get('og_mailinglist_server_string', 'example.com');
+  $new_headers['to'] = $group_node->ogm_email . "@" . variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME']);
   $new_headers['bcc'] =
     array_to_comma_delimited_string(
       _og_mailinglist_get_subscribers($node, $new_node));
@@ -736,14 +736,14 @@ function _og_mailinglist_rewrite_headers($email, $node, $new_node = FALSE, $comm
   
   // Add a reply-to header directed to the group if enabled.
   if (variable_get('og_mailinglist_reply_to_group', FALSE)) {
-    $new_headers['reply-to'] = $group_node->ogm_email . "@" . variable_get('og_mailinglist_server_string', 'example.com');
+    $new_headers['reply-to'] = $group_node->ogm_email . "@" . variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME']);
   }
 
   // Add list headers.
   $new_headers['List-Id'] = "<" . $group_node->ogm_email . "@" .
-                variable_get('og_mailinglist_server_string', 'example.com') . ">";
+                variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME']) . ">";
   $new_headers['List-Post'] = "<mailto:" . $group_node->ogm_email . "@" .
-                variable_get('og_mailinglist_server_string', 'example.com') . ">";
+                variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME']) . ">";
   $new_headers['List-Archive'] = url("node/" . $group_node->nid, array('absolute' => TRUE));
   
   // Thread-URL header.
@@ -752,7 +752,7 @@ function _og_mailinglist_rewrite_headers($email, $node, $new_node = FALSE, $comm
   
   // Set x-BeenThere header
   $new_headers['X-BeenThere'] = $group_node->ogm_email . "@" .
-                variable_get('og_mailinglist_server_string', 'example.com');
+                variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME']);
 
   // Set Message-Id
   $new_headers['Message-ID'] = $email['headers']['message-id'];

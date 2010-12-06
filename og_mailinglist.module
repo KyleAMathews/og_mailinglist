@@ -94,7 +94,7 @@ function og_mailinglist_admin_settings() {
   $form['og_mailinglist_server_string'] = array(
     '#title' => t('Domain name'),
     '#type' => 'textfield',
-    '#default_value' => variable_get('og_mailinglist_server_string', 'example.com'),
+    '#default_value' => variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME']),
     '#description' => t('Domain name for outgoing/incoming emails, e.g. example.com.'),
   );
   $form['og_mailinglist_max_message_size'] = array(
