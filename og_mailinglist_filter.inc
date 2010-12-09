@@ -1,6 +1,5 @@
 <?php
 
-// TODO move all filter quote into an .inc file
 // Possible way to simplify this. Drop the find start of quoted section and loop through it
 // and just do as doing with Hotmail/Outlook and other clients that don't quote
 // properly and match all the quoted section w/ regex.

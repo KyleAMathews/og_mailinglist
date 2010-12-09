@@ -26,7 +26,6 @@ require_once("og_mailinglist_phpmailer.inc");
 require_once('og_mailinglist_api.inc');
 og_mailinglist_phpmailer_load_library();
 
-// TODO remove thread subscriptions older than 3 months. If someone ressurrects a thread, then readd people to thread. Probably need a table to track which threads have been retired.
 /**
  * Implementation of hook_menu(). 
  */
@@ -461,8 +460,6 @@ function _og_mailinglist_build_quotes_toggle($text) {
   return $text;
 }
 
-// TODO would be useful at some point to add option to truncate long words
-// URLs tend to stick out side of comment box which is ugly.
 function _og_mailinglist_remove_quotes($text) {
   module_load_include('inc', 'og_mailinglist', 'og_mailinglist_filter');
   $quotes = _og_mailinglist_find_quoted_sections($text);
