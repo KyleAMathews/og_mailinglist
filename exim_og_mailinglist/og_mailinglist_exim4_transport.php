@@ -1,9 +1,9 @@
 #!/usr/bin/php
 <?php
 
-// Reads in raw email off the STDIN and posts the email using our curl command for the appropriate site.
+$raw_email = "";
 
-// Grab the raw email message from stdin.
+// Reads in raw email off the STDIN and posts the email using our curl command for the appropriate site.
 $fd = fopen("php://stdin", "r");
 while (!feof($fd)) {
   $raw_email .= fread($fd, 1024);
