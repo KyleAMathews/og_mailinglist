@@ -1,0 +1,33 @@
+<?php
+
+/**
+ * Implementation of hook_og_mailinglist_save_node_alter().
+ */
+function og_mailinglist_og_forum_og_mailinglist_save_node_alter(&$node) {
+  // If this is a forum post and the og_forum module is enabled, find this group's
+  // default forum container and add that to the node object.
+  if ($node->type == "forum" && module_exists('og_forum')) {
+    // The "t.weight <> 0" is a hack essentially. og_term doesn't give any good way 
+    // of finding out which term is actually an og_forum term and which isn't.
+    // But it seems to change the weight of all legit forums to something other
+    // than 0 (-10 in most (all) cases) (I'm guessing a lot here). Anyways, don't 
+    // argue with what works.
+    $forum_id = db_result(db_query("SELECT o.tid
+                                    FROM {og_term} o
+                                    JOIN {term_data} t
+                                    ON o.tid = t.tid
+                                    WHERE o.nid = %d
+                                    AND t.weight <> 0", current($node->og_groups)));
+    $term = taxonomy_get_term($forum_id);
+    if(empty($node->tid)) {
+      $node->tid = $term->tid;
+    }
+    if(empty($node->vid)) {
+      $node->vid = $term->vid;
+    }
+    if(empty($node->taxonomy)) {
+      $node->taxonomy = array($term->vid => $term);
+    }
+  }
+}
+

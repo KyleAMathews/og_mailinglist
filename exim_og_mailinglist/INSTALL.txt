@@ -5,8 +5,8 @@ These files are for integrating OG Mailinglist with the EXIM MTA.
 2. Copy 950_exim4-config_drupal_og_mailinglist_router to /etc/exim4/conf.d/router/950_exim4-config_drupal_og_mailinglist_router
 3. Copy 95_exim4-config_drupal_og_mailinglist_transport to /etc/exim4/conf.d/transport/95_exim4-config_drupal_og_mailinglist_transport
 4. Create a file in the /etc/exim4/exim_og_mailinglist directory called site_info.php. Model it after the code below. Add an array item for each site that your server is receiving emails for.
-5. Run dpkg-reconfigure exim4-config (Debain/Ubuntu - is there an equivalent command on other OSs?) and ensure that the "Other destinations for which mail is accepted:" or "local domains" setting includes your site's domain name. Otherwise, Exim will simply reject emails directed to this domain.
-6. Restart exim by running "/etc/init.d/exim4 restart". Note that on some operating systems like Debian, you need to run "update-exim4.conf" to actually update the configuration before restarting.  See your installation's Exim documentation for specifics.
+5. Run dpkg-reconfigure exim4-config on Debain/Ubuntu systems (What is the equivalent command if any on other OSs?) and ensure that the "Other destinations for which mail is accepted:" or "local domains" setting includes your site's domain name. Otherwise, Exim will simply reject emails directed to this domain.
+6. Restart exim by running "/etc/init.d/exim4 restart". Note that on some operating systems like Debian, you need to run "update-exim4.conf.template" to actually update the configuration before restarting.  See your installation's Exim documentation for specifics.
 7. Test setup by sending email to a test group's email on your site e.g. test-group@yoursite.com
 
 Debugging help for when things don't work:
@@ -24,11 +24,11 @@ function og_mailinglist_site_info() {
   return array (
     'eduglu.com' => array(
             'post_url' => 'http://eduglu.com/og_mailinglist',
-            'validation_string' => 'get this from /admin/settings/og_mailinglist and paste here',
+            'validation_string' => 'get this from /admin/og/og_mailinglist and paste here',
            ),
     'anothersite.com' => array(
             'post_url' => 'http://anothersite.com/og_mailinglist',
-            'validation_string' => 'get this from /admin/settings/og_mailinglist and paste here',
+            'validation_string' => 'get this from /admin/og/og_mailinglist and paste here',
            ),
   );
 }

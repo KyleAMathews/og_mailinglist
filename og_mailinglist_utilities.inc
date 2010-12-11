@@ -66,15 +66,15 @@ function og_mailinglist_add_web_headers($mailer, $node, $comment = 0, $in_reply_
   global $base_url;
   
   $mailer->AddCustomHeader($mailer->HeaderLine("List-Id", "<" . $group_node->ogm_email .
-            "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">"));
+            "@" . variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME']) . ">"));
   $mailer->AddCustomHeader($mailer->HeaderLine("List-Post", "<mailto:" . $group_node->ogm_email .
-            "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">"));
+            "@" . variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME']) . ">"));
   $mailer->AddCustomHeader($mailer->HeaderLine("List-Archive", url("node/" .
             $group_node->nid, array('absolute' => TRUE))));
   $mailer->AddCustomHeader($mailer->HeaderLine("X-Thread-Url", $base_url .
             "/node/" . $node->nid));
   $mailer->AddCustomHeader($mailer->HeaderLine("X-BeenThere", $group_node->ogm_email .
-            "@" . variable_get('og_mailinglist_server_string', 'example.com')));
+            "@" . variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME'])));
 
   // Add in-reply-to / references
   if (!empty($in_reply_to)) {
@@ -87,12 +87,12 @@ function og_mailinglist_add_web_headers($mailer, $node, $comment = 0, $in_reply_
   // Add a reply-to header directed to the group if enabled.
   if (variable_get('og_mailinglist_reply_to_group', FALSE)) {
     $mailer->AddCustomHeader($mailer->HeaderLine("reply-to", "<" . $group_node->ogm_email .
-            "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">"));
+            "@" . variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME']) . ">"));
   }
 
   // Set Message-ID.
   $comment_id = (!empty($comment)) ? $comment->cid : 0;
-  $mailer->MessageID = "<node-" . $node->nid . "-comment-" . $comment_id . "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">";
+  $mailer->MessageID = "<node-" . $node->nid . "-comment-" . $comment_id . "@" . variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME']) . ">";
   
   return $mailer;
 }
@@ -117,14 +117,14 @@ function _og_mailinglist_add_addresses($mailer, $node, $new_node = FALSE,
   }
   
   if ($author->uid == 0) {
-    $author->mail = "anonymous@" . variable_get('og_mailinglist_server_string', 'example.com');
+    $author->mail = "anonymous@" . variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME']);
     $author_name = "anonymous";
   }
   try {
     $mailer->From = $author->mail;
     $mailer->FromName = $author_name;
     $mailer->AddAddress($group_node->ogm_email . "@" .
-            variable_get('og_mailinglist_server_string', 'example.com'), $group_node->title);
+            variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME']), $group_node->title);
 
     // Add emails to BCC
     foreach ($subscribers as $subscriber) {
@@ -204,30 +204,20 @@ function array_copy ($aSource) {
 }
 
 /*
- * Use every possible method to figure out the group nid of a node.
+ * Load the parent group node of a node.
  */
 function _og_mailinglist_load_group($node) {
-  if (!empty($node->og_groups_both)) {
-    return node_load(array('nid' => current(array_keys($node->og_groups_both))));
-  }
-  elseif (!empty($node->og_groups)) {
-    return node_load(array('nid' => current(array_keys($node->og_groups))));
-  }
-  elseif (!empty($node->og_initial_groups)) {
-    return node_load(array('nid' => current(array_keys($node->og_initial_groups))));
+  $group_node = node_load(array('nid' => db_result(db_query("SELECT group_nid
+                                            FROM {og_ancestry}
+                                            WHERE nid = %d", $node->nid))));
+  if (!empty($group_node)) {
+    return $group_node;
   }
   else {
-    $group_node = node_load(array('nid' => db_result(db_query("SELECT group_nid
-                                              FROM {og_ancestry}
-                                              WHERE nid = %d", $node->nid))));
-    if (!empty($group_node)) {
-      return $group_node;
-    }
-    else {
-      return null;
-    }
+    return null;
   }
 }
+
 /**
  * Capitalize all words
  * @param string Data to capitalize
@@ -267,14 +257,14 @@ function og_mailinglist_phpmailer_load_library() {
     // First, try using libraries module.
     if (module_exists('libraries')) {
       // Let's see if PHPMailer is really available from libraries.
-      $phpmailer_library = './'. libraries_get_path('PHPMailer') .'/class.phpmailer.php';
+      $phpmailer_library = './'. libraries_get_path('phpmailer') .'/class.phpmailer.php';
       if (file_exists($phpmailer_library)) {
         include_once $phpmailer_library;
       }
     }
     // If PHPMailer is not already loaded, then try from module subdirectory.
     if (!class_exists('PHPMailer')) {
-      $phpmailer_library = './'. drupal_get_path('module', 'og_mailinglist') .'/PHPMailer/class.phpmailer.php';
+      $phpmailer_library = './'. drupal_get_path('module', 'og_mailinglist') .'/phpmailer/class.phpmailer.php';
       if (file_exists($phpmailer_library)) {
         include_once $phpmailer_library;
       }
@@ -310,7 +300,7 @@ function og_mailinglist_mimeDecode_load_library() {
         }
       }
     }
-    // If PHPMailer is not already loaded, then try from module subdirectory.
+    // If Mail_mimeDecode is still not loaded, then try from module subdirectory.
     if (!class_exists('Mail_mimeDecode')) {
       $Mail_mimeDecode_library = './'. drupal_get_path('module', 'og_mailinglist') .'/mimeDecode/mimeDecode.php';
       if (file_exists($Mail_mimeDecode_library)) {
@@ -319,6 +309,6 @@ function og_mailinglist_mimeDecode_load_library() {
     }
 
   }
-  // Tell the caller if PHPMailer class exists.
+  // Tell the caller if Mail_mimeDecode class exists.
   return class_exists('Mail_mimeDecode');
 }

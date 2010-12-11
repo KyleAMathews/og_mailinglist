@@ -88,7 +88,7 @@ function _og_mailinglist_send_digest_emails() {
                                         FROM {og_mailinglist}
                                         WHERE nid = %d", $gid));
 
-    $subject = "[" . $group->ogm_email . "] Digest for " . $group_email . "@" . variable_get("og_mailinglist_server_string", "example.com")
+    $subject = "[" . $group->ogm_email . "] Digest for " . $group_email . "@" . variable_get("og_mailinglist_server_string", $_SERVER['SERVER_NAME'])
           . " - " . $message_count . " Messages in " . count($nids) . " Discussions";
 
     // Assemble message
@@ -130,11 +130,11 @@ function _og_mailinglist_send_digest_emails() {
     $body .= "__<br />";
     $body .= "You received this message because you are a member of the \"" .
               $group->title . "\" group on " .
-              variable_get("og_mailinglist_server_string", "example.com") . "<br />";
+              variable_get("og_mailinglist_server_string", $_SERVER['SERVER_NAME']) . "<br />";
     $body .= "To unsubscribe to this group, visit " .
               url("og_mailinglist/subscriptions", array("absolute" => true)) . "<br />";
     $body .= "To post a new message to this group, email " . $group_email . "@" .
-      variable_get("og_mailinglist_server_string", "example.com") . "<br />";
+      variable_get("og_mailinglist_server_string", $_SERVER['SERVER_NAME']) . "<br />";
 
     // For each person, send out an email.
     $result = db_query("SELECT uid
@@ -157,13 +157,13 @@ function _og_mailinglist_send_digest_emails() {
 
     foreach ($uids as $email) {
       $mailer = og_mailinglist_create_mailer();
-      $mailer->From = $group->ogm_email . "+no-reply@" . variable_get("og_mailinglist_server_string", "example.com");
+      $mailer->From = $group->ogm_email . "+no-reply@" . variable_get("og_mailinglist_server_string", $_SERVER['SERVER_NAME']);
       $mailer->FromName = $group_email . "@" .
-      variable_get("og_mailinglist_server_string", "example.com");
+      variable_get("og_mailinglist_server_string", $_SERVER['SERVER_NAME']);
       $mailer->AddCustomHeader($mailer->HeaderLine("List-Id", "<" . $group->ogm_email .
-            "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">"));
+            "@" . variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME']) . ">"));
       $mailer->AddCustomHeader($mailer->HeaderLine("List-Post", "<mailto:" . $group->ogm_email .
-            "@" . variable_get('og_mailinglist_server_string', 'example.com') . ">"));
+            "@" . variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME']) . ">"));
       $mailer->AddCustomHeader($mailer->HeaderLine("List-Archive", url("node/" .
             $group->nid, array('absolute' => TRUE))));
       $mailer->AddAddress($email);
@@ -186,7 +186,7 @@ function og_mailinglist_style_node_message($node) {
 
   // Prepare node body for viewing.
   $node = og_mailinglist_render_node_body($node);
-  $body .= og_mailinglist_prepare_web_content($node->body); // TODO Test if names go out correctly + switch it to use watchdog.
+  $body .= og_mailinglist_prepare_web_content($node->body);
   $body .= "<br />\n";
   
   return $body;
@@ -194,7 +194,7 @@ function og_mailinglist_style_node_message($node) {
 
 function og_mailinglist_style_comment_message($comment) {
   $user = user_load(array('uid' => $comment->uid));
-  $body .= "<div style=\"" . MESSAGE_HEADER . "\"><strong>" .
+  $body = "<div style=\"" . MESSAGE_HEADER . "\"><strong>" .
     l((isset($user->realname) ? $user->realname : $user->name), "user/" . $user->uid, array('absolute' => TRUE))
     . "</strong> " . $user->mail . " " .
     date("d M Y — g:ia O", $comment->timestamp) . "</div>\n";
