@@ -375,19 +375,17 @@ function _og_mailinglist_email_node_email($email, $node) {
   $email = _og_mailinglist_rewrite_headers($email, $node, TRUE);
   $footer = _og_mailinglist_build_footer($node);
   $email = _og_mailinglist_add_footer($email, $footer);
-
-  $email['new_email_body'] = _og_mailinglist_encode_email(array($email['structure']));
-$email['structure']->headers['to'] = "mathews.kyle@gmail.com";
-  $email['new_email_headers'] = _og_mailinglist_encode_email_headers($email['structure']->headers);  
-
+  $headers = $email['structure']->headers;
   unset($email['structure']->headers);
+  $email['new_email_text'] = _og_mailinglist_encode_email(array($email['structure']));
+  
   // Send it off.
-  _og_mailinglist_send_raw_email($email['new_email_headers'], $email['new_email_body']);
-print_r($email);
+  _og_mailinglist_send_raw_email($headers, $email['new_email_text'], $node);
+
   // If the sender's subscription type isn't email, give him a thread subscription.
-//  if (og_mailinglist_get_group_subscription_type($node->og_groups[0], $node->uid) != "email") {
-//    og_mailinglist_save_thread_subscriptions($node->nid, array($node->uid));
-//  }
+  if (og_mailinglist_get_group_subscription_type($node->og_groups[0], $node->uid) != "email") {
+    og_mailinglist_save_thread_subscriptions($node->nid, array($node->uid));
+  }
 }
 
 function _og_mailinglist_email_comment_email($email, $node, $comment) {
@@ -395,10 +393,12 @@ function _og_mailinglist_email_comment_email($email, $node, $comment) {
   $email = _og_mailinglist_rewrite_headers($email, $node, FALSE, $comment);
   $footer = _og_mailinglist_build_footer($node);
   $email = _og_mailinglist_add_footer($email, $footer);
+  $headers = $email['structure']->headers;
+  unset($email['structure']->headers);
   $email['new_email_text'] = _og_mailinglist_encode_email(array($email['structure']));
   
   // Send it off.
-  _og_mailinglist_send_raw_email($email['new_email_text']);
+  _og_mailinglist_send_raw_email($headers, $email['new_email_text'], $node);
 }
 
 function _og_mailinglist_parse_email($email) {
@@ -658,6 +658,15 @@ function _og_mailinglist_sanitise_filename($filename) {
   return $filename;
 }
 
+function _og_mailinglist_create_new_email($email) {
+  $structure = clone $email['structure'];
+  $structure = _og_mailinglist_rewrite_headers($structure, $email);
+  $structure = _og_mailinglist_add_footer($structure, $email);
+  $email['new_email_text'] = _og_mailinglist_encode_email(array($structure));
+  
+  return $email;
+}
+
 // Turn structure back into a plain text email using recursion.
 function _og_mailinglist_encode_email($structure, $boundary = "", $email = "") {
   foreach($structure as $part) {   
@@ -726,9 +735,7 @@ function _og_mailinglist_rewrite_headers($email, $node, $new_node = FALSE, $comm
   
   $new_headers['from'] = $headers['from'];
   $new_headers['to'] = $group_node->ogm_email . "@" . variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME']);
-  $new_headers['bcc'] =
-    array_to_comma_delimited_string(
-      _og_mailinglist_get_subscribers($node, $new_node));
+  $new_headers['bcc'] = _og_mailinglist_get_subscribers($node, $new_node);
   $new_headers['content-type'] = $headers['content-type'];
   $new_headers['content-transfer-encoding'] =  $headers['content-transfer-encoding'];
   
@@ -838,12 +845,63 @@ function _og_mailinglist_add_footer($email, $footer) {
   return $email;
 }
 
-function _og_mailinglist_send_raw_email($header, $body) {
-//  $rand_filename = rand(1000, 10000000000);
-//  file_put_contents("/tmp/" . $rand_filename, $raw_email . "\n");
-//  system("/usr/sbin/sendmail -oi -t < /tmp/" . $rand_filename);
+function _og_mailinglist_send_raw_email($headers, $body, $node) {
   $mailer = og_mailinglist_create_mailer();
-  $mailer->SendmailSend($header, $body);
+  $mailer->ClearAddresses();
+
+  foreach($headers as $key => $value) {
+    switch (strtolower($key)) {
+      case 'date':
+	$mailer->MessageDate = $value;
+        break;
+      case 'message-id':
+        $mailer->MessageID = $value;
+        break;
+      case 'subject':
+	$mailer->Subject = $value;
+        break;
+      case 'to':
+        if (preg_match("/(^<)*<(.*?)>/", $value, $matches)) { 
+          $mailer->AddAddress($matches[1], $matches[2]);
+        } else
+          $mailer->AddAddress($value);
+        break;
+      case 'cc':
+        if (preg_match("/(^<)*<(.*?)>/", $value, $matches)) { 
+          $mailer->AddCC($matches[1], $matches[2]);
+        } else
+          $mailer->AddCC($value);
+        break;
+      case 'bcc':
+        foreach($value as $recipient) {
+          $mailer->AddDeliverTo($recipient);
+        }
+        break;
+      case 'from':
+        if (preg_match("/([^<]*)<(.*?)>/", $value, $matches)) { 
+          $mailer->From = $matches[2];
+          $mailer->FromName = $matches[1];
+        } else
+          $mailer->From = $value;
+        break;
+      default:
+        $mailer->AddCustomHeader($key . ':' . $value);
+    }
+  }
+
+  $mailer->Body = $body;
+
+  $success = $mailer->Send();
+  
+  if ($success) {
+    $parent_message_id = _og_mailinglist_get_thread_parent_messageid($email['headers']['in-reply-to']);
+    og_mailinglist_log_email_sent('web', $node->nid, $comment->cid, $mailer->MessageID, $headers['in_reply_to'], $headers['References'], $parent_message_id);
+  }
+  else {
+    watchdog('og_mailinglist', "OG_Mailinglist couldn't send a new node email.", NULL,
+             WATCHDOG_ERROR);
+  }
+  
 }
 
 /*
