@@ -1,0 +1,125 @@
+Here's a first draft on documenting the APIs that have been added into OG Mailinglist to this point. Refinements to the text + additional examples are welcome:
+
+Hook signiture, short description of what it can be used for, modules using it, example code.
+
+
+hook_og_mailinglist_new_email_comment_alter($email)
+===================================================
+
+Lets other modules alter the new comment or delay posting for a time
+(e.g. a moderation module might want to delay posting until a human moderator has had a chance to ok it
+or until the email can be run through a spam checker such as Mollem).
+
+Modules using this hook:
+https://github.com/KyleAMathews/familyletter
+
+Example code:
+
+<?php
+function example_og_mailinglist_new_email_comment_alter(&$email) {
+  // If you module holds onto an email for a time before processing it,
+  // then you need to mark the email array that it's been processed
+  // to avoid an endless loop.
+  if ($email['example_processed']) {
+    return;
+  }
+
+  // Call another function to check if this email should be moderated.
+  if (example_should_this_email_be_moderated($email)) {
+    // Store the email (probably to the database).
+    $email['example_processed'] = TRUE;
+    example_store_email($email);
+
+    // Set the email array to false so OG Mailinglist will know not to save or send out again the email.
+    $email = FALSE;
+  }
+}
+
+
+hook_og_mailinglist_new_email_node_alter(&$email)
+==================================================
+Lets other modules alter a new node from email or delay posting for a time.
+This hook can be used in very similar ways to hook_og_mailinglist_new_email_comment_alter()
+and any moderation module will almost certainly need to implement both hooks.
+
+Modules using this hook:
+none so far.
+
+Example code:
+
+<?php
+function example_og_mailinglist_new_email_node_alter(&$email) {
+  // If you module holds onto an email for a time before processing it,
+  // then you need to mark the email array that it's been processed
+  // to avoid an endless loop.
+  if ($email['example_processed']) {
+    return;
+  }
+
+  // Call another function to check if this email should be moderated.
+  if (example_should_this_email_be_moderated($email)) {
+    // Store the email (probably to the database).
+    $email['example_processed'] = TRUE;
+    example_store_email($email);
+
+    // Set the email array to false so OG Mailinglist will know not to save or send out again the email.
+    $email = FALSE;
+  }
+}
+
+og_mailinglist_save_commment_alter(&$comment)
+=============================================
+
+Lets other modules alter the node object before saving.
+
+Modules using this hook:
+none so far.
+
+Example code:
+
+<?php
+function example_og_mailinglist_save_comment_alter(&$comment) {
+  // Add the user's name before the subject.
+  $account = user_load($comment['uid'];
+  $comment['subject'] = $account->name . ": " . $comment['subject'];
+}
+
+
+og_mailinglist_save_node_alter(&$node)
+======================================
+
+Lets other modules alter the node object before saving.
+
+Modules using this hook
+og_mailinglist_og_forum - included with OG Mailinglist
+
+Example code:
+
+<?php
+
+// Code taken from og_mailinglist_og_forum which provides integration between og_forum and og_mailinglist
+// This code finds the default forum for the group the email is sent to
+// and adds the necessary information to the node object for it to be saved correctly
+// into that forum.
+function og_mailinglist_og_forum_og_mailinglist_save_node_alter(&$node) {
+  // If this is a forum post and the og_forum module is enabled, find this group's
+  // default forum container and add that to the node object.
+  if ($node->type == "forum" && module_exists('og_forum')) {
+    $forum_id = db_result(db_query("SELECT o.tid
+                                    FROM {og_term} o
+                                    JOIN {term_data} t
+                                    ON o.tid = t.tid
+                                    WHERE o.nid = %d
+                                    AND t.weight <> 0", current($node->og_groups)));
+    $term = taxonomy_get_term($forum_id);
+    if(empty($node->tid)) {
+      $node->tid = $term->tid;
+    }
+    if(empty($node->vid)) {
+      $node->vid = $term->vid;
+    }
+    if(empty($node->taxonomy)) {
+      $node->taxonomy = array($term->vid => $term);
+    }
+  }
+}

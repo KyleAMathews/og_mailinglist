@@ -248,7 +248,7 @@ function og_mailinglist_save_comment($email) {
 
   $mailbody = $email['mailbody'];
 
-  // create an array representing the comment
+  // Create an array representing the comment
   $comment = array();
   $comment['uid'] = $email['userid'];
   $comment['nid'] = $nid;
