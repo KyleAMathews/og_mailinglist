@@ -188,6 +188,7 @@ function _og_mailinglist_process_email($raw_email, $group_name) {
       $head[] = 'From: ' . variable_get("og_mailinglist_noreply_email", t("no-reply@" . variable_get("og_mailinglist_server_string", $_SERVER['SERVER_NAME'])));
       $head[] = 'References: ' . $email['headers']['message-id'];
       $head[] = 'In-Reply-To: ' . $email['headers']['message-id'];
+      $head[] = 'X-BeenThere: ' . variable_get("og_mailinglist_server_string", $_SERVER['SERVER_NAME']);
       $errormsg = $e->getMessage();
       $msgdate = $email['headers']['date'];
       $msgfrom = $email['headers']['from'];
