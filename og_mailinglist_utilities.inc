@@ -59,86 +59,6 @@ function og_mailinglist_build_web_footer($node, $body, $cid = 0) {
 
   return $body . "\n" . $footer;
 }
-  
-
-function og_mailinglist_add_web_headers($mailer, $node, $comment = 0, $in_reply_to = 0, $references = 0) {
-  $group_node = _og_mailinglist_load_group($node);
-  global $base_url;
-  
-  $mailer->AddCustomHeader($mailer->HeaderLine("List-Id", "<" . $group_node->ogm_email .
-            "@" . variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME']) . ">"));
-  $mailer->AddCustomHeader($mailer->HeaderLine("List-Post", "<mailto:" . $group_node->ogm_email .
-            "@" . variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME']) . ">"));
-  $mailer->AddCustomHeader($mailer->HeaderLine("List-Archive", url("node/" .
-            $group_node->nid, array('absolute' => TRUE))));
-  $mailer->AddCustomHeader($mailer->HeaderLine("X-Thread-Url", $base_url .
-            "/node/" . $node->nid));
-  $mailer->AddCustomHeader($mailer->HeaderLine("X-BeenThere", $group_node->ogm_email .
-            "@" . variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME'])));
-
-  // Add in-reply-to / references
-  if (!empty($in_reply_to)) {
-    $mailer->AddCustomHeader($mailer->HeaderLine("In-Reply-To", $in_reply_to));
-  }
-  if (!empty($references)) {
-    $mailer->AddCustomHeader($mailer->HeaderLine("References", $references));
-  }
-
-  // Add a reply-to header directed to the group if enabled.
-  if (variable_get('og_mailinglist_reply_to_group', FALSE)) {
-    $mailer->AddCustomHeader($mailer->HeaderLine("reply-to", "<" . $group_node->ogm_email .
-            "@" . variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME']) . ">"));
-  }
-
-  // Set Message-ID.
-  $comment_id = (!empty($comment)) ? $comment->cid : 0;
-  $mailer->MessageID = "<node-" . $node->nid . "-comment-" . $comment_id . "@" . variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME']) . ">";
-  
-  return $mailer;
-}
-
-function _og_mailinglist_add_addresses($mailer, $node, $new_node = FALSE,
-                                 $comment = NULL, $email = NULL) {
-  $group_node = _og_mailinglist_load_group($node);
-  $subscribers = _og_mailinglist_get_subscribers($node, $new_node);
-    
-  if (!empty($comment)) {
-    $author = user_load(array('uid' => $comment->uid));
-  }
-  else {
-    $author = user_load(array('uid' => $node->uid));
-  }
-  
-  if (isset($author->realname)) {
-    $author_name = $author->realname; 
-  }
-  else {
-    $author_name = $author->name; 
-  }
-  
-  if ($author->uid == 0) {
-    $author->mail = "anonymous@" . variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME']);
-    $author_name = "anonymous";
-  }
-  try {
-    $mailer->From = $author->mail;
-    $mailer->FromName = $author_name;
-    $mailer->AddAddress($group_node->ogm_email . "@" .
-            variable_get('og_mailinglist_server_string', $_SERVER['SERVER_NAME']), $group_node->title);
-
-    // Add emails to BCC
-    foreach ($subscribers as $subscriber) {
-      $mailer->AddBCC($subscriber);
-    }
-  } catch (phpmailerException $e) {
-       watchdog('og_mailinglist', t('PHPMailer error: !error', array('!error' => $e->errorMessage())), NULL, WATCHDOG_ERROR);
-  } catch (Exception $e) {
-       watchdog('og_mailinglist', $e->getMessage(), NULL, WATCHDOG_ERROR);
-  }
-
-  return $mailer;  
-}
-
 
 function dd_log($data, $label = "") {
   $my_file = "/tmp/drupal_log";
@@ -167,7 +87,7 @@ function write_string_to_file($data, $name = "lsjdf") {
 }
 
 /**
- * make a recursive copy of an array 
+ * Make a recursive copy of an array.
  *
  * @param array $aSource
  * @return array    copy of source array
