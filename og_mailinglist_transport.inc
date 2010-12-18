@@ -373,7 +373,7 @@ function _og_mailinglist_email_node_email($email, $node) {
   $email['new_email_text'] = _og_mailinglist_encode_email(array($email['structure']));
   
   // Send it off.
-  _og_mailinglist_send_raw_email($headers, $email['new_email_text'], $node);
+  _og_mailinglist_send_email($headers, $email['new_email_text'], $node);
 
   // If the sender's subscription type isn't email, give him a thread subscription.
   if (og_mailinglist_get_group_subscription_type($node->og_groups[0], $node->uid) != "email") {
@@ -391,7 +391,7 @@ function _og_mailinglist_email_comment_email($email, $node, $comment) {
   $email['new_email_text'] = _og_mailinglist_encode_email(array($email['structure']));
   
   // Send it off.
-  _og_mailinglist_send_raw_email($headers, $email['new_email_text'], $node);
+  _og_mailinglist_send_email($headers, $email['new_email_text'], $node);
 }
 
 function _og_mailinglist_parse_email($email) {
@@ -837,7 +837,7 @@ function _og_mailinglist_add_footer($email, $footer) {
   return $email;
 }
 
-function _og_mailinglist_send_raw_email($headers, $body, $node) {
+function _og_mailinglist_send_email($headers, $body, $node) {
   $mailer = og_mailinglist_create_mailer();
   $mailer->ClearAddresses();
   foreach($headers as $key => $value) {
