@@ -884,7 +884,7 @@ function _og_mailinglist_send_raw_email($headers, $body, $node) {
         preg_match("/charset=(.*)/s", $value, $matches);
         $charset = $matches[1];
         // If we succeed, set that for the mailer than proceed.
-        if (!empty($charset) {
+        if (!empty($charset)) {
           $mailer->CharSet = $charset;
         }
         break;
