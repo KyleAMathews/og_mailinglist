@@ -841,8 +841,10 @@ function _og_mailinglist_add_footer($email, $footer) {
 function _og_mailinglist_send_raw_email($headers, $body, $node) {
   $mailer = og_mailinglist_create_mailer();
   $mailer->ClearAddresses();
-
   foreach($headers as $key => $value) {
+    if (empty($value)) {
+      continue;
+    }
     switch (strtolower($key)) {
       case 'date':
 	$mailer->MessageDate = $value;
@@ -867,7 +869,7 @@ function _og_mailinglist_send_raw_email($headers, $body, $node) {
         break;
       case 'bcc':
         foreach($value as $recipient) {
-          $mailer->AddDeliverTo($recipient);
+          $mailer->AddBCC($recipient);
         }
         break;
       case 'from':
