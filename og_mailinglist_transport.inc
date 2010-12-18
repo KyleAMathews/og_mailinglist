@@ -879,6 +879,15 @@ function _og_mailinglist_send_raw_email($headers, $body, $node) {
         } else
           $mailer->From = $value;
         break;
+      case 'content-type':
+        // Parse the charset.
+        preg_match("/charset=(.*)/s", $value, $matches);
+        $charset = $matches[1];
+        // If we succeed, set that for the mailer than proceed.
+        if (!empty($charset) {
+          $mailer->CharSet = $charset;
+        }
+        break;
       default:
         $mailer->AddCustomHeader($key . ':' . $value);
     }
