@@ -712,12 +712,11 @@ function _og_mailinglist_encode_email_headers($array) {
   return $header;
 }
 
-// Keep mime-version, date, subject, from, to, and content-type
+// Keep date, subject, from, to, and content-type
 function _og_mailinglist_rewrite_headers($email, $node, $new_node = FALSE, $comment = 0) {
   $group_node = _og_mailinglist_load_group($node);
   $headers = $email['structure']->headers;
   $new_headers = array();
-  $new_headers['mime-version'] = $headers['mime-version'];
   $new_headers['date'] = $headers['date'];
   if ($new_node) {
     $new_headers['subject'] = "[" . $group_node->ogm_email . "] " . $node->title;  
