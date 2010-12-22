@@ -90,7 +90,7 @@ function og_mailinglist_check_user_subscribed_to_thread($nid, $uid) {
 function og_mailinglist_save_thread_subscriptions($nid, $uids) {
   foreach ($uids as $uid) {
     if ($uid != 0) { // Ignore anonymous users.
-    db_query("INSERT INTO {og_mailinglist_thread}
+    db_query("INSERT IGNORE INTO {og_mailinglist_thread}
              VALUES (%d, %d)", $nid, $uid);
     }
   }
