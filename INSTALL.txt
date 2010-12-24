@@ -13,7 +13,7 @@ Right now the only fully supported MTAs are Exim, QMail and Postfix. If you use 
 
 * PHPMailer 5
 
-* PHP libraries Mailparse and mimeDecode
+* PHP libraries mimeDecode and Curl.
 
 * Sendmail-compatible MTA - At the moment, og_mailinglist directly executes the sendmail or sendmail-compatible binary to send emails. You will therefore need to have a sendmail-compatible binary in your path, and not have PHP set up to disable the system function. Work is underway to remove this requirement. See http://drupal.org/node/951018 for more information on this issue.
 
@@ -25,6 +25,8 @@ INSTALLATION INSTRUCTIONS:
 * Download and unpack the latest PHPMailer 5.x then move the library to og_mailinglist/phpmailer or to libraries/phpmailer if you use the libraries module - http://kent.dl.sourceforge.net/project/phpmailer/phpmailer%20for%20php5_6/PHPMailer%20v5.1/PHPMailer_v5.1.tar.gz 
 
 * Install the PHP library mimeDecode. On Debian/Ubuntu run from the command line, "apt-get install php-mail-mimedecode". You can also download the file directly from http://pear.php.net/package/Mail_mimeDecode and add the file either as a subdirectory to og_mailinglist or to the libraries folder. Note, mimeDecode depends on PHP PEAR, which sould be installed on any recent install of PHP but if you get weird errors, this might be something worth checking. (Note, this installation step is only necessary if you want members of your site to be able to send email to the site to start or respond to posts. If all posting will happen directly on the site, this step is unnecessary)
+
+* Install the PHP library Curl (if it's not already installed. Many setups come preinstalled with Curl support.). On Debian/Ubuntu run from the command line, "apt-get install php5-curl".
 
 * Go to the Modules page in Drupal and enable the module (like normal).  After saving, navigate to admin/og/og_mailinglist and configure per your server setup.
 
