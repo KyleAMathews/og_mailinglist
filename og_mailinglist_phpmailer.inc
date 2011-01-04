@@ -89,7 +89,7 @@ function og_mailinglist_send_node_email($node) {
   $mailer = og_mailinglist_add_web_headers($mailer, $node);
 
   // Decorate subject.
-  $mailer->Subject = "[" . $group_node->ogm_email . "] " . $node->title;
+  $subject = "[" . $group_node->ogm_email . "] " . $node->title;
   
   // Prepare node body for viewing.
   $node = og_mailinglist_render_node_body($node);
@@ -98,7 +98,21 @@ function og_mailinglist_send_node_email($node) {
   $body = og_mailinglist_prepare_web_content($node->body);
   $body = og_mailinglist_build_web_footer($node, $body, 0, TRUE);
 
-  
+  // Let other modules alter outgoing node emails.
+  $data = array(
+    'subject' => $subject,
+    'body' => $body,
+    'ogm_email' => $group_node->ogm_email,
+    'title' => $node->title,
+    'nid' => $node->nid,
+    'node' => $node,
+  );
+
+  drupal_alter('og_mailinglist_new_node', $data);
+  $subject = $data['subject'];
+  $body = $data['body'];
+
+  $mailer->Subject = $subject;
   $mailer->Body = $body;
   $mailer->isHTML = TRUE;
   $mailer->AltBody = drupal_html_to_text($body); 

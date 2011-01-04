@@ -67,7 +67,7 @@ function example_og_mailinglist_new_email_node_alter(&$email) {
   }
 }
 
-og_mailinglist_save_commment_alter(&$comment)
+hook_og_mailinglist_save_commment_alter(&$comment)
 =============================================
 
 Lets other modules alter the comment object before saving.
@@ -85,7 +85,7 @@ function example_og_mailinglist_save_comment_alter(&$comment) {
 }
 
 
-og_mailinglist_save_node_alter(&$node)
+hook_og_mailinglist_save_node_alter(&$node)
 ======================================
 
 Lets other modules alter the node object before saving.
@@ -123,3 +123,22 @@ function og_mailinglist_og_forum_og_mailinglist_save_node_alter(&$node) {
     }
   }
 }
+
+hook_og_mailinglist_new_node_alter(&$data)
+======================================
+
+Lets other modules alter the subject and body of a node created on the website before it's sent. 
+
+Modules using this hook
+Etherpad - https://github.com/KyleAMathews/drupal-etherpad
+
+Example code:
+
+<?php
+
+function etherpad_og_mailinglist_new_node_alter(&$data) {
+    $data['subject'] = t("A new Notes pad has been added: @title", array('@title' => $data['title']));
+      $data['body'] = t("<p>A Notes pad let's you and others in your group write together in realtime! It's great for taking notes together in class or collaboratively preparing study materials</p> <br /><a style='font-size:150%' href='!link'>Start writing</a>", array('!link' => url('node/' . $data['nid'], array('absolute' => TRUE))));
+}
+
+?>
