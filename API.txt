@@ -70,7 +70,7 @@ function example_og_mailinglist_new_email_node_alter(&$email) {
 og_mailinglist_save_commment_alter(&$comment)
 =============================================
 
-Lets other modules alter the node object before saving.
+Lets other modules alter the comment object before saving.
 
 Modules using this hook:
 none so far.
