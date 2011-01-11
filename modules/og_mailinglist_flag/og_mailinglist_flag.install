@@ -10,6 +10,7 @@ function og_mailinglist_flag_install() {
 /**
  * Adds flags for all subscribed nodes in past month.
  **/
+function og_mailinglist_flag_add_flags() {
   // Get all users who have a ogm subscription.
   $result = db_query("SELECT DISTINCT uid FROM {og_mailinglist_thread}");
 
@@ -37,5 +38,4 @@ function og_mailinglist_flag_install() {
       flag('unflag', 'follow_node', $nid, $account);
     }
   }
-
 }
