@@ -1,0 +1,41 @@
+<?php
+
+/**
+ * Implementation of hook_install().
+ */
+function og_mailinglist_flag_install() {
+  drupal_set_message("OG Mailinglist Flags ships with a default flag. You'll almost certainly need to edit it at /admin/build/flags to make it suitable for your needs. Also, there's a utility function available in og_mailinglist_flag.install for adding flags for all subscriptions made for nodes created in the past month");
+}
+
+/**
+ * Adds flags for all subscribed nodes in past month.
+ **/
+  // Get all users who have a ogm subscription.
+  $result = db_query("SELECT DISTINCT uid FROM {og_mailinglist_thread}");
+
+  $uids = array();
+  while ($info = db_fetch_array($result)) {
+    $uids[] = $info['uid'];
+  }
+
+  // Loop through users fetching all their subscriptions from past month
+  // and adding a flag for each.
+  foreach ($uids as $uid) {
+    $account = user_load($uid);
+    $result = db_query("SELECT o.nid
+                         FROM {node} n
+                         INNER JOIN {og_mailinglist_thread} o
+                         ON n.nid = o.nid
+                         WHERE o.uid = %d
+                         AND n.created > (unix_timestamp())- 2592000", $uid);
+
+    $nids = array();
+    while ($info = db_fetch_array($result)) {
+      $nids[] = $info['nid'];
+    }
+    foreach ($nids as $nid) {
+      flag('unflag', 'follow_node', $nid, $account);
+    }
+  }
+
+}

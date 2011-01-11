@@ -1,0 +1,6 @@
+name = OG Mailinglist Flag
+description = "Integrates Og Mailinglist with the Flag module to provide a simple ajaxy subscription to nodes for OG Mailinglist"
+dependencies[] = og_mailinglist
+dependencies[] = flag
+package = "Organic groups"
+core = "6.x"
