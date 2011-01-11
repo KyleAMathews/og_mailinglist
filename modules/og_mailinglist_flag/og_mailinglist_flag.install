@@ -4,7 +4,7 @@
  * Implementation of hook_install().
  */
 function og_mailinglist_flag_install() {
-  drupal_set_message("OG Mailinglist Flags ships with a default flag. You'll almost certainly need to edit it at /admin/build/flags to make it suitable for your needs. Also, there's a utility function available in og_mailinglist_flag.install for adding flags for all subscriptions made for nodes created in the past month");
+  drupal_set_message("OG Mailinglist Flags ships with a default flag. You'll almost certainly need to edit it at /admin/build/flags to make it suitable for your needs. The two big things are giving permission to roles to use the flags and choosing which content types can be 'followed'. Also, there's a utility function available in og_mailinglist_flag.install for adding flags for all subscriptions made for nodes created in the past month");
 }
 
 /**
