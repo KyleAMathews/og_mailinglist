@@ -23,7 +23,7 @@ function og_mailinglist_flag_og_mailinglist_delete_thread_subscription($nid, $ui
 /**
  * Implementation of hook_flag().
  **/
-function og_mailinglist_flag_flag($action, $flag, $content_id, $account, $fcid) {
+function og_mailinglist_flag_flag($action, $flag, $content_id, $account) {
   if ($flag->name == "follow_node") {
     switch ($action) {
       case 'flag':
