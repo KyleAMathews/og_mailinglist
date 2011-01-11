@@ -142,3 +142,39 @@ function etherpad_og_mailinglist_new_node_alter(&$data) {
 }
 
 ?>
+
+hook_og_mailinglist_delete_thread_subscription($nid, $uid)
+==========================================================
+
+Fires when a thread subscription is deleted.
+
+Modules using this hook
+OG Mailinglist Flag
+
+Example code:
+
+<?php
+// When a thread subscription is deleted, unflag the node as well.
+function og_mailinglist_flag_og_mailinglist_delete_thread_subscription($nid, $uid) {
+  $account = user_load($uid);
+  flag('unflag', 'follow_node', $nid, $account);
+}
+?>
+
+hook_og_mailinglist_save_thread_subscription($nid, $uid)
+=======================================================
+
+Fires when a thread subscription is saved.
+
+Modules using this hook
+OG Mailinglist Flag
+
+Example code:
+
+<?php
+// Flag the node for the user when they subscribe to a node.
+function og_mailinglist_flag_og_mailinglist_save_thread_subscription($nid, $uid) {
+  $account = user_load($uid);
+  flag('flag', 'follow_node', $nid, $account);
+}
+?>

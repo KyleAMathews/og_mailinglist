@@ -3,7 +3,7 @@
 /**
  * Implementation of hook_og_mailinglist_save_thread_subscription().
  *
- * Flag the node when someone is subscribed to a node.
+ * Flag the node for the user when they subscribe to a node.
  **/
 function og_mailinglist_flag_og_mailinglist_save_thread_subscription($nid, $uid) {
   $account = user_load($uid);
