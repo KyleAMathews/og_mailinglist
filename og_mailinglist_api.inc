@@ -88,10 +88,21 @@ function og_mailinglist_check_user_subscribed_to_thread($nid, $uid) {
  * @return null.
  */
 function og_mailinglist_save_thread_subscriptions($nid, $uids) {
+  static $saved = array();
   foreach ($uids as $uid) {
+    // Check that this subscription hasn't already been saved on this page load.
+    if (in_array($nid . "_" . $uid, $saved)) {
+      continue;
+    }
+    $saved[] = $nid . "_" . $uid;
+
     if ($uid != 0) { // Ignore anonymous users.
-    db_query("INSERT INTO {og_mailinglist_thread}
+      $result = db_query("INSERT INTO {og_mailinglist_thread}
              VALUES (%d, %d)", $nid, $uid);
+      if ($result) {
+        // Invoke hook
+        module_invoke_all('og_mailinglist_save_thread_subscription', $nid, $uid);
+      }
     }
   }
 }
@@ -160,6 +171,9 @@ function og_mailinglist_subscribe_group_threads($gid, $uid) {
   }
 }
 
+/**
+ * Unsubscribe a user from all group threads when they leave that group.
+ **/
 function og_mailinglist_delete_group_threads($gid, $uid) {
   // Delete threads.
   db_query("DELETE m FROM {og_mailinglist_thread} m
@@ -169,10 +183,25 @@ function og_mailinglist_delete_group_threads($gid, $uid) {
            AND o.group_nid = %d", $uid, $gid);  
 }
 
+/**
+ * Remove a user from a thread.
+ **/
 function og_mailinglist_delete_thread_subscription($nid, $uid) {
-  return db_query("DELETE FROM {og_mailinglist_thread}
+  static $deleted = array();
+  // Check that this subscription hasn't already been deleted.
+  if (in_array($nid . "_" . $uid, $deleted)) {
+    return;
+  }
+  $deleted[] = $nid . "_" . $uid;
+
+  $result = db_query("DELETE FROM {og_mailinglist_thread}
            WHERE nid = %d
            AND uid = %d", $nid, $uid);
+
+  if ($result) {
+    // Invoke hook
+    module_invoke_all('og_mailinglist_delete_thread_subscription', $nid, $uid);
+  }
 }
 
 /*
