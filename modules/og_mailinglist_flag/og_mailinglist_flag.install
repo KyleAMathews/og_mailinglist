@@ -35,7 +35,7 @@ function og_mailinglist_flag_add_flags() {
       $nids[] = $info['nid'];
     }
     foreach ($nids as $nid) {
-      flag('unflag', 'follow_node', $nid, $account);
+      flag('flag', 'follow_node', $nid, $account);
     }
   }
 }
