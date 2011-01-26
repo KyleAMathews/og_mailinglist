@@ -386,8 +386,9 @@ function og_mailinglist_comment($comment, $op) {
 
   if ($op == 'publish') {
     // Check that the node is published.
-    $node = node_load($comment->nid);    
-    if ($node->status) {
+    $node = node_load($comment->nid);
+    $group_node = _og_mailinglist_load_group($node);
+    if ($node->status && is_object($group_node)) {
       og_mailinglist_send_comment_email($comment, $node);
       
       // User might not be subscribed to thread. Subscribe them now if not
