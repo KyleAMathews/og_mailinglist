@@ -27,8 +27,7 @@ function og_mailinglist_flag_add_flags() {
                          FROM {node} n
                          INNER JOIN {og_mailinglist_thread} o
                          ON n.nid = o.nid
-                         WHERE o.uid = %d
-                         AND n.created > (unix_timestamp())- 2592000", $uid);
+                         WHERE o.uid = %d", $uid);
 
     $nids = array();
     while ($info = db_fetch_array($result)) {
