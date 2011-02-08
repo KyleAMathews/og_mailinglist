@@ -202,6 +202,8 @@ function og_mailinglist_delete_thread_subscription($nid, $uid) {
     // Invoke hook
     module_invoke_all('og_mailinglist_delete_thread_subscription', $nid, $uid);
   }
+
+  return $result;
 }
 
 /*

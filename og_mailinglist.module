@@ -240,6 +240,9 @@ function og_mailinglist_unsubscribe_thread($node) {
      " . l("Undo", "og_mailinglist/subscribe/" . $node->nid, array("attributes" => array("id" => "og_mailinglist_undo")))
            . "</div>";
   }
+  else {
+    return "Something unexpected happened and we weren't able to unsubscribe you from this post. Please contact your site administrator.";
+  }
 }
 
 function og_mailinglist_subscribe_thread($node) {
