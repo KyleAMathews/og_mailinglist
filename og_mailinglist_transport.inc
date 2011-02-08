@@ -43,6 +43,11 @@ function _og_mailinglist_process_email($raw_email, $group_name) {
       exit();
     }
 
+    // If there isn't a message-id (which sometimes happens with spam emails), reject it.
+    if (empty($email['headers']['message-id'])) {
+      exit();
+    }
+
     if (empty($email['headers']['subject'])) {
       $email['headers']['subject'] = t('(no subject)');
     }
