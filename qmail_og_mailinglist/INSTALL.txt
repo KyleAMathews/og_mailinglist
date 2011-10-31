@@ -1,12 +1,12 @@
 These files are for integrating OG Mailinglist with the QMAIL MTA.
 
-# Installation Instructions (Only tested on Plesk 8.6.0 system, documentation for other systems is welcome). These instructions assume root access. 
+# Installation Instructions (Only tested on Plesk 8.6.0 system, documentation for other systems is welcome). These instructions assume root access.
 
-1. Create a domain for the email side of OGM with a "catchall mailbox" for all mail to the domain (eg groups@group.yoursite.com). For Plesk 8.6.0 tutorial see http://www.webhostingresourcekit.com/flash/plesk-8-linux/plesk8linux_catchall.html - if you are not using Plesk you can also refer to http://www.lifewithqmail.org/lwq.html 
+1. Create a domain for the email side of OGM with a "catchall mailbox" for all mail to the domain (eg groups@group.yoursite.com). For Plesk 8.6.0 tutorial see http://www.webhostingresourcekit.com/flash/plesk-8-linux/plesk8linux_catchall.html - if you are not using Plesk you can also refer to http://www.lifewithqmail.org/lwq.html
 
 2. Copy the og_mailinglist_exim4_transport.php file from the exim_og_mailinglist folder into the home dir for the mailbox and set the ownership to be popuser:popuser using the chown command.
 
-eg /var/qmail/mailnames/group.yoursite.com/groups  
+eg /var/qmail/mailnames/group.yoursite.com/groups
 
 3. In the home dir of the  mailbox, create a .qmail file containing the following lines:
 
@@ -17,7 +17,7 @@ The first line pipes the incoming email into the test@group.yoursite.com group a
 
 The second line also archives the email for troubleshooting/archival purposes. (You may also want to remove this line after you get your script running correctly)
 
-4. Create a file called sites_info.php in the mailbox home dir containing the following, tailored for your site(s). 
+4. Create a file called sites_info.php in the mailbox home dir containing the following, tailored for your site(s).
 
 <?php
 

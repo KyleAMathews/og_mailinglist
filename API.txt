@@ -127,7 +127,7 @@ function og_mailinglist_og_forum_og_mailinglist_save_node_alter(&$node) {
 hook_og_mailinglist_new_node_alter(&$data)
 ======================================
 
-Lets other modules alter the subject and body of a node created on the website before it's sent. 
+Lets other modules alter the subject and body of a node created on the website before it's sent.
 
 Modules using this hook
 Etherpad - https://github.com/KyleAMathews/drupal-etherpad

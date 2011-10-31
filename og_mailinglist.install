@@ -6,17 +6,17 @@ include_once 'og_mailinglist_utilities.inc'; //Load our utilities so the hook_re
  */
 function og_mailinglist_install() {
   $success = drupal_install_schema('og_mailinglist');
-  
+
   // Add any previously created groups to og_mailinglist.
   add_groups_to_og_mailinglist();
-  
+
   if ($success) {
     drupal_set_message(st('OG Mailinglist module installed tables successfully.'));
   }
   else {
     drupal_set_message(st('The installation of the OG Mailinglist tables failed.'), 'error');
   }
-    
+
   // Set OGM's system weight to be after Pathauto so our email footers always use the correct path.
   $weight = db_result(db_query("SELECT weight FROM {system} WHERE type = 'module' AND name = 'pathauto'"));
   if (!empty($weight)) {
@@ -55,7 +55,7 @@ function og_mailinglist_requirements($phase) {
       $requirements['og_mailinglist_phpmailer']['description'] = t('The <a href="@phpmailer">PHPMailer</a> library is missing or not installed correctly. <a href="@download">Download</a> and extract it to your <em>og_mailinglist</em> module directory. See the INSTALL.txt file for more information at path/to/drupal@install.', array('@phpmailer' => 'http://phpmailer.worxware.com/index.php?pg=phpmailer', '@download' => 'http://sourceforge.net/projects/phpmailer/files/phpmailer%20for%20php5_6/', '@install' => url(drupal_get_path('module', 'og_mailinglist') . '/INSTALL.txt')));
       $requirements['og_mailinglist_phpmailer']['severity'] = REQUIREMENT_ERROR;
     }
-    
+
     //Check for the Mail_mimeDecode library.
     og_mailinglist_mimeDecode_load_library();
     $requirements['og_mailinglist_mimeDecode']['title'] = t('Mail_mimeDecode PEAR extension');
@@ -79,7 +79,7 @@ function og_mailinglist_requirements($phase) {
  */
 function og_mailinglist_schema() {
  $schema = array();
- 
+
  $schema['og_mailinglist'] = array(
   'fields' => array(
    'nid' => array(
@@ -97,7 +97,7 @@ function og_mailinglist_schema() {
    ),
    'primary key' => array('nid'),
  );
- 
+
  $schema['og_mailinglist_source'] = array(
    'fields' => array(
      'nid' => array(
@@ -205,7 +205,7 @@ function og_mailinglist_schema() {
      'subscription_type' => array('subscription_type'),
    ),
  );
- 
+
  return $schema;
 }
 
@@ -233,7 +233,7 @@ function og_mailinglist_update_6000() {
    'primary key' => array('nid'),
  );
  db_create_table($ret, 'og_mailinglist', $schema['og_mailinglist']);
- 
+
  return $ret;
 }
 
@@ -249,13 +249,13 @@ function og_mailinglist_update_6001() {
  */
 function og_mailinglist_update_6002() {
   $ret = array();
- 
+
   db_drop_field($ret, 'og_mailinglist_subscription', 'space_type');
   db_change_field($ret, 'og_mailinglist_subscription', 'sid', 'nid', array(
                            'type' => 'int',
                            'not null' => TRUE,
                            'default' => 0));
-  
+
   return $ret;
 }
 
@@ -322,7 +322,7 @@ function og_mailinglist_update_6004() {
 */
 function og_mailinglist_update_6005() {
   $ret = array();
-  
+
   $weight = db_result(db_query("SELECT weight FROM {system} WHERE type = 'module' AND name = 'pathauto'"));
   if (!empty($weight)) {
     db_query("UPDATE {system} SET weight = %d WHERE type = 'module' AND name = 'og_mailinglist'", $weight + 1);
@@ -334,18 +334,18 @@ function og_mailinglist_update_6005() {
 function add_groups_to_og_mailinglist() {
   if (!module_exists('purl') && !module_exists('spaces_og')) {
     $results = db_query("SELECT nid, title FROM {node} WHERE type = 'group'");
-   
+
     $groups = array();
-   
+
     while ($data = db_fetch_array($results)) {
       $groups[$data['nid']] = $data['title'];
     }
-   
+
     foreach ($groups as $nid => $title) {
       $title = string_to_machine_readable($title);
       db_query("INSERT INTO {og_mailinglist}
                VALUES (%d, '%s')", $nid, $title);
-      
+
       // Subscribe group members to active threads.
       og_mailinglist_create_subscriptions_for_last_month($nid);
     }
@@ -362,7 +362,7 @@ function add_groups_to_og_mailinglist() {
     foreach ($groups as $nid => $title) {
       db_query("INSERT INTO {og_mailinglist}
                VALUES (%d, '%s')", $nid, $title);
-      
+
       // Subscribe group members to active threads.
       og_mailinglist_create_subscriptions_for_last_month($nid);
     }
@@ -375,7 +375,7 @@ function add_groups_to_og_mailinglist() {
  */
 function og_mailinglist_create_subscriptions_for_last_month($gid) {
   module_load_include('inc', 'og_mailinglist', 'og_mailinglist_api');
-  
+
   // Create email subscriptions to group for all group members.
   $results = db_query("SELECT uid
                        FROM {og_uid}
@@ -385,16 +385,16 @@ function og_mailinglist_create_subscriptions_for_last_month($gid) {
     $uids[] = $data['uid'];
   }
   og_mailinglist_save_group_subscriptions($gid, $uids);
-  
+
   $sql = "SELECT n.nid
           FROM {og_ancestry} o
           JOIN {node} n
           ON o.nid = n.nid
           WHERE o.group_nid = %d
           AND n.created > (unix_timestamp() - 2592000)";
-          
+
   $results = db_query($sql, $gid);
-  
+
   while ($data = db_fetch_array($results)) {
     og_mailinglist_save_group_thread_subscriptions($gid, $data['nid']);
   }

@@ -8,10 +8,10 @@
 // of people do that.
 // Making the switch would vastly simplify the code.
 // We could then hold the regex for each email client in an array and just pass
-// that and the text into a function. 
+// that and the text into a function.
 function _og_mailinglist_find_quoted_sections($text) {
   $quotes = array();
-  
+
   // Some email clients are "special". They don't like to place ">" in front of
   // quotes. We need to give them their own special functions.
   $quotes[] = array();
@@ -27,11 +27,11 @@ function _og_mailinglist_find_quoted_sections($text) {
   $quotes[] = _og_mailinglist_filter_unknown_client4b_quotes($text);
   $quotes[] = _og_mailinglist_filter_unknown_client5_quotes($text);
   $quotes[] = _og_mailinglist_filter_quotes($text);
-  
+
   // Identify the longest quoted section of all possible matches and only
   // remove that one.
   $quotes = _og_mailinglist_longest_string($quotes);
-  
+
   return $quotes;
 }
 
@@ -46,7 +46,7 @@ function _og_mailinglist_longest_string ($quotes) {
       $longest = array(strlen(implode("", $quote)) => $quote);
     }
   }
-  
+
   return end($longest);
 }
 
@@ -65,7 +65,7 @@ function _og_mailinglist_filter_quotes($text) {
     if (preg_match("/On\s\w{3},\s\w{3}\s\d{1,2},\s\d{4}\sat\s\d{1,2}:\d{2}\s[PM|AM]/s", #Gmail
                              $line, $matches)
       || preg_match("/On\s\w{3}\s\d{1,2},\s\d{4},\sat\s\d{1,2}:\d{2}\s(AM|PM),\s/s", #Apple mail
-                            $line, $matches)    
+                            $line, $matches)
       || preg_match("/On\s\w{3}\s\d{2},\s\d{4},\sat\s[0-9:]{4,5}\s(PM|AM),\s[a-zA-Z\s]+wrote:/s", #unknown as of yet
                             $line, $matches)
       || preg_match("/On\s\d{1,2}\/\d{1,2}\/\d{1,2},\s.+?<[a-zA-Z0-9_\-\.\+\^!#\$%&*+\/\=\?\`\|\{\}~\']+@(?:(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.?)+>\swrote:/s", # Some mobile email client, blackberry maybe?
@@ -76,7 +76,7 @@ function _og_mailinglist_filter_quotes($text) {
                             $line, $matches)
       && !$in_quote) {
 
-      
+
       $quotes[$count][] = $line;
       $in_quote = TRUE;
     }
@@ -84,7 +84,7 @@ function _og_mailinglist_filter_quotes($text) {
       // or the previous line ended w/ a "<" Long emails addresses
       // (e.g. <someaddress@gmail.com>) sometimes get truncated
       // leaving the second part of the line on the next line.
-            || substr(trim(array_pop(end($quotes))), -1) === "<" 
+            || substr(trim(array_pop(end($quotes))), -1) === "<"
       // Same situation as above. But here the <someaddress@gmail.com> is
       // brought down to the next line so the < is at the start of the line.
             || substr(trim($line), 0, 1) === "<"
@@ -101,7 +101,7 @@ function _og_mailinglist_filter_quotes($text) {
   foreach ($quotes as $quote) {
     $quotes_imploded[] = implode($quote, "\n");
   }
-  
+
   return $quotes_imploded;
 }
 
@@ -134,7 +134,7 @@ function _og_mailinglist_filter_outlook_quotes($text) {
   }
   else {
     return array();
-  }  
+  }
 }
 
 /**
@@ -148,7 +148,7 @@ function _og_mailinglist_filter_android_gmail_quotes($text) {
   }
   else {
     return array();
-  }  
+  }
 }
 
 /**
@@ -162,7 +162,7 @@ function _og_mailinglist_filter_unknown_client_quotes($text) {
   }
   else {
     return array();
-  }  
+  }
 }
 
 /**
@@ -176,7 +176,7 @@ function _og_mailinglist_filter_unknown_client2_quotes($text) {
   }
   else {
     return array();
-  }  
+  }
 }
 
 /**
@@ -186,7 +186,7 @@ function _og_mailinglist_filter_unknown_client2_quotes($text) {
  * Sent: Monday, April 05, 2010 5:30 PM
  * To: A group
  * Subject: [a-group] SQL Server Express
- * 
+ *
  */
 function _og_mailinglist_filter_unknown_client3_quotes($text) {
   $regex = "/From:\s.*?\[.*?@.*?\].*?Sent:\s\w*?,\s\w*?\s\d{1,2},\s\d{4}\s\d{1,2}:\d{2}\s(PM|AM).*?To:\s.*?Subject:.*/s";
@@ -206,7 +206,7 @@ function _og_mailinglist_filter_unknown_client3_quotes($text) {
  * Sent: Thursday, 23 September 2010 9:55 AM // Diff from above is in date format.
  * To: test-two@lists.somewhere.com
  * Subject: [test-two] Thursday morning: Forum start via email
- * 
+ *
  */
 function _og_mailinglist_filter_unknown_client3a_quotes($text) {
   $regex = "/From:\s.*?\[.*?@.*?\].*?Sent:\s\w*?,\s\d{1,2}\s\w*?\s\d{4}\s\d{1,2}:\d{2}\s(PM|AM).*?To:\s.*?Subject:.*/s";
@@ -224,10 +224,10 @@ function _og_mailinglist_filter_unknown_client3a_quotes($text) {
  *
  * -----Original Message-----
  * From: Someone <someone@me.com>
- * Date: Sat, 10 Apr 2110 12:25:28 
+ * Date: Sat, 10 Apr 2110 12:25:28
  * To: Entrepreneurship<entrepreneurship@island.byu.edu>
- * Subject: Re: [entrepreneurship] Need Tech Guys to Form 
- * 
+ * Subject: Re: [entrepreneurship] Need Tech Guys to Form
+ *
  */
 function _og_mailinglist_filter_unknown_client4_quotes($text) {
   $regex = "/-----Original\sMessage-----.*?From:\s.*?@.*?Date:\s\w{3},\s\d{1,2}\s.*?:.*?:.*?To:.*?@.*?Subject:.*/s";
@@ -248,7 +248,7 @@ function _og_mailinglist_filter_unknown_client4_quotes($text) {
  * Sent: Friday, 24 September 2010 10:54 AM
  * To: test-one@lists.somewhere.com
  * Subject: Re: [test-one] Test to Group 1 From Email
- * 
+ *
  */
 function _og_mailinglist_filter_unknown_client4a_quotes($text) {
   $regex = "/-----Original\sMessage-----.*?From:\s.*?@.*?Sent:\s\w{3,9},\s\d{1,2}\s.*?:.*?:.*?To:.*?@.*?Subject:.*/s";
@@ -269,7 +269,7 @@ function _og_mailinglist_filter_unknown_client4a_quotes($text) {
  * To: test-one@lists.somewhere.com
  * Subject: [test-one] Test to Group 1 From Email
  * Date: Fri, 24 Sep 2010 09:36:57 +1000
- * 
+ *
  */
 function _og_mailinglist_filter_unknown_client4b_quotes($text) {
   $regex = "/-----\sOriginal\sMessage\s-----.*?From:\s.*?\<.*?@.*?\>.*?To:\s.*?Subject:\s.*?Date:\s\w*?,\s\d{1,2}\s\w*?\s\d{4}\s\d{1,2}:\d{2}:\d{2}\s.*/s";
@@ -286,7 +286,7 @@ function _og_mailinglist_filter_unknown_client4b_quotes($text) {
  * Filter quotes out of emails from yet another email client.
  *
  * On 15 April 2010 21:57, someone someone@example.com wrote:
- * 
+ *
  */
 function _og_mailinglist_filter_unknown_client5_quotes($text) {
   $regex = "/On\s\d{1,2}\s\w.*?\s\d{4}\s\d{2}:\d{2},\s.*?@.*?\s.*?wrote:.*/s";

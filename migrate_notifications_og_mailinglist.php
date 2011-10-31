@@ -4,7 +4,7 @@
  * so you might have to tweak things. Improvements to the script are highly welcome.
  */
 
-# set up the drupal directory -- very important 
+# set up the drupal directory -- very important
 $DRUPAL_DIR = '/var/www/island_prod';
 
 # set some server variables so Drupal doesn't freak out
@@ -13,11 +13,11 @@ $_SERVER['SCRIPT_FILENAME'] = '/script.php';
 $_SERVER['HTTP_HOST'] = 'example.com';
 $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 $_SERVER['REQUEST_METHOD'] = 'POST';
- 
+
 # act as the first user
 global $user;
 $user->uid = 1;
- 
+
 # gain access to drupal
 chdir($DRUPAL_DIR);  # drupal assumes this is the root dir
 error_reporting(E_ERROR | E_PARSE); # drupal throws a few warnings, so suppress these
@@ -32,7 +32,7 @@ error_reporting(E_ALL);
 // Using just data from notifications seemed to miss people somehow.
 
 $results = db_query("SELECT nid, uid FROM {og_uid}");
-  
+
 while ($data = db_fetch_array($results)) {
   //print_r($data);
   echo db_query("INSERT INTO {og_mailinglist_subscription}
@@ -47,7 +47,7 @@ $sql = "SELECT n.uid AS uid, f.value AS gid, n.send_interval AS send_interval
   AND n.send_interval <> 0 "// We've already added those above.
   ."GROUP BY uid, gid
   ORDER BY n.uid";
-  
+
 $results = db_query($sql);
 
 while ($data = db_fetch_array($results)) {
@@ -63,7 +63,7 @@ while ($data = db_fetch_array($results)) {
          SET subscription_type = 'digest email'
          WHERE sid = %d
          AND uid = %d", $data['gid'], $data['uid']);
-  }  
+  }
 }
 
 //echo "=== Inserting data into og_mailinglist_thread for past month of conversations ==";
@@ -77,7 +77,7 @@ while ($data = db_fetch_array($results)) {
 //  if ($group_nid = db_result(db_query("SELECT group_nid
 //                         FROM og_ancestry
 //                         WHERE nid = %d", $data['nid']))) {
-//    
+//
 //    // Node is in a group.
 //    $subs = og_mailinglist_get_space_subscriptions($group_nid, 'og');
 //    og_mailinglist_save_thread_subscriptions($data['nid'], array_keys($subs));
