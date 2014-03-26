@@ -32,7 +32,7 @@ function og_mailinglist_flag_flag($action, $flag, $content_id, $account) {
 
       case 'unflag':
         og_mailinglist_delete_thread_subscription($content_id, $account->uid);
-        break;  
+        break;
     }
   }
 }
@@ -48,7 +48,7 @@ function og_mailinglist_flag_flag_default_flags() {
     'name' => 'follow_node',
     'title' => 'Follow Node',
     'global' => '0',
-    'types' => 
+    'types' =>
     array (
       0 => 'poll',
       1 => 'note',
@@ -64,14 +64,14 @@ function og_mailinglist_flag_flag_default_flags() {
     'unflag_message' => '',
     'unflag_denied_text' => '',
     'link_type' => 'toggle',
-    'roles' => 
+    'roles' =>
     array (
-      'flag' => 
+      'flag' =>
       array (
         0 => 2,
         1 => 3,
       ),
-      'unflag' => 
+      'unflag' =>
       array (
         0 => 2,
         1 => 3,

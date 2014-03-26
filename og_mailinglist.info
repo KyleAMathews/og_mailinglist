@@ -1,5 +1,5 @@
 ; $Id: og_mailinglist.info,v 1.0 2009-03-16 $
-name = OG Mailinglist 
+name = OG Mailinglist
 description = "Allows email submissions of new posts and comments for organic groups."
 dependencies[] = og
 package = "Organic groups"

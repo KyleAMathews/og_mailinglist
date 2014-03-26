@@ -3,7 +3,7 @@
 
 /**
  * Saves new thread subscriptions for members of a group.
- * 
+ *
  * @param int $gid Group ID
  * @param int $nid Node ID
  */
@@ -22,7 +22,7 @@ function og_mailinglist_save_group_thread_subscriptions($gid, $nid) {
  * Returns users who are active email subscribers in a group.
  *
  * @param int $gid Group id to query for subscriptions
- * 
+ *
  * @return array of UIDs and email addresses that are subscribed to this group.
  *  Format = key (UID) => value (email address)
  */
@@ -31,19 +31,19 @@ function og_mailinglist_get_group_subscriptions($gid) {
                      FROM {og_mailinglist_subscription}
                      WHERE nid = %d
                      AND subscription_type = 'email'", $gid);
-  
+
   $uids = array();
   while ($data = db_fetch_array($result)) {
-    $uids[] = $data['uid'];  
+    $uids[] = $data['uid'];
   }
-  
+
   $emails = array();
   foreach ($uids as $uid) {
     $emails[$uid] = db_result(db_query("SELECT mail
                                    FROM {users}
                                    WHERE uid = %d", $uid));
   }
-  
+
   return $emails;
 }
 
@@ -55,19 +55,19 @@ function og_mailinglist_get_thread_subscriptions($nid) {
   $result = db_query("SELECT uid
                      FROM {og_mailinglist_thread}
                      WHERE nid = %d", $nid);
-  
+
   $uids = array();
   while ($data = db_fetch_array($result)) {
-    $uids[] = $data['uid'];  
+    $uids[] = $data['uid'];
   }
-  
+
   $emails = array();
   foreach ($uids as $uid) {
     $emails[$uid] = db_result(db_query("SELECT mail
                                    FROM {users}
                                    WHERE uid = %d", $uid));
   }
-  
+
   return $emails;
 }
 
@@ -148,7 +148,7 @@ function og_mailinglist_delete_group_subscriptions($gid, $uids) {
     db_query("DELETE FROM {og_mailinglist_subscription}
              WHERE nid = %d
              AND uid = %d", $gid, $uid);
-    
+
     og_mailinglist_delete_group_threads($gid, $uid);
   }
 }
@@ -165,7 +165,7 @@ function og_mailinglist_subscribe_group_threads($gid, $uid) {
                       WHERE o.group_nid = %d
                       ORDER BY created DESC
                       LIMIT 15", $gid);
-  
+
   while ($data = db_fetch_array($results)) {
     og_mailinglist_save_thread_subscriptions($data['nid'], array($uid));
   }
@@ -180,7 +180,7 @@ function og_mailinglist_delete_group_threads($gid, $uid) {
            INNER JOIN {og_ancestry} o
            WHERE o.nid = m.nid
            AND m.uid = %d
-           AND o.group_nid = %d", $uid, $gid);  
+           AND o.group_nid = %d", $uid, $gid);
 }
 
 /**
@@ -211,7 +211,7 @@ function og_mailinglist_delete_thread_subscription($nid, $uid) {
  */
 function og_mailinglist_log_email_sent($source, $nid, $cid = 0, $message_id = 0, $in_reply_to = 0, $references = 0, $parent_message_id = 0) {
   return db_query("INSERT INTO {og_mailinglist_source}
-           VALUES (%d, %d, '%s', '%s', '%s', '%s', '%s')", 
+           VALUES (%d, %d, '%s', '%s', '%s', '%s', '%s')",
            $nid, $cid, $source, $message_id, $in_reply_to, $references, $parent_message_id);
 }
 /*
@@ -252,7 +252,7 @@ function og_mailinglist_delete_group($nid) {
   // Delete information from og_mailinglist.
   db_query("DELETE FROM {og_mailinglist}
            WHERE nid = %d", $nid);
-  
+
   // Delete group subscriptions from og_mailinglist_subscriptions.
   db_query("DELETE FROM {og_mailinglist_subscription}
            WHERE nid = %d", $nid);
@@ -286,7 +286,7 @@ function _og_mailinglist_get_thread_parent_messageid($in_reply_to_message_id, $r
         }
     }
   }
- 
+
 }
 
 function _og_mailinglist_get_nid_from_parent_messageid($message_id) {

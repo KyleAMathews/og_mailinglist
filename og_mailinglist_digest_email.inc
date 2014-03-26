@@ -105,7 +105,7 @@ function _og_mailinglist_send_digest_emails() {
     $body .= "</ul>\n";
     $body .= "<hr />\n";
 
-    // Add individual posts. 
+    // Add individual posts.
     foreach ($nids as $nid) {
       $body .= '<a name="digest-' . $nid['node_obj']->nid . '"></a>';
       $body .= '<div style="' . DISCUSSION_HEADER . '">';
@@ -171,7 +171,7 @@ function _og_mailinglist_send_digest_emails() {
       $mailer->Body = $body;
       $mailer->isHTML(TRUE);
       $mailer->Send();
-      watchdog('og_mailinglist', 'Sent digest email to @email for group @group', 
+      watchdog('og_mailinglist', 'Sent digest email to @email for group @group',
                 array('@email' => $email, '@group' => $group->title), WATCHDOG_INFO);
     }
   }
@@ -188,7 +188,7 @@ function og_mailinglist_style_node_message($node) {
   $node = og_mailinglist_render_node_body($node);
   $body .= og_mailinglist_prepare_web_content($node->body);
   $body .= "<br />\n";
-  
+
   return $body;
 }
 
@@ -203,7 +203,7 @@ function og_mailinglist_style_comment_message($comment) {
   $comment->comment = _og_mailinglist_remove_quotes($comment->comment);
   $body .= og_mailinglist_prepare_web_content($comment->comment);
   $body .= "<br />\n";
-  
+
   return $body;
 }
 
@@ -213,6 +213,6 @@ function og_mailinglist_count_new_messages($message) {
       $count++;
     }
     $count += count(array_keys($message)) - 2;
-    
+
     return $count;
 }

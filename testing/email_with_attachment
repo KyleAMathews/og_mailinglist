@@ -21,7 +21,7 @@ DomainKey-Signature: a=rsa-sha1; c=nofws;
          0ma8Aezz249cn2xenNYKdnEzF+xjNEvJBRMppUMjATlHiWVEivWp88Xv20iptefh4Wzf
          fkWzU/+gcO/WAMT/h4HAhoija/NguoiadULFQ=
 MIME-Version: 1.0
-Received: by 10.220.3.211 with SMTP id 19mr7817291vco.7.1259706520854; Tue, 01 
+Received: by 10.220.3.211 with SMTP id 19mr7817291vco.7.1259706520854; Tue, 01
 	Dec 2009 14:28:40 -0800 (PST)
 Date: Tue, 1 Dec 2009 15:28:40 -0700
 Message-ID: <efeed12d0912011428u1b69f6d2x6181b2e0a8005ad@mail.gmail.com>
@@ -48,9 +48,9 @@ Content-Type: text/html; charset=UTF-8
 
 --001517576d90b2621b0479b24728--
 --001517576d90b262310479b2472a
-Content-Type: application/vnd.oasis.opendocument.text; 
+Content-Type: application/vnd.oasis.opendocument.text;
 	name="write_up_for_drupaled_post_on_writing_assignment.odt"
-Content-Disposition: attachment; 
+Content-Disposition: attachment;
 	filename="write_up_for_drupaled_post_on_writing_assignment.odt"
 Content-Transfer-Encoding: base64
 X-Attachment-Id: f_g2p8q0qv0

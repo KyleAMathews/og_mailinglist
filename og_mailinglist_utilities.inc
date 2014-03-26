@@ -12,13 +12,13 @@ function _og_mailinglist_get_subscribers($node, $new_node = FALSE) {
   else { // this is a new comment.
     $subscribers = og_mailinglist_get_thread_subscriptions($node->nid);
   }
-  
+
   if (is_numeric(variable_get('og_mailinglist_test_email_address', ''))) {
     $uid = variable_get('og_mailinglist_test_email_address', '');
     $email = db_result(db_query("SELECT mail FROM {users} WHERE uid = %d", $uid));
     $uids[$uid] = $email;
   }
-  
+
   return $subscribers;
 }
 
@@ -35,7 +35,7 @@ function _og_mailinglist_build_footer($node) {
 Full post: " .  url("node/" . $node->nid, array('absolute' => TRUE))   . "
 Manage my subscriptions: " . url("og_mailinglist/subscriptions", array('absolute' => TRUE)) . "
 Stop emails for this post: " . url("og_mailinglist/unsubscribe/" . $node->nid, array("absolute" => TRUE));
-  
+
   return $footer;
 }
 
@@ -66,11 +66,11 @@ function dd_log($data, $label = "") {
   ob_start();
   print_r($data);
   $string_data = ob_get_clean();
-  
+
   if (!empty($label)) {
     $string_data = $label . ": " . $string_data;
   }
-  
+
   fwrite($fh, $string_data . "\n");
   fclose($fh);
 }
@@ -81,7 +81,7 @@ function write_string_to_file($data, $name = "lsjdf") {
   ob_start();
   print_r($data);
   $stringData = ob_get_clean();
-    
+
   fwrite($fh, $stringData . "\n");
   fclose($fh);
 }
@@ -97,15 +97,15 @@ function array_copy ($aSource) {
     if (!is_array($aSource)) {
         throw new Exception("Input is not an Array");
     }
-    
+
     // initialize return array
     $aRetAr = array();
-    
+
     // get array keys
     $aKeys = array_keys($aSource);
     // get array values
     $aVals = array_values($aSource);
-    
+
     // loop through array and assign keys+values to new return array
     for ($x=0;$x<count($aKeys);$x++) {
         // clone if object
@@ -119,7 +119,7 @@ function array_copy ($aSource) {
             $aRetAr[$aKeys[$x]]=$aVals[$x];
         }
     }
-    
+
     return $aRetAr;
 }
 
